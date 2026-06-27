@@ -11,7 +11,13 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppIndexRouteImport } from './routes/_app.index'
+import { Route as AppSettingsRouteImport } from './routes/_app.settings'
+import { Route as AppReportsRouteImport } from './routes/_app.reports'
 import { Route as AppProjectsRouteImport } from './routes/_app.projects'
+import { Route as AppLocalizationStudioRouteImport } from './routes/_app.localization-studio'
+import { Route as AppLaunchChecklistRouteImport } from './routes/_app.launch-checklist'
+import { Route as AppConsumerInsightRouteImport } from './routes/_app.consumer-insight'
+import { Route as AppChinaMarketInsightRouteImport } from './routes/_app.china-market-insight'
 
 const AppRoute = AppRouteImport.update({
   id: '/_app',
@@ -22,32 +28,106 @@ const AppIndexRoute = AppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppRoute,
 } as any)
+const AppSettingsRoute = AppSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppReportsRoute = AppReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppProjectsRoute = AppProjectsRouteImport.update({
   id: '/projects',
   path: '/projects',
   getParentRoute: () => AppRoute,
 } as any)
+const AppLocalizationStudioRoute = AppLocalizationStudioRouteImport.update({
+  id: '/localization-studio',
+  path: '/localization-studio',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppLaunchChecklistRoute = AppLaunchChecklistRouteImport.update({
+  id: '/launch-checklist',
+  path: '/launch-checklist',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppConsumerInsightRoute = AppConsumerInsightRouteImport.update({
+  id: '/consumer-insight',
+  path: '/consumer-insight',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppChinaMarketInsightRoute = AppChinaMarketInsightRouteImport.update({
+  id: '/china-market-insight',
+  path: '/china-market-insight',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
+  '/china-market-insight': typeof AppChinaMarketInsightRoute
+  '/consumer-insight': typeof AppConsumerInsightRoute
+  '/launch-checklist': typeof AppLaunchChecklistRoute
+  '/localization-studio': typeof AppLocalizationStudioRoute
   '/projects': typeof AppProjectsRoute
+  '/reports': typeof AppReportsRoute
+  '/settings': typeof AppSettingsRoute
 }
 export interface FileRoutesByTo {
+  '/china-market-insight': typeof AppChinaMarketInsightRoute
+  '/consumer-insight': typeof AppConsumerInsightRoute
+  '/launch-checklist': typeof AppLaunchChecklistRoute
+  '/localization-studio': typeof AppLocalizationStudioRoute
   '/projects': typeof AppProjectsRoute
+  '/reports': typeof AppReportsRoute
+  '/settings': typeof AppSettingsRoute
   '/': typeof AppIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteWithChildren
+  '/_app/china-market-insight': typeof AppChinaMarketInsightRoute
+  '/_app/consumer-insight': typeof AppConsumerInsightRoute
+  '/_app/launch-checklist': typeof AppLaunchChecklistRoute
+  '/_app/localization-studio': typeof AppLocalizationStudioRoute
   '/_app/projects': typeof AppProjectsRoute
+  '/_app/reports': typeof AppReportsRoute
+  '/_app/settings': typeof AppSettingsRoute
   '/_app/': typeof AppIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/projects'
+  fullPaths:
+    | '/'
+    | '/china-market-insight'
+    | '/consumer-insight'
+    | '/launch-checklist'
+    | '/localization-studio'
+    | '/projects'
+    | '/reports'
+    | '/settings'
   fileRoutesByTo: FileRoutesByTo
-  to: '/projects' | '/'
-  id: '__root__' | '/_app' | '/_app/projects' | '/_app/'
+  to:
+    | '/china-market-insight'
+    | '/consumer-insight'
+    | '/launch-checklist'
+    | '/localization-studio'
+    | '/projects'
+    | '/reports'
+    | '/settings'
+    | '/'
+  id:
+    | '__root__'
+    | '/_app'
+    | '/_app/china-market-insight'
+    | '/_app/consumer-insight'
+    | '/_app/launch-checklist'
+    | '/_app/localization-studio'
+    | '/_app/projects'
+    | '/_app/reports'
+    | '/_app/settings'
+    | '/_app/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -70,6 +150,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/settings': {
+      id: '/_app/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AppSettingsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/reports': {
+      id: '/_app/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof AppReportsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/projects': {
       id: '/_app/projects'
       path: '/projects'
@@ -77,16 +171,56 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProjectsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/localization-studio': {
+      id: '/_app/localization-studio'
+      path: '/localization-studio'
+      fullPath: '/localization-studio'
+      preLoaderRoute: typeof AppLocalizationStudioRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/launch-checklist': {
+      id: '/_app/launch-checklist'
+      path: '/launch-checklist'
+      fullPath: '/launch-checklist'
+      preLoaderRoute: typeof AppLaunchChecklistRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/consumer-insight': {
+      id: '/_app/consumer-insight'
+      path: '/consumer-insight'
+      fullPath: '/consumer-insight'
+      preLoaderRoute: typeof AppConsumerInsightRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/china-market-insight': {
+      id: '/_app/china-market-insight'
+      path: '/china-market-insight'
+      fullPath: '/china-market-insight'
+      preLoaderRoute: typeof AppChinaMarketInsightRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
 interface AppRouteChildren {
+  AppChinaMarketInsightRoute: typeof AppChinaMarketInsightRoute
+  AppConsumerInsightRoute: typeof AppConsumerInsightRoute
+  AppLaunchChecklistRoute: typeof AppLaunchChecklistRoute
+  AppLocalizationStudioRoute: typeof AppLocalizationStudioRoute
   AppProjectsRoute: typeof AppProjectsRoute
+  AppReportsRoute: typeof AppReportsRoute
+  AppSettingsRoute: typeof AppSettingsRoute
   AppIndexRoute: typeof AppIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppChinaMarketInsightRoute: AppChinaMarketInsightRoute,
+  AppConsumerInsightRoute: AppConsumerInsightRoute,
+  AppLaunchChecklistRoute: AppLaunchChecklistRoute,
+  AppLocalizationStudioRoute: AppLocalizationStudioRoute,
   AppProjectsRoute: AppProjectsRoute,
+  AppReportsRoute: AppReportsRoute,
+  AppSettingsRoute: AppSettingsRoute,
   AppIndexRoute: AppIndexRoute,
 }
 
