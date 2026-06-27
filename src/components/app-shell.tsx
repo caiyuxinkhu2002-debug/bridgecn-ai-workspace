@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 
-const nav = [
+const nav: { to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean }[] = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { to: "/projects", label: "Projects", icon: FolderKanban },
   { to: "/china-market-insight", label: "China Market Insight", icon: LineChart },
@@ -23,7 +23,7 @@ const nav = [
   { to: "/launch-checklist", label: "Launch Checklist", icon: ListChecks },
   { to: "/reports", label: "Reports", icon: FileBarChart },
   { to: "/settings", label: "Settings", icon: Settings },
-] as const;
+];
 
 export function AppShell({ children }: { children?: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -49,7 +49,7 @@ export function AppShell({ children }: { children?: ReactNode }) {
             return (
               <Link
                 key={item.to}
-                to={item.to}
+                to={item.to as string}
                 className={`flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm transition-colors ${
                   active
                     ? "bg-[var(--sidebar-accent)] text-[var(--sidebar-accent-foreground)] font-medium"
