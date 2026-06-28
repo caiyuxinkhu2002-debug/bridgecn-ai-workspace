@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import {
   Sparkles,
@@ -138,10 +138,13 @@ function StartPage() {
 
       {/* Submit */}
       <div className="mt-12 flex flex-col items-center gap-3">
-        <button className="group inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[var(--foreground)] px-6 text-sm font-medium text-[var(--background)] shadow-[var(--shadow-card)] transition-transform hover:-translate-y-0.5 sm:w-auto sm:px-8">
+        <Link
+          to="/report"
+          className="group inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[var(--foreground)] px-6 text-sm font-medium text-[var(--background)] shadow-[var(--shadow-card)] transition-transform hover:-translate-y-0.5 sm:w-auto sm:px-8"
+        >
           Generate China Market Report
           <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-        </button>
+        </Link>
         <p className="text-xs text-[var(--muted-foreground)]">
           Typically takes about 30 seconds. You can edit everything after.
         </p>
