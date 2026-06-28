@@ -14,6 +14,7 @@ import { Route as AppIndexRouteImport } from './routes/_app.index'
 import { Route as AppStartRouteImport } from './routes/_app.start'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
 import { Route as AppReportsRouteImport } from './routes/_app.reports'
+import { Route as AppReportRouteImport } from './routes/_app.report'
 import { Route as AppProjectsRouteImport } from './routes/_app.projects'
 import { Route as AppLocalizationStudioRouteImport } from './routes/_app.localization-studio'
 import { Route as AppLaunchChecklistRouteImport } from './routes/_app.launch-checklist'
@@ -42,6 +43,11 @@ const AppSettingsRoute = AppSettingsRouteImport.update({
 const AppReportsRoute = AppReportsRouteImport.update({
   id: '/reports',
   path: '/reports',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppReportRoute = AppReportRouteImport.update({
+  id: '/report',
+  path: '/report',
   getParentRoute: () => AppRoute,
 } as any)
 const AppProjectsRoute = AppProjectsRouteImport.update({
@@ -77,6 +83,7 @@ export interface FileRoutesByFullPath {
   '/launch-checklist': typeof AppLaunchChecklistRoute
   '/localization-studio': typeof AppLocalizationStudioRoute
   '/projects': typeof AppProjectsRoute
+  '/report': typeof AppReportRoute
   '/reports': typeof AppReportsRoute
   '/settings': typeof AppSettingsRoute
   '/start': typeof AppStartRoute
@@ -87,6 +94,7 @@ export interface FileRoutesByTo {
   '/launch-checklist': typeof AppLaunchChecklistRoute
   '/localization-studio': typeof AppLocalizationStudioRoute
   '/projects': typeof AppProjectsRoute
+  '/report': typeof AppReportRoute
   '/reports': typeof AppReportsRoute
   '/settings': typeof AppSettingsRoute
   '/start': typeof AppStartRoute
@@ -100,6 +108,7 @@ export interface FileRoutesById {
   '/_app/launch-checklist': typeof AppLaunchChecklistRoute
   '/_app/localization-studio': typeof AppLocalizationStudioRoute
   '/_app/projects': typeof AppProjectsRoute
+  '/_app/report': typeof AppReportRoute
   '/_app/reports': typeof AppReportsRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/start': typeof AppStartRoute
@@ -114,6 +123,7 @@ export interface FileRouteTypes {
     | '/launch-checklist'
     | '/localization-studio'
     | '/projects'
+    | '/report'
     | '/reports'
     | '/settings'
     | '/start'
@@ -124,6 +134,7 @@ export interface FileRouteTypes {
     | '/launch-checklist'
     | '/localization-studio'
     | '/projects'
+    | '/report'
     | '/reports'
     | '/settings'
     | '/start'
@@ -136,6 +147,7 @@ export interface FileRouteTypes {
     | '/_app/launch-checklist'
     | '/_app/localization-studio'
     | '/_app/projects'
+    | '/_app/report'
     | '/_app/reports'
     | '/_app/settings'
     | '/_app/start'
@@ -183,6 +195,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppReportsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/report': {
+      id: '/_app/report'
+      path: '/report'
+      fullPath: '/report'
+      preLoaderRoute: typeof AppReportRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/projects': {
       id: '/_app/projects'
       path: '/projects'
@@ -227,6 +246,7 @@ interface AppRouteChildren {
   AppLaunchChecklistRoute: typeof AppLaunchChecklistRoute
   AppLocalizationStudioRoute: typeof AppLocalizationStudioRoute
   AppProjectsRoute: typeof AppProjectsRoute
+  AppReportRoute: typeof AppReportRoute
   AppReportsRoute: typeof AppReportsRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppStartRoute: typeof AppStartRoute
@@ -239,6 +259,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppLaunchChecklistRoute: AppLaunchChecklistRoute,
   AppLocalizationStudioRoute: AppLocalizationStudioRoute,
   AppProjectsRoute: AppProjectsRoute,
+  AppReportRoute: AppReportRoute,
   AppReportsRoute: AppReportsRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppStartRoute: AppStartRoute,
