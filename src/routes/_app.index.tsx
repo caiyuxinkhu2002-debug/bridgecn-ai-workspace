@@ -206,10 +206,13 @@ function DashboardPage() {
           </p>
 
           <div className="mt-8 flex flex-wrap items-center gap-3">
-            <button className="group inline-flex h-11 items-center gap-2 rounded-full bg-[var(--foreground)] px-5 text-sm font-medium text-[var(--background)] shadow-[var(--shadow-card)] transition-transform hover:-translate-y-0.5">
+            <Link
+              to="/start"
+              className="group inline-flex h-11 items-center gap-2 rounded-full bg-[var(--foreground)] px-5 text-sm font-medium text-[var(--background)] shadow-[var(--shadow-card)] transition-transform hover:-translate-y-0.5"
+            >
               New Research
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-            </button>
+            </Link>
             <button className="inline-flex h-11 items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--background)] px-5 text-sm font-medium text-[var(--foreground)] transition-colors hover:bg-[var(--muted)]">
               <Play className="h-3.5 w-3.5" />
               Explore Demo

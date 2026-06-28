@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppIndexRouteImport } from './routes/_app.index'
+import { Route as AppStartRouteImport } from './routes/_app.start'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
 import { Route as AppReportsRouteImport } from './routes/_app.reports'
 import { Route as AppProjectsRouteImport } from './routes/_app.projects'
@@ -26,6 +27,11 @@ const AppRoute = AppRouteImport.update({
 const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppStartRoute = AppStartRouteImport.update({
+  id: '/start',
+  path: '/start',
   getParentRoute: () => AppRoute,
 } as any)
 const AppSettingsRoute = AppSettingsRouteImport.update({
@@ -73,6 +79,7 @@ export interface FileRoutesByFullPath {
   '/projects': typeof AppProjectsRoute
   '/reports': typeof AppReportsRoute
   '/settings': typeof AppSettingsRoute
+  '/start': typeof AppStartRoute
 }
 export interface FileRoutesByTo {
   '/china-market-insight': typeof AppChinaMarketInsightRoute
@@ -82,6 +89,7 @@ export interface FileRoutesByTo {
   '/projects': typeof AppProjectsRoute
   '/reports': typeof AppReportsRoute
   '/settings': typeof AppSettingsRoute
+  '/start': typeof AppStartRoute
   '/': typeof AppIndexRoute
 }
 export interface FileRoutesById {
@@ -94,6 +102,7 @@ export interface FileRoutesById {
   '/_app/projects': typeof AppProjectsRoute
   '/_app/reports': typeof AppReportsRoute
   '/_app/settings': typeof AppSettingsRoute
+  '/_app/start': typeof AppStartRoute
   '/_app/': typeof AppIndexRoute
 }
 export interface FileRouteTypes {
@@ -107,6 +116,7 @@ export interface FileRouteTypes {
     | '/projects'
     | '/reports'
     | '/settings'
+    | '/start'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/china-market-insight'
@@ -116,6 +126,7 @@ export interface FileRouteTypes {
     | '/projects'
     | '/reports'
     | '/settings'
+    | '/start'
     | '/'
   id:
     | '__root__'
@@ -127,6 +138,7 @@ export interface FileRouteTypes {
     | '/_app/projects'
     | '/_app/reports'
     | '/_app/settings'
+    | '/_app/start'
     | '/_app/'
   fileRoutesById: FileRoutesById
 }
@@ -148,6 +160,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/start': {
+      id: '/_app/start'
+      path: '/start'
+      fullPath: '/start'
+      preLoaderRoute: typeof AppStartRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/settings': {
@@ -210,6 +229,7 @@ interface AppRouteChildren {
   AppProjectsRoute: typeof AppProjectsRoute
   AppReportsRoute: typeof AppReportsRoute
   AppSettingsRoute: typeof AppSettingsRoute
+  AppStartRoute: typeof AppStartRoute
   AppIndexRoute: typeof AppIndexRoute
 }
 
@@ -221,6 +241,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppProjectsRoute: AppProjectsRoute,
   AppReportsRoute: AppReportsRoute,
   AppSettingsRoute: AppSettingsRoute,
+  AppStartRoute: AppStartRoute,
   AppIndexRoute: AppIndexRoute,
 }
 
@@ -232,13 +253,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
