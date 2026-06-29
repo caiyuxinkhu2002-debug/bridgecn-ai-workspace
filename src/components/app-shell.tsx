@@ -419,34 +419,3 @@ export function PlaceholderPanel({ note }: { note?: string }) {
 
 // Suppress unused warnings for icons used by callers
 export const _icons = { Megaphone };
-
-export function PageHeader({
-  title,
-  description,
-}: {
-  title: string;
-  description?: string;
-}) {
-  return (
-    <div className="mb-6">
-      <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
-      {description && (
-        <p className="mt-1 text-sm text-[var(--muted-foreground)]">{description}</p>
-      )}
-    </div>
-  );
-}
-
-export function PlaceholderPanel({ note }: { note?: string }) {
-  return (
-    <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--background)] p-12 text-center shadow-[var(--shadow-soft)]">
-      <div className="mx-auto grid h-10 w-10 place-items-center rounded-full bg-[var(--primary-soft)] text-[var(--primary)]">
-        <Sparkles className="h-5 w-5" />
-      </div>
-      <div className="mt-3 text-sm font-medium">Coming soon</div>
-      <p className="mx-auto mt-1 max-w-sm text-xs text-[var(--muted-foreground)]">
-        {note ?? "This module is being prepared. UI scaffolding is in place."}
-      </p>
-    </div>
-  );
-}
