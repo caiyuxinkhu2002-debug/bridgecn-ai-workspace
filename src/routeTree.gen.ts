@@ -9,6 +9,9 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as RegisterRouteImport } from './routes/register'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppIndexRouteImport } from './routes/_app.index'
 import { Route as AppStartRouteImport } from './routes/_app.start'
@@ -21,6 +24,21 @@ import { Route as AppLaunchChecklistRouteImport } from './routes/_app.launch-che
 import { Route as AppConsumerInsightRouteImport } from './routes/_app.consumer-insight'
 import { Route as AppChinaMarketInsightRouteImport } from './routes/_app.china-market-insight'
 
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppRoute = AppRouteImport.update({
   id: '/_app',
   getParentRoute: () => rootRouteImport,
@@ -78,6 +96,9 @@ const AppChinaMarketInsightRoute = AppChinaMarketInsightRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
   '/china-market-insight': typeof AppChinaMarketInsightRoute
   '/consumer-insight': typeof AppConsumerInsightRoute
   '/launch-checklist': typeof AppLaunchChecklistRoute
@@ -89,6 +110,9 @@ export interface FileRoutesByFullPath {
   '/start': typeof AppStartRoute
 }
 export interface FileRoutesByTo {
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
   '/china-market-insight': typeof AppChinaMarketInsightRoute
   '/consumer-insight': typeof AppConsumerInsightRoute
   '/launch-checklist': typeof AppLaunchChecklistRoute
@@ -103,6 +127,9 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteWithChildren
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
   '/_app/china-market-insight': typeof AppChinaMarketInsightRoute
   '/_app/consumer-insight': typeof AppConsumerInsightRoute
   '/_app/launch-checklist': typeof AppLaunchChecklistRoute
@@ -118,6 +145,9 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/forgot-password'
+    | '/login'
+    | '/register'
     | '/china-market-insight'
     | '/consumer-insight'
     | '/launch-checklist'
@@ -129,6 +159,9 @@ export interface FileRouteTypes {
     | '/start'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/forgot-password'
+    | '/login'
+    | '/register'
     | '/china-market-insight'
     | '/consumer-insight'
     | '/launch-checklist'
@@ -142,6 +175,9 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_app'
+    | '/forgot-password'
+    | '/login'
+    | '/register'
     | '/_app/china-market-insight'
     | '/_app/consumer-insight'
     | '/_app/launch-checklist'
@@ -156,10 +192,34 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
+  LoginRoute: typeof LoginRoute
+  RegisterRoute: typeof RegisterRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_app': {
       id: '/_app'
       path: ''
@@ -270,6 +330,9 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
+  ForgotPasswordRoute: ForgotPasswordRoute,
+  LoginRoute: LoginRoute,
+  RegisterRoute: RegisterRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
