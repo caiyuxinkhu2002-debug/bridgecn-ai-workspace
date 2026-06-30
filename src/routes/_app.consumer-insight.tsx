@@ -25,6 +25,7 @@ function ConsumerInsightPage() {
     <div>
       <ProjectContextBar />
       <PageHeader title={t("consumer.title")} description={t("consumer.sub")} />
+      <DataIntegrityBanner />
       {!hasData ? (
         <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--background)] p-10 text-center shadow-[var(--shadow-soft)]">
           <Sparkles className="mx-auto h-5 w-5 text-[var(--primary)]" />

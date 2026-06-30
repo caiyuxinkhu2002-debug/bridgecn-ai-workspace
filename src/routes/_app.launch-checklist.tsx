@@ -135,6 +135,7 @@ function LaunchChecklistPage() {
     <div>
       <ProjectContextBar />
       <PageHeader title={t("launch.title")} description={t("launch.sub")} />
+      <DataIntegrityBanner />
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[var(--border)] bg-[var(--background)] p-3 shadow-[var(--shadow-soft)]">
         <div className="flex items-center gap-2 text-xs text-[var(--muted-foreground)]">
           <Sparkles className="h-3.5 w-3.5 text-[var(--primary)]" />

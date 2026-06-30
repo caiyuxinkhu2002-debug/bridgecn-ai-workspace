@@ -136,6 +136,7 @@ function ReportPage() {
         title={activeProject?.name ? `${activeProject.name} · ${t("reports.title")}` : t("reports.title")}
         description={t("reports.sub")}
       />
+      <DataIntegrityBanner />
       <div className="mx-auto max-w-5xl space-y-8 py-2 md:py-6 print:max-w-full print:py-0">
         <header className="border-b border-[var(--border)] pb-8">
           <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--muted-foreground)]">

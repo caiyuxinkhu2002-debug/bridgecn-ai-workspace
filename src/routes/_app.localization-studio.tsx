@@ -325,6 +325,7 @@ function LocalizationStudioPage() {
     <div>
       <ProjectContextBar />
       <PageHeader title={t("loc.title")} description={t("loc.sub")} />
+      <DataIntegrityBanner />
 
       <div className="space-y-6">
         {/* Action bar */}
