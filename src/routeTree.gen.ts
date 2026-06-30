@@ -13,16 +13,9 @@ import { Route as RegisterRouteImport } from './routes/register'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AppRouteImport } from './routes/_app'
-import { Route as AppIndexRouteImport } from './routes/_app.index'
 import { Route as AppStartRouteImport } from './routes/_app.start'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
-import { Route as AppReportsRouteImport } from './routes/_app.reports'
 import { Route as AppReportRouteImport } from './routes/_app.report'
-import { Route as AppProjectsRouteImport } from './routes/_app.projects'
-import { Route as AppLocalizationStudioRouteImport } from './routes/_app.localization-studio'
-import { Route as AppLaunchChecklistRouteImport } from './routes/_app.launch-checklist'
-import { Route as AppConsumerInsightRouteImport } from './routes/_app.consumer-insight'
-import { Route as AppChinaMarketInsightRouteImport } from './routes/_app.china-market-insight'
 
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
@@ -43,11 +36,6 @@ const AppRoute = AppRouteImport.update({
   id: '/_app',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AppIndexRoute = AppIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppStartRoute = AppStartRouteImport.update({
   id: '/start',
   path: '/start',
@@ -58,71 +46,29 @@ const AppSettingsRoute = AppSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AppRoute,
 } as any)
-const AppReportsRoute = AppReportsRouteImport.update({
-  id: '/reports',
-  path: '/reports',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppReportRoute = AppReportRouteImport.update({
   id: '/report',
   path: '/report',
   getParentRoute: () => AppRoute,
 } as any)
-const AppProjectsRoute = AppProjectsRouteImport.update({
-  id: '/projects',
-  path: '/projects',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppLocalizationStudioRoute = AppLocalizationStudioRouteImport.update({
-  id: '/localization-studio',
-  path: '/localization-studio',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppLaunchChecklistRoute = AppLaunchChecklistRouteImport.update({
-  id: '/launch-checklist',
-  path: '/launch-checklist',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppConsumerInsightRoute = AppConsumerInsightRouteImport.update({
-  id: '/consumer-insight',
-  path: '/consumer-insight',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppChinaMarketInsightRoute = AppChinaMarketInsightRouteImport.update({
-  id: '/china-market-insight',
-  path: '/china-market-insight',
-  getParentRoute: () => AppRoute,
-} as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof AppIndexRoute
+  '/': typeof AppRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
-  '/china-market-insight': typeof AppChinaMarketInsightRoute
-  '/consumer-insight': typeof AppConsumerInsightRoute
-  '/launch-checklist': typeof AppLaunchChecklistRoute
-  '/localization-studio': typeof AppLocalizationStudioRoute
-  '/projects': typeof AppProjectsRoute
   '/report': typeof AppReportRoute
-  '/reports': typeof AppReportsRoute
   '/settings': typeof AppSettingsRoute
   '/start': typeof AppStartRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof AppRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
-  '/china-market-insight': typeof AppChinaMarketInsightRoute
-  '/consumer-insight': typeof AppConsumerInsightRoute
-  '/launch-checklist': typeof AppLaunchChecklistRoute
-  '/localization-studio': typeof AppLocalizationStudioRoute
-  '/projects': typeof AppProjectsRoute
   '/report': typeof AppReportRoute
-  '/reports': typeof AppReportsRoute
   '/settings': typeof AppSettingsRoute
   '/start': typeof AppStartRoute
-  '/': typeof AppIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -130,16 +76,9 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
-  '/_app/china-market-insight': typeof AppChinaMarketInsightRoute
-  '/_app/consumer-insight': typeof AppConsumerInsightRoute
-  '/_app/launch-checklist': typeof AppLaunchChecklistRoute
-  '/_app/localization-studio': typeof AppLocalizationStudioRoute
-  '/_app/projects': typeof AppProjectsRoute
   '/_app/report': typeof AppReportRoute
-  '/_app/reports': typeof AppReportsRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/start': typeof AppStartRoute
-  '/_app/': typeof AppIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -148,46 +87,27 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/register'
-    | '/china-market-insight'
-    | '/consumer-insight'
-    | '/launch-checklist'
-    | '/localization-studio'
-    | '/projects'
     | '/report'
-    | '/reports'
     | '/settings'
     | '/start'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/'
     | '/forgot-password'
     | '/login'
     | '/register'
-    | '/china-market-insight'
-    | '/consumer-insight'
-    | '/launch-checklist'
-    | '/localization-studio'
-    | '/projects'
     | '/report'
-    | '/reports'
     | '/settings'
     | '/start'
-    | '/'
   id:
     | '__root__'
     | '/_app'
     | '/forgot-password'
     | '/login'
     | '/register'
-    | '/_app/china-market-insight'
-    | '/_app/consumer-insight'
-    | '/_app/launch-checklist'
-    | '/_app/localization-studio'
-    | '/_app/projects'
     | '/_app/report'
-    | '/_app/reports'
     | '/_app/settings'
     | '/_app/start'
-    | '/_app/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -227,13 +147,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_app/': {
-      id: '/_app/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof AppIndexRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/start': {
       id: '/_app/start'
       path: '/start'
@@ -248,13 +161,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSettingsRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/reports': {
-      id: '/_app/reports'
-      path: '/reports'
-      fullPath: '/reports'
-      preLoaderRoute: typeof AppReportsRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/report': {
       id: '/_app/report'
       path: '/report'
@@ -262,68 +168,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppReportRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/projects': {
-      id: '/_app/projects'
-      path: '/projects'
-      fullPath: '/projects'
-      preLoaderRoute: typeof AppProjectsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/localization-studio': {
-      id: '/_app/localization-studio'
-      path: '/localization-studio'
-      fullPath: '/localization-studio'
-      preLoaderRoute: typeof AppLocalizationStudioRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/launch-checklist': {
-      id: '/_app/launch-checklist'
-      path: '/launch-checklist'
-      fullPath: '/launch-checklist'
-      preLoaderRoute: typeof AppLaunchChecklistRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/consumer-insight': {
-      id: '/_app/consumer-insight'
-      path: '/consumer-insight'
-      fullPath: '/consumer-insight'
-      preLoaderRoute: typeof AppConsumerInsightRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/china-market-insight': {
-      id: '/_app/china-market-insight'
-      path: '/china-market-insight'
-      fullPath: '/china-market-insight'
-      preLoaderRoute: typeof AppChinaMarketInsightRouteImport
-      parentRoute: typeof AppRoute
-    }
   }
 }
 
 interface AppRouteChildren {
-  AppChinaMarketInsightRoute: typeof AppChinaMarketInsightRoute
-  AppConsumerInsightRoute: typeof AppConsumerInsightRoute
-  AppLaunchChecklistRoute: typeof AppLaunchChecklistRoute
-  AppLocalizationStudioRoute: typeof AppLocalizationStudioRoute
-  AppProjectsRoute: typeof AppProjectsRoute
   AppReportRoute: typeof AppReportRoute
-  AppReportsRoute: typeof AppReportsRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppStartRoute: typeof AppStartRoute
-  AppIndexRoute: typeof AppIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
-  AppChinaMarketInsightRoute: AppChinaMarketInsightRoute,
-  AppConsumerInsightRoute: AppConsumerInsightRoute,
-  AppLaunchChecklistRoute: AppLaunchChecklistRoute,
-  AppLocalizationStudioRoute: AppLocalizationStudioRoute,
-  AppProjectsRoute: AppProjectsRoute,
   AppReportRoute: AppReportRoute,
-  AppReportsRoute: AppReportsRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppStartRoute: AppStartRoute,
-  AppIndexRoute: AppIndexRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
