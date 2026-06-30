@@ -20,6 +20,7 @@ export type Project = {
   summary: string;
   description: string;
   targetMarket: string;
+  archived: boolean;
 };
 
 export type Profile = {
@@ -122,6 +123,7 @@ type Ctx = {
   activeWorkspace: Workspace;
   projects: Project[];
   allProjects: Project[];
+  archivedProjects: Project[];
   activeProjectId: string;
   setActiveProjectId: (id: string) => void;
   activeProject: Project;
@@ -146,6 +148,9 @@ type Ctx = {
   createProject: (input: { name: string; industry?: string; targetMarket?: string; description?: string }) => Promise<Project | null>;
   updateProject: (id: string, patch: Partial<{ name: string; industry: string; region: string; targetMarket: string; description: string; summary: string; stage: Stage }>) => Promise<void>;
   deleteProject: (id: string) => Promise<void>;
+  archiveProject: (id: string) => Promise<void>;
+  unarchiveProject: (id: string) => Promise<void>;
+  duplicateProject: (id: string) => Promise<Project | null>;
 };
 
 const WorkspaceCtx = createContext<Ctx | null>(null);
@@ -195,6 +200,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       summary: r.summary || "",
       description: r.description || "",
       targetMarket: r.target_market || "",
+      archived: Boolean((r as { archived_at?: string | null }).archived_at),
     }),
     [],
   );
