@@ -402,6 +402,7 @@ export type Database = {
         Args: { _user: string; _workspace: string }
         Returns: boolean
       }
+      reap_stale_ai_jobs: { Args: never; Returns: number }
       workspace_role_of: {
         Args: { _user: string; _workspace: string }
         Returns: Database["public"]["Enums"]["workspace_role"]
