@@ -48,19 +48,20 @@ function marketToDatabase(market: string): string {
   if (/hong\s*kong|香港|hk\b/.test(m)) return "hk";
   if (/taiwan|台湾|台灣|\btw\b/.test(m)) return "tw";
   if (/singapore|新加坡|\bsg\b/.test(m)) return "sg";
-  if (/china|中国|cn|大陆|prc/.test(m)) return "cn";
-  if (/korea|한국|kr|韩国/.test(m)) return "kr";
-  if (/japan|日本|jp/.test(m)) return "jp";
-  if (/united kingdom|uk|britain|英国/.test(m)) return "uk";
-  if (/german|deutsch|de|德国/.test(m)) return "de";
-  if (/france|fr|法国/.test(m)) return "fr";
-  if (/spain|es|西班牙/.test(m)) return "es";
-  if (/italy|it|意大利/.test(m)) return "it";
-  if (/australia|au|澳洲|澳大利亚/.test(m)) return "au";
-  if (/brazil|br|巴西/.test(m)) return "br";
-  if (/mexico|mx|墨西哥/.test(m)) return "mx";
-  if (/india|in|印度/.test(m)) return "in";
-  if (/united states|usa|us|america|美国/.test(m)) return "us";
+  if (/indonesia|印尼/.test(m)) return "id";
+  if (/india|印度|\bin\b/.test(m)) return "in";
+  if (/china|中国|大陆|mainland|prc|tier\s*[12]|tier\s*1\.5|\bcn\b/.test(m)) return "cn";
+  if (/korea|한국|韩国|\bkr\b/.test(m)) return "kr";
+  if (/japan|日本|\bjp\b/.test(m)) return "jp";
+  if (/united kingdom|britain|英国|\buk\b/.test(m)) return "uk";
+  if (/german|deutsch|德国|\bde\b/.test(m)) return "de";
+  if (/france|法国|\bfr\b/.test(m)) return "fr";
+  if (/spain|西班牙|\bes\b/.test(m)) return "es";
+  if (/italy|意大利|\bit\b/.test(m)) return "it";
+  if (/australia|澳洲|澳大利亚|\bau\b/.test(m)) return "au";
+  if (/brazil|巴西|\bbr\b/.test(m)) return "br";
+  if (/mexico|墨西哥|\bmx\b/.test(m)) return "mx";
+  if (/united states|usa|america|美国|\bus\b/.test(m)) return "us";
   return "us";
 }
 
@@ -140,6 +141,7 @@ export const fetchSemrushSnapshot = createServerFn({ method: "POST" })
     const db = marketToDatabase(data.targetMarket);
     const domain = normalizeDomain(data.domain);
     const errors: string[] = [];
+    console.log("[semrush.snapshot]", { targetMarket: data.targetMarket, mappedDb: db, domain });
 
     const snapshot: SemrushSnapshot = {
       market: db,

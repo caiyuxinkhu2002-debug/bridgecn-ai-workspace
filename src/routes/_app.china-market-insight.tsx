@@ -189,7 +189,14 @@ function MarketInsightPage() {
     <div>
       <ProjectContextBar />
       <PageHeader title={t("market.title")} description={t("market.sub")} />
-      <DataIntegrityBanner />
+      <DataIntegrityBanner
+        verified={!!semrush}
+        verifiedLabel={
+          semrush
+            ? `Live SEMrush data (${semrush.market.toUpperCase()}) fetched at ${new Date(semrush.fetchedAt).toLocaleString()} is grounding the green Verified card below. The next AI regeneration will use this snapshot; other KPIs remain AI inference based on category benchmarks.`
+            : undefined
+        }
+      />
       {/* AI Action Bar */}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[var(--border)] bg-[var(--background)] p-3 shadow-[var(--shadow-soft)]">
         <div className="flex items-center gap-2 text-xs text-[var(--muted-foreground)]">
