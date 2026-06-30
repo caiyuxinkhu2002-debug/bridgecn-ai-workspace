@@ -19,6 +19,8 @@ import {
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { useWorkspace } from "@/lib/workspace-context";
+import { listJobs } from "@/lib/ai/service";
+import type { AIJob, AIModule } from "@/lib/ai/types";
 
 export const Route = createFileRoute("/_app/ai-workspace")({
   head: () => ({ meta: [{ title: "AI Workspace — BridgeCN AI" }] }),
@@ -29,31 +31,70 @@ type StepStatus = "completed" | "running" | "pending";
 
 function AIWorkspacePage() {
   const { t } = useI18n();
-  const { activeProject } = useWorkspace();
+  const { activeProject, activeWorkspace } = useWorkspace();
 
-  // Sprint 9: pipeline steps stay as a generic workflow template
-  // (no brand-specific content). All progress is "pending" until the
-  // AI engine is wired to populate per-project status.
+  // Sprint A: derive each pipeline step's status from the most recent AI job
+  // for that module on the active project. Activity log = the last 12 jobs.
+  const [jobs, setJobs] = useState<AIJob[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    async function go() {
+      if (!activeWorkspace?.id || !activeProject?.id) { setJobs([]); return; }
+      try {
+        const list = await listJobs({ workspaceId: activeWorkspace.id, projectId: activeProject.id, limit: 30 });
+        if (!cancelled) setJobs(list);
+      } catch (e) { console.error(e); }
+    }
+    go();
+    const id = setInterval(go, 5000);
+    return () => { cancelled = true; clearInterval(id); };
+  }, [activeWorkspace?.id, activeProject?.id]);
+
+  function latestFor(mod: AIModule): AIJob | undefined {
+    return jobs.find((j) => j.module === mod);
+  }
+  function statusFor(mod: AIModule): StepStatus {
+    const j = latestFor(mod);
+    if (!j) return "pending";
+    if (j.status === "running" || j.status === "queued") return "running";
+    if (j.status === "completed") return "completed";
+    return "pending";
+  }
+  function progressFor(mod: AIModule): number {
+    const s = statusFor(mod);
+    if (s === "completed") return 100;
+    if (s === "running") return 45;
+    return 0;
+  }
+
   const steps: {
     key: string;
+    module: AIModule;
     icon: typeof LineChart;
     status: StepStatus;
     progress: number;
     minutes: number;
   }[] = [
-    { key: "market", icon: LineChart, status: "pending", progress: 0, minutes: 4 },
-    { key: "consumer", icon: Users, status: "pending", progress: 0, minutes: 6 },
-    { key: "localization", icon: Languages, status: "pending", progress: 0, minutes: 5 },
-    { key: "compliance", icon: ShieldCheck, status: "pending", progress: 0, minutes: 3 },
-    { key: "launch", icon: Rocket, status: "pending", progress: 0, minutes: 7 },
-    { key: "report", icon: FileBarChart, status: "pending", progress: 0, minutes: 4 },
+    { key: "market",       module: "market",       icon: LineChart,   status: statusFor("market"),       progress: progressFor("market"),       minutes: 4 },
+    { key: "consumer",     module: "consumer",     icon: Users,       status: statusFor("consumer"),     progress: progressFor("consumer"),     minutes: 6 },
+    { key: "localization", module: "localization", icon: Languages,   status: statusFor("localization"), progress: progressFor("localization"), minutes: 5 },
+    { key: "compliance",   module: "localization", icon: ShieldCheck, status: statusFor("localization"), progress: progressFor("localization"), minutes: 3 },
+    { key: "launch",       module: "launch",       icon: Rocket,      status: statusFor("launch"),       progress: progressFor("launch"),       minutes: 7 },
+    { key: "report",       module: "reports",      icon: FileBarChart,status: statusFor("reports"),      progress: progressFor("reports"),      minutes: 4 },
   ];
 
-  // Sprint 9: activity log and AI outputs are project-driven; with no
-  // active job they render empty states instead of demo content.
-  const activityKeys: string[] = [];
-  const times: string[] = [];
-  const hasOutputs = false;
+  // Activity feed reads recent jobs.
+  const activity = jobs.slice(0, 12).map((j) => {
+    const ts = j.completed_at || j.started_at || j.created_at;
+    return {
+      id: j.id,
+      time: new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      label: t(`aiws.step.${j.module === "reports" ? "report" : j.module}`) + " · " + t(`ai.status.${j.status}`),
+      done: j.status === "completed",
+      running: j.status === "running" || j.status === "queued",
+    };
+  });
+  const hasOutputs = jobs.some((j) => j.status === "completed");
 
   // Subtle pulse for the "running" indicator only — no other animation.
   const [pulse, setPulse] = useState(0);
@@ -62,6 +103,13 @@ function AIWorkspacePage() {
     return () => clearInterval(id);
   }, []);
 
+  if (!activeProject) {
+    return (
+      <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--background)] p-10 text-center text-sm text-[var(--muted-foreground)]">
+        {t("common.noActiveProject")}
+      </div>
+    );
+  }
   const stageLabel = t(`stage.${activeProject.stage}`);
 
   return (
@@ -183,32 +231,31 @@ function AIWorkspacePage() {
               </span>
             }
           />
-          {activityKeys.length === 0 ? (
+          {activity.length === 0 ? (
             <p className="px-4 py-8 text-center text-xs text-[var(--muted-foreground)]">{t("common.empty")}</p>
           ) : (
           <ul className="max-h-[640px] divide-y divide-[var(--border)] overflow-y-auto">
-            {activityKeys.map((k, i) => {
-              const isLast = i === activityKeys.length - 1;
+            {activity.map((a) => {
               return (
-                <li key={k} className="flex items-start gap-3 px-4 py-2.5">
+                <li key={a.id} className="flex items-start gap-3 px-4 py-2.5">
                   <span className="mt-1 w-12 shrink-0 font-mono text-[10px] text-[var(--muted-foreground)]">
-                    {times[i]}
+                    {a.time}
                   </span>
                   <span
                     className={`mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-md ${
-                      isLast
+                      a.running
                         ? "bg-[var(--primary)] text-white"
                         : "bg-[var(--muted)] text-[var(--muted-foreground)]"
                     }`}
                   >
-                    {isLast ? (
+                    {a.running ? (
                       <Loader2 className="h-3 w-3 animate-spin" />
                     ) : (
                       <CheckCircle2 className="h-3 w-3" />
                     )}
                   </span>
                   <p className="min-w-0 flex-1 text-[13px] leading-relaxed text-[var(--foreground)]">
-                    {t(k)}
+                    {a.label}
                   </p>
                 </li>
               );

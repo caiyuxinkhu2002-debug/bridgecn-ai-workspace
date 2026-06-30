@@ -1,5 +1,13 @@
 import type { AIProvider, AIJobPhase, AIStreamEvent } from "../types";
-import { type ProjectContext, deriveKeywords, describeBrand, targetMarketLabel } from "../project-context";
+import {
+  type ProjectContext,
+  deriveKeywords,
+  describeBrand,
+  targetMarketLabel,
+  marketPreset,
+  deriveConfidence,
+  deriveKpis,
+} from "../project-context";
 
 // Placeholder provider — emits the same event stream a real provider will,
 // but every piece of output is derived from the injected ProjectContext.
@@ -27,25 +35,6 @@ const LOC_PHASE_SCRIPT: { phase: AIJobPhase; message: string; ms: number }[] = [
   { phase: "writing",   message: "Rewriting",                          ms: 500 },
 ];
 
-const MARKET_SOURCES = [
-  "Xiaohongshu (小红书)",
-  "Douyin (抖音)",
-  "QuestMobile",
-  "iiMedia Research",
-  "National Bureau of Statistics of China",
-  "Tmall Global Insights",
-];
-
-const MARKET_REGIONS = [
-  { name: "Shanghai",  v: 94, growth: "+21.4%" },
-  { name: "Beijing",   v: 88, growth: "+18.7%" },
-  { name: "Hangzhou",  v: 76, growth: "+24.1%" },
-  { name: "Shenzhen",  v: 71, growth: "+16.2%" },
-  { name: "Guangzhou", v: 63, growth: "+12.8%" },
-  { name: "Chengdu",   v: 58, growth: "+19.5%" },
-];
-
-const PLATFORM_ROTATION = ["Xiaohongshu", "Douyin", "Tmall", "Weibo", "WeChat", "JD.com"];
 const GROWTH_ROTATION = ["+42%", "+35%", "+28%", "+24%", "+19%", "+14%"];
 const SCORE_ROTATION = [96, 91, 87, 84, 78, 72];
 
@@ -70,10 +59,11 @@ function readContext(input: Record<string, unknown> | undefined): ProjectContext
 
 function buildMarketKeywords(ctx: ProjectContext) {
   const kws = deriveKeywords(ctx, 6);
+  const platforms = marketPreset(ctx).platforms;
   return kws.map((k, i) => ({
     k,
     growth: GROWTH_ROTATION[i % GROWTH_ROTATION.length],
-    platform: PLATFORM_ROTATION[i % PLATFORM_ROTATION.length],
+    platform: platforms[i % platforms.length],
     score: SCORE_ROTATION[i % SCORE_ROTATION.length],
   }));
 }
@@ -139,13 +129,6 @@ function buildLocInsights(ctx: ProjectContext) {
   };
 }
 
-const LOC_COMPLIANCE = {
-  advertising: "Pass — no superlatives requiring substantiation under SAMR ad rules.",
-  sensitive: "No restricted terms detected (medical claims, '最', '第一' avoided).",
-  risk: "Low",
-  regulation: "Reviewed against relevant SAMR / industry guidance for imported goods in this category.",
-};
-
 const LOC_SCORES = { localization: 94, seo: 88, native: 92, platformMatch: 90 };
 
 export const placeholderProvider: AIProvider = {
@@ -155,11 +138,18 @@ export const placeholderProvider: AIProvider = {
     const events: AIStreamEvent[] = [];
     const isMarket = module === "market";
     const isLoc = module === "localization";
+    const isConsumer = module === "consumer";
     const ctx = readContext(input);
+    const preset = marketPreset(ctx);
+    const baseConf = deriveConfidence(ctx);
     const MARKET_KEYWORDS = buildMarketKeywords(ctx);
     const paragraphs = isMarket ? buildMarketParagraphs(ctx) : buildGenericParagraphs(ctx);
     const LOC_ITEMS = buildLocItems(ctx);
     const LOC_INSIGHTS = buildLocInsights(ctx);
+    const LOC_COMPLIANCE = preset.compliance;
+    const MARKET_REGIONS = preset.regions;
+    const MARKET_SOURCES = preset.sources;
+    const MARKET_KPIS = deriveKpis(ctx, baseConf);
     const script = isLoc ? LOC_PHASE_SCRIPT : PHASE_SCRIPT;
     try {
       for (const step of script) {
@@ -172,8 +162,10 @@ export const placeholderProvider: AIProvider = {
           }
         }
         if (isMarket && step.phase === "analyzing") {
-          yield { type: "data", data: { confidence: 78 } };
+          yield { type: "data", data: { confidence: Math.max(60, baseConf - 10) } };
           await delay(200, signal);
+          yield { type: "data", data: { kpis: MARKET_KPIS } };
+          await delay(120, signal);
           for (const r of MARKET_REGIONS) {
             await delay(80, signal);
             yield { type: "data", data: { regionAppend: r } };
@@ -182,7 +174,11 @@ export const placeholderProvider: AIProvider = {
             await delay(80, signal);
             yield { type: "data", data: { keywordAppend: k } };
           }
-          yield { type: "data", data: { confidence: 92 } };
+          yield { type: "data", data: { confidence: baseConf } };
+        }
+        if (isConsumer && step.phase === "analyzing") {
+          await delay(150, signal);
+          yield { type: "data", data: { confidence: baseConf } };
         }
         if (isLoc && step.phase === "analyzing") {
           await delay(150, signal);
@@ -210,9 +206,6 @@ export const placeholderProvider: AIProvider = {
         acc += "\n\n";
         yield { type: "delta", text: "\n\n" };
       }
-      if (isMarket) {
-        yield { type: "data", data: { confidence: 96 } };
-      }
       yield { type: "phase", phase: "completed", message: "Completed" };
       yield {
         type: "done",
@@ -221,7 +214,8 @@ export const placeholderProvider: AIProvider = {
           ? {
               provider: "placeholder",
               summary: acc.trim(),
-              confidence: 96,
+              confidence: baseConf,
+              kpis: MARKET_KPIS,
               sources: MARKET_SOURCES,
               keywords: MARKET_KEYWORDS,
               regions: MARKET_REGIONS,
