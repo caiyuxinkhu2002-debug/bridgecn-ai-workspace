@@ -6,7 +6,7 @@ import { Sparkles, ArrowRight, ArrowLeft, Loader2, CheckCircle2, Plus, X, Wand2 
 import { BUILDER_STEPS, BUILDER_STEP_KEY, type BuilderStep } from "@/lib/ai/project-builder";
 import { extractKnowledgeFromWebsite } from "@/lib/ai/extract-knowledge.functions";
 import { useServerFn } from "@tanstack/react-start";
-import { useT } from "@/lib/i18n";
+import { useT, useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/start")({
   head: () => ({
@@ -34,6 +34,7 @@ function StartPage() {
   const router = useRouter();
   const { createProject, workspaceId } = useWorkspace();
   const t = useT();
+  const { locale } = useI18n();
   const extract = useServerFn(extractKnowledgeFromWebsite);
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -63,7 +64,7 @@ function StartPage() {
 
     // Kick off the real extraction in parallel with the visual pipeline.
     const extractionPromise = extract({
-      data: { brandName: name.trim(), website: website.trim(), targetMarket },
+      data: { brandName: name.trim(), website: website.trim(), targetMarket, uiLocale: locale },
     }).catch((err: unknown) => {
       console.error("[builder] extraction failed", err);
       return null;
