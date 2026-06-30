@@ -1,12 +1,14 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { PageHeader } from "@/components/app-shell";
 import { ProjectContextBar } from "@/components/project-context-bar";
 import { WorkflowFooter } from "@/components/workflow-footer";
 import { useI18n } from "@/lib/i18n";
 import { useWorkspace } from "@/lib/workspace-context";
-import { Download, Share2, FileText, Search } from "lucide-react";
+import { Download, Share2, FileText, Search, Loader2, Sparkles, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { listReports, deleteReport, generateReportNow, type ReportRow } from "@/lib/reports.functions";
+import { buildProjectContext } from "@/lib/ai/project-context";
 
 export const Route = createFileRoute("/_app/reports")({
   head: () => ({ meta: [{ title: "Reports — BridgeCN AI" }] }),
@@ -16,12 +18,47 @@ export const Route = createFileRoute("/_app/reports")({
 function ReportsPage() {
   const { t } = useI18n();
   const router = useRouter();
-  const { reports, setActiveProjectId, activeProject } = useWorkspace();
+  const { activeProject, activeWorkspace } = useWorkspace();
   const [q, setQ] = useState("");
-  // Sprint A: never cross-project leak. Show only reports for the active
-  // project, even if that's an empty list — empty state guides the user.
-  const scoped = activeProject?.id ? reports.filter((r) => r.projectId === activeProject.id) : reports;
-  const filtered = scoped.filter((r) => r.title.toLowerCase().includes(q.toLowerCase()));
+  const [rows, setRows] = useState<ReportRow[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [generating, setGenerating] = useState(false);
+
+  const refresh = useCallback(async () => {
+    if (!activeWorkspace?.id) return;
+    setLoading(true);
+    try {
+      const list = await listReports({ data: { workspaceId: activeWorkspace.id, projectId: activeProject?.id || null } });
+      setRows(list);
+    } catch (e) { toast.error((e as Error).message); }
+    finally { setLoading(false); }
+  }, [activeWorkspace?.id, activeProject?.id]);
+
+  useEffect(() => { refresh(); }, [refresh]);
+
+  const filtered = rows.filter((r) => r.title.toLowerCase().includes(q.toLowerCase()));
+
+  const onGenerate = useCallback(async () => {
+    if (!activeWorkspace?.id || !activeProject?.id) {
+      toast.error("Open a project first");
+      return;
+    }
+    setGenerating(true);
+    try {
+      const ctx = buildProjectContext(activeProject);
+      const row = await generateReportNow({ data: { workspaceId: activeWorkspace.id, projectId: activeProject.id, projectContext: ctx } });
+      toast.success("Report generated");
+      await refresh();
+      router.navigate({ to: "/report", search: { reportId: row.id } as never });
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally { setGenerating(false); }
+  }, [activeWorkspace?.id, activeProject, refresh, router]);
+
+  const onDelete = useCallback(async (id: string) => {
+    try { await deleteReport({ data: { id } }); await refresh(); toast.success("Deleted"); }
+    catch (e) { toast.error((e as Error).message); }
+  }, [refresh]);
 
   async function onShare(id: string, title: string) {
     const url = `${window.location.origin}/report?reportId=${encodeURIComponent(id)}`;
@@ -39,7 +76,6 @@ function ReportsPage() {
     }
   }
   function onDownload(id: string) {
-    setActiveProjectId(scoped.find((r) => r.id === id)?.projectId || activeProject?.id || "");
     router.navigate({ to: "/report", search: { reportId: id, print: 1 } as never });
   }
   return (
@@ -51,22 +87,32 @@ function ReportsPage() {
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted-foreground)]" />
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("reports.search")} className="h-9 w-full rounded-md border border-[var(--border)] bg-[var(--background)] pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/30" />
         </div>
-        <button className="h-9 rounded-md border border-[var(--border)] px-3 text-xs font-medium hover:bg-[var(--muted)]">{t("reports.allTypes")}</button>
+        <button
+          onClick={onGenerate}
+          disabled={generating || !activeProject?.id}
+          className="inline-flex h-9 items-center gap-1.5 rounded-md bg-[var(--primary)] px-3 text-xs font-medium text-white shadow-[var(--shadow-soft)] hover:opacity-90 disabled:opacity-50"
+        >
+          {generating ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+          {generating ? t("common.generating") : "Generate report"}
+        </button>
       </div>
       <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--background)] shadow-[var(--shadow-soft)]">
         <ul className="divide-y divide-[var(--border)]">
-          {filtered.length === 0 ? (
+          {loading ? (
+            <li className="px-5 py-10 text-center text-xs text-[var(--muted-foreground)]"><Loader2 className="mx-auto h-5 w-5 animate-spin" /></li>
+          ) : filtered.length === 0 ? (
             <li className="px-5 py-10 text-center text-sm text-[var(--muted-foreground)]">{t("common.noResults")}</li>
           ) : filtered.map((r) => (
             <li key={r.id} className="flex items-center gap-4 px-5 py-4 transition-colors hover:bg-[var(--muted)]/60">
               <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[var(--muted)]"><FileText className="h-4 w-4" /></div>
               <div className="min-w-0 flex-1">
-                <button onClick={() => { setActiveProjectId(r.projectId); router.navigate({ to: "/report", search: { reportId: r.id } as never }); }} className="block w-full truncate text-left text-sm font-medium hover:underline">{r.title}</button>
-                <p className="truncate text-xs text-[var(--muted-foreground)]">{r.type} · {r.date}</p>
+                <button onClick={() => router.navigate({ to: "/report", search: { reportId: r.id } as never })} className="block w-full truncate text-left text-sm font-medium hover:underline">{r.title}</button>
+                <p className="truncate text-xs text-[var(--muted-foreground)]">{r.type} · {new Date(r.created_at).toLocaleDateString()}</p>
               </div>
               <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-medium ${r.status === "Ready" ? "bg-[oklch(0.96_0.04_150)] text-[oklch(0.42_0.12_150)]" : "bg-[var(--muted)] text-[var(--muted-foreground)]"}`}>{r.status === "Ready" ? t("reports.status.ready") : t("reports.status.draft")}</span>
               <button onClick={() => onShare(r.id, r.title)} className="grid h-8 w-8 place-items-center rounded-md hover:bg-[var(--background)]" aria-label={t("common.share")}><Share2 className="h-3.5 w-3.5" /></button>
               <button onClick={() => onDownload(r.id)} className="grid h-8 w-8 place-items-center rounded-md hover:bg-[var(--background)]" aria-label={t("common.download")}><Download className="h-3.5 w-3.5" /></button>
+              <button onClick={() => onDelete(r.id)} className="grid h-8 w-8 place-items-center rounded-md hover:bg-[var(--background)]" aria-label="delete"><Trash2 className="h-3.5 w-3.5" /></button>
             </li>
           ))}
         </ul>

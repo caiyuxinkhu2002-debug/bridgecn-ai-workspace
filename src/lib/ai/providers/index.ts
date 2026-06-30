@@ -1,5 +1,6 @@
 import type { AIProvider, AIProviderId } from "../types";
 import { placeholderProvider } from "./placeholder";
+import { lovableProvider } from "./lovable";
 
 // Provider registry. Adding a new provider is a one-liner here once its module
 // implements the `AIProvider` contract. UI/service code never imports a
@@ -7,7 +8,7 @@ import { placeholderProvider } from "./placeholder";
 
 const REGISTRY: Partial<Record<AIProviderId, AIProvider>> = {
   placeholder: placeholderProvider,
-  // openai:     placeholderProvider, // TODO: implement
+  lovable: lovableProvider,
   // claude:     placeholderProvider, // TODO: implement
   // gemini:     placeholderProvider, // TODO: implement
   // openrouter: placeholderProvider, // TODO: implement
@@ -18,12 +19,13 @@ const REGISTRY: Partial<Record<AIProviderId, AIProvider>> = {
 const DEFAULT_PROVIDER_KEY = "bridgecn.ai.provider";
 
 export function listProviders(): { id: AIProviderId; label: string; available: boolean }[] {
-  const all: AIProviderId[] = ["placeholder", "openai", "claude", "gemini", "openrouter", "deepseek", "qwen"];
+  const all: AIProviderId[] = ["lovable", "placeholder", "openai", "claude", "gemini", "openrouter", "deepseek", "qwen"];
   return all.map((id) => ({ id, label: PROVIDER_LABELS[id], available: Boolean(REGISTRY[id]) }));
 }
 
 const PROVIDER_LABELS: Record<AIProviderId, string> = {
   placeholder: "Placeholder (Architecture Preview)",
+  lovable: "Lovable AI (Gemini)",
   openai: "OpenAI",
   claude: "Claude",
   gemini: "Gemini",
@@ -33,12 +35,12 @@ const PROVIDER_LABELS: Record<AIProviderId, string> = {
 };
 
 export function getDefaultProviderId(): AIProviderId {
-  if (typeof window === "undefined") return "placeholder";
+  if (typeof window === "undefined") return "lovable";
   try {
     const saved = window.localStorage.getItem(DEFAULT_PROVIDER_KEY);
     if (saved && REGISTRY[saved as AIProviderId]) return saved as AIProviderId;
   } catch { /* ignore */ }
-  return "placeholder";
+  return "lovable";
 }
 
 export function setDefaultProviderId(id: AIProviderId) {
