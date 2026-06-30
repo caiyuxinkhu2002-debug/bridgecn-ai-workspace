@@ -20,6 +20,7 @@ export type AIModule =
 
 export type AIProviderId =
   | "placeholder"
+  | "lovable"
   | "openai"
   | "claude"
   | "gemini"
