@@ -11,6 +11,7 @@ import {
 import { useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/app-shell";
+import { DataIntegrityBanner } from "@/components/data-integrity-banner";
 import { ProjectContextBar } from "@/components/project-context-bar";
 import { useI18n } from "@/lib/i18n";
 import { useWorkspace } from "@/lib/workspace-context";
