@@ -144,9 +144,9 @@ function LocalizationStudioPage() {
       const d = (ai.data ?? {}) as Record<string, unknown>;
       return {
         items: (d.items as LocItem[] | undefined) ?? [],
-        insights: (d.insights as LocInsights | undefined) ?? {},
-        compliance: (d.compliance as LocCompliance | undefined) ?? {},
-        scores: (d.scores as LocScores | undefined) ?? {},
+        insights: ((d.insights as LocInsights | undefined) ?? {}) as LocInsights,
+        compliance: ((d.compliance as LocCompliance | undefined) ?? {}) as LocCompliance,
+        scores: ((d.scores as LocScores | undefined) ?? {}) as LocScores,
         updatedAt: null as string | null,
         live: true as const,
         output: ai.output,
@@ -156,15 +156,23 @@ function LocalizationStudioPage() {
       const d = (selectedJob.output_data ?? {}) as Record<string, unknown>;
       return {
         items: (d.items as LocItem[] | undefined) ?? [],
-        insights: (d.insights as LocInsights | undefined) ?? {},
-        compliance: (d.compliance as LocCompliance | undefined) ?? {},
-        scores: (d.scores as LocScores | undefined) ?? {},
+        insights: ((d.insights as LocInsights | undefined) ?? {}) as LocInsights,
+        compliance: ((d.compliance as LocCompliance | undefined) ?? {}) as LocCompliance,
+        scores: ((d.scores as LocScores | undefined) ?? {}) as LocScores,
         updatedAt: selectedJob.completed_at || selectedJob.created_at,
         live: false as const,
         output: selectedJob.output,
       };
     }
-    return { items: [], insights: {}, compliance: {}, scores: {}, updatedAt: null, live: false as const, output: "" };
+    return {
+      items: [] as LocItem[],
+      insights: {} as LocInsights,
+      compliance: {} as LocCompliance,
+      scores: {} as LocScores,
+      updatedAt: null as string | null,
+      live: false as const,
+      output: "",
+    };
   }, [ai.isRunning, ai.status, ai.data, ai.output, selectedJob]);
 
   // ── Export helpers ──
