@@ -1,20 +1,16 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
+import { toast } from "sonner";
+import { useWorkspace } from "@/lib/workspace-context";
 import {
   Sparkles,
   ArrowRight,
-  Paperclip,
-  Globe2,
   Sparkle,
   Sprout,
   Shirt,
   Coffee,
   Cpu,
-  Search,
-  Languages,
-  Megaphone,
-  Target,
-  Command,
+  Loader2,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_app/start")({
@@ -39,17 +35,39 @@ const industries = [
   { label: "Technology", icon: Cpu },
 ];
 
-const goals = [
-  { label: "Market Research", icon: Search },
-  { label: "Localization", icon: Languages },
-  { label: "Marketing Strategy", icon: Megaphone },
-  { label: "Competitor Analysis", icon: Target },
+const targetMarkets = [
+  "Mainland · Tier 1",
+  "Mainland · Tier 1.5",
+  "Mainland · Tier 2",
+  "Hong Kong",
+  "Taiwan",
 ];
 
 function StartPage() {
-  const [prompt, setPrompt] = useState("");
+  const router = useRouter();
+  const { createProject, workspaceId } = useWorkspace();
+  const [name, setName] = useState("");
   const [industry, setIndustry] = useState("Beauty");
-  const [goal, setGoal] = useState("Market Research");
+  const [targetMarket, setTargetMarket] = useState(targetMarkets[0]);
+  const [description, setDescription] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function submit() {
+    if (!name.trim()) { toast.error("Brand name is required"); return; }
+    if (!workspaceId) { toast.error("No workspace selected"); return; }
+    setBusy(true);
+    try {
+      const created = await createProject({ name, industry, targetMarket, description });
+      if (!created) { toast.error("Could not create project"); return; }
+      toast.success("Project created");
+      router.navigate({ to: "/projects/$projectId", params: { projectId: created.id } });
+    } catch (e) {
+      console.error(e);
+      toast.error("Could not create project");
+    } finally {
+      setBusy(false);
+    }
+  }
 
   return (
     <div className="mx-auto max-w-3xl py-6 md:py-12">
@@ -63,39 +81,35 @@ function StartPage() {
           Start Your China Expansion
         </h1>
         <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-[var(--muted-foreground)]">
-          Tell BridgeCN AI about your business and expansion goals. AI will
-          generate a complete China market entry strategy.
+          Tell BridgeCN AI about your brand. We&apos;ll create a project workspace
+          so you can run market, consumer, and localization research.
         </p>
       </div>
 
-      {/* Prompt box */}
+      {/* Brand name */}
       <div className="mt-10">
+        <label className="mb-2 block text-xs font-medium uppercase tracking-wider text-[var(--muted-foreground)]">Brand name</label>
+        <input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="e.g. Beauty of Joseon"
+          maxLength={120}
+          className="block w-full rounded-2xl border border-[var(--border)] bg-[var(--background)] px-5 py-4 text-[15px] text-[var(--foreground)] shadow-[var(--shadow-card)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-4 focus:ring-[var(--primary-soft)]"
+        />
+      </div>
+
+      {/* Description */}
+      <div className="mt-8">
+        <label className="mb-2 block text-xs font-medium uppercase tracking-wider text-[var(--muted-foreground)]">Description</label>
         <div className="group relative rounded-2xl border border-[var(--border)] bg-[var(--background)] shadow-[var(--shadow-card)] transition-shadow focus-within:shadow-[0_0_0_4px_var(--primary-soft),var(--shadow-card)]">
           <textarea
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
             rows={5}
+            maxLength={1000}
             placeholder="We are a Korean skincare brand planning to enter Shanghai..."
             className="block w-full resize-none rounded-2xl bg-transparent px-5 pt-5 pb-3 text-[15px] leading-relaxed text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none"
           />
-          <div className="flex items-center justify-between gap-2 border-t border-[var(--border)] px-3 py-2.5">
-            <div className="flex items-center gap-1">
-              <button className="inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-medium text-[var(--muted-foreground)] hover:bg-[var(--muted)] hover:text-[var(--foreground)]">
-                <Paperclip className="h-3.5 w-3.5" />
-                Attach
-              </button>
-              <button className="inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-medium text-[var(--muted-foreground)] hover:bg-[var(--muted)] hover:text-[var(--foreground)]">
-                <Globe2 className="h-3.5 w-3.5" />
-                Sources
-              </button>
-            </div>
-            <div className="hidden items-center gap-1 text-[11px] text-[var(--muted-foreground)] sm:flex">
-              <kbd className="inline-flex h-5 items-center gap-0.5 rounded border border-[var(--border)] bg-[var(--muted)] px-1.5 font-mono">
-                <Command className="h-2.5 w-2.5" />K
-              </kbd>
-              <span>to focus</span>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -118,18 +132,16 @@ function StartPage() {
           })}
         </Group>
 
-        <Group label="Goal">
-          {goals.map((g) => {
-            const Icon = g.icon;
-            const active = goal === g.label;
+        <Group label="Target market">
+          {targetMarkets.map((m) => {
+            const active = targetMarket === m;
             return (
               <Chip
-                key={g.label}
+                key={m}
                 active={active}
-                onClick={() => setGoal(g.label)}
+                onClick={() => setTargetMarket(m)}
               >
-                <Icon className="h-3.5 w-3.5" />
-                {g.label}
+                {m}
               </Chip>
             );
           })}
@@ -138,15 +150,18 @@ function StartPage() {
 
       {/* Submit */}
       <div className="mt-12 flex flex-col items-center gap-3">
-        <Link
-          to="/report"
-          className="group inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[var(--foreground)] px-6 text-sm font-medium text-[var(--background)] shadow-[var(--shadow-card)] transition-transform hover:-translate-y-0.5 sm:w-auto sm:px-8"
+        <button
+          type="button"
+          onClick={submit}
+          disabled={busy || !name.trim()}
+          className="group inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[var(--foreground)] px-6 text-sm font-medium text-[var(--background)] shadow-[var(--shadow-card)] transition-transform hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:px-8"
         >
-          Generate China Market Report
+          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+          Create Project
           <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-        </Link>
+        </button>
         <p className="text-xs text-[var(--muted-foreground)]">
-          Typically takes about 30 seconds. You can edit everything after.
+          You can edit project details and progress through stages later.
         </p>
       </div>
     </div>
