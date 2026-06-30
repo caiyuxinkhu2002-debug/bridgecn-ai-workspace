@@ -12,6 +12,8 @@ import { useAIJob } from "@/lib/ai/use-ai-job";
 import { listJobs, deleteJob, getJob } from "@/lib/ai/service";
 import type { AIJob } from "@/lib/ai/types";
 import { toast } from "sonner";
+import { fetchSemrushSnapshot, type SemrushSnapshot } from "@/lib/data/semrush.functions";
+import { Database as DatabaseIcon } from "lucide-react";
 
 export const Route = createFileRoute("/_app/china-market-insight")({
   head: () => ({ meta: [{ title: "China Market Insight — BridgeCN AI" }] }),
@@ -30,6 +32,8 @@ function MarketInsightPage() {
   const ai = useAIJob();
   const [history, setHistory] = useState<AIJob[]>([]);
   const [selectedJob, setSelectedJob] = useState<AIJob | null>(null);
+  const [semrush, setSemrush] = useState<SemrushSnapshot | null>(null);
+  const [semrushLoading, setSemrushLoading] = useState(false);
 
   const refreshHistory = useCallback(async () => {
     if (!activeWorkspace?.id) return;
@@ -78,6 +82,45 @@ function MarketInsightPage() {
   const generate = useCallback(() => {
     ai.run({ module: "market", prompt: buildPrompt() });
   }, [ai, buildPrompt]);
+
+  const generateWithSemrush = useCallback(async () => {
+    const p = activeProject;
+    const kb = p?.knowledgeBase || {};
+    const domain = kb.website || p?.website || "";
+    if (!domain) {
+      toast.error("Add a website URL to the project Knowledge Base first.");
+      return;
+    }
+    setSemrushLoading(true);
+    try {
+      const snap = await fetchSemrushSnapshot({
+        data: {
+          domain,
+          targetMarket: p?.targetMarket || p?.region || "",
+          seedKeywords: (kb.keywords || []).slice(0, 3),
+        },
+      });
+      setSemrush(snap);
+      if (snap.errors.length && !snap.domainOverview && snap.keywords.length === 0) {
+        toast.error(`SEMrush: ${snap.errors[0]}`);
+        return;
+      }
+      if (snap.errors.length) {
+        toast.message(`SEMrush partial data (${snap.errors.length} warnings)`);
+      } else {
+        toast.success(`SEMrush data fetched · ${snap.market}`);
+      }
+      ai.run({
+        module: "market",
+        prompt: buildPrompt(),
+        input: { extra: { semrush: snap, fetchedAt: snap.fetchedAt, market: snap.market } },
+      });
+    } catch (e) {
+      toast.error((e as Error).message || "SEMrush fetch failed");
+    } finally {
+      setSemrushLoading(false);
+    }
+  }, [activeProject, ai, buildPrompt]);
 
   // Merge live AI data with the selected/persisted job's data for display.
   const displayed = useMemo(() => {
@@ -188,8 +231,48 @@ function MarketInsightPage() {
             {ai.isRunning ? <Loader2 className="h-3 w-3 animate-spin" /> : <Play className="h-3 w-3" />}
             {ai.isRunning ? t("common.generating") : t("market.action.generate")}
           </button>
+          <button
+            onClick={generateWithSemrush}
+            disabled={ai.isRunning || semrushLoading || !activeWorkspace?.id}
+            title="Fetch real keyword volumes, competitor traffic and domain SEO from SEMrush, then run analysis grounded in that data."
+            className="inline-flex items-center gap-1.5 rounded-md border border-[oklch(0.55_0.14_150)]/40 bg-[oklch(0.55_0.14_150)]/10 px-3 py-1.5 text-xs font-medium text-[oklch(0.45_0.14_150)] hover:bg-[oklch(0.55_0.14_150)]/20 disabled:opacity-50"
+          >
+            {semrushLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <DatabaseIcon className="h-3 w-3" />}
+            {semrushLoading ? "Fetching SEMrush…" : "Refresh with SEMrush"}
+          </button>
         </div>
       </div>
+
+      {semrush ? (
+        <div className="mb-6 rounded-2xl border border-[oklch(0.55_0.14_150)]/30 bg-[oklch(0.55_0.14_150)]/5 p-4 text-xs">
+          <div className="mb-2 flex items-center gap-2 font-medium text-[oklch(0.4_0.14_150)]">
+            <ShieldCheck className="h-3.5 w-3.5" /> Verified · SEMrush · {semrush.market.toUpperCase()} · {new Date(semrush.fetchedAt).toLocaleString()}
+          </div>
+          <div className="grid gap-3 sm:grid-cols-3">
+            {semrush.domainOverview ? (
+              <div>
+                <p className="text-[10px] uppercase text-[var(--muted-foreground)]">Domain · {semrush.domain}</p>
+                <p className="mt-1 tabular-nums">{semrush.domainOverview.organicKeywords.toLocaleString()} keywords · {semrush.domainOverview.organicTraffic.toLocaleString()} monthly traffic</p>
+              </div>
+            ) : null}
+            {semrush.competitors.length > 0 ? (
+              <div>
+                <p className="text-[10px] uppercase text-[var(--muted-foreground)]">Top organic competitors</p>
+                <p className="mt-1">{semrush.competitors.slice(0, 3).map((c) => c.domain).join(", ")}</p>
+              </div>
+            ) : null}
+            {semrush.keywords.length > 0 ? (
+              <div>
+                <p className="text-[10px] uppercase text-[var(--muted-foreground)]">Seed keyword volume</p>
+                <p className="mt-1">{semrush.keywords.map((k) => `${k.phrase} (${k.volume.toLocaleString()}/mo)`).join(" · ")}</p>
+              </div>
+            ) : null}
+          </div>
+          {semrush.errors.length > 0 ? (
+            <p className="mt-2 text-[10px] text-[var(--muted-foreground)]">Warnings: {semrush.errors.join(" · ")}</p>
+          ) : null}
+        </div>
+      ) : null}
 
       <div className="space-y-8">
         {/* AI Market Summary */}
