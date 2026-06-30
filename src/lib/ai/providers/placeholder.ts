@@ -114,7 +114,7 @@ export const placeholderProvider: AIProvider = {
         }
       }
       const LOC_ITEMS = [
-          { source: "촉촉하고 깨끗한 한방 스킨케어, 조선미녀.",        target: "源自韩方的清润护肤 ✨ Beauty of Joseon,姐妹们一试就爱。", note: "Hero claim · primary brand line" },
+          { source: "촉촉하고 깨끗한 스킨케어 라인업.",                  target: "清润舒缓的护肤体验 ✨ 姐妹们一试就爱。",                       note: "Hero claim · primary brand line" },
           { source: "민감한 피부를 위한 순한 클렌징 밤.",                target: "敏感肌也能放心用的温和洁颜膏,卸妆零负担。",                   note: "Sensitive skin product line" },
           { source: "비건 처방, 99% 자연유래 성분.",                     target: "纯素配方 · 99% 天然来源成分,成分党安心选。",                    note: "Ingredient story · ingredient-led consumers" },
       ];
