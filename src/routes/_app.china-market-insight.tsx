@@ -96,6 +96,9 @@ function MarketInsightPage() {
       return;
     }
     setSemrushLoading(true);
+    // Clear the previously-shown job so stale AI sources/KPIs disappear
+    // immediately while we fetch fresh SEMrush data + regenerate.
+    setSelectedJob(null);
     try {
       const snap = await fetchSemrushSnapshot({
         data: {
