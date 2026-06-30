@@ -16,6 +16,7 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppIndexRouteImport } from './routes/_app.index'
 import { Route as AppStartRouteImport } from './routes/_app.start'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
+import { Route as AppReportsRouteImport } from './routes/_app.reports'
 import { Route as AppReportRouteImport } from './routes/_app.report'
 import { Route as AppProjectsRouteImport } from './routes/_app.projects'
 import { Route as AppLocalizationStudioRouteImport } from './routes/_app.localization-studio'
@@ -56,6 +57,11 @@ const AppStartRoute = AppStartRouteImport.update({
 const AppSettingsRoute = AppSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppReportsRoute = AppReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
   getParentRoute: () => AppRoute,
 } as any)
 const AppReportRoute = AppReportRouteImport.update({
@@ -105,6 +111,7 @@ export interface FileRoutesByFullPath {
   '/localization-studio': typeof AppLocalizationStudioRoute
   '/projects': typeof AppProjectsRouteWithChildren
   '/report': typeof AppReportRoute
+  '/reports': typeof AppReportsRoute
   '/settings': typeof AppSettingsRoute
   '/start': typeof AppStartRoute
   '/projects/$projectId': typeof AppProjectsProjectIdRoute
@@ -119,6 +126,7 @@ export interface FileRoutesByTo {
   '/localization-studio': typeof AppLocalizationStudioRoute
   '/projects': typeof AppProjectsRouteWithChildren
   '/report': typeof AppReportRoute
+  '/reports': typeof AppReportsRoute
   '/settings': typeof AppSettingsRoute
   '/start': typeof AppStartRoute
   '/': typeof AppIndexRoute
@@ -136,6 +144,7 @@ export interface FileRoutesById {
   '/_app/localization-studio': typeof AppLocalizationStudioRoute
   '/_app/projects': typeof AppProjectsRouteWithChildren
   '/_app/report': typeof AppReportRoute
+  '/_app/reports': typeof AppReportsRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/start': typeof AppStartRoute
   '/_app/': typeof AppIndexRoute
@@ -154,6 +163,7 @@ export interface FileRouteTypes {
     | '/localization-studio'
     | '/projects'
     | '/report'
+    | '/reports'
     | '/settings'
     | '/start'
     | '/projects/$projectId'
@@ -168,6 +178,7 @@ export interface FileRouteTypes {
     | '/localization-studio'
     | '/projects'
     | '/report'
+    | '/reports'
     | '/settings'
     | '/start'
     | '/'
@@ -184,6 +195,7 @@ export interface FileRouteTypes {
     | '/_app/localization-studio'
     | '/_app/projects'
     | '/_app/report'
+    | '/_app/reports'
     | '/_app/settings'
     | '/_app/start'
     | '/_app/'
@@ -246,6 +258,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof AppSettingsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/reports': {
+      id: '/_app/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof AppReportsRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/report': {
@@ -319,6 +338,7 @@ interface AppRouteChildren {
   AppLocalizationStudioRoute: typeof AppLocalizationStudioRoute
   AppProjectsRoute: typeof AppProjectsRouteWithChildren
   AppReportRoute: typeof AppReportRoute
+  AppReportsRoute: typeof AppReportsRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppStartRoute: typeof AppStartRoute
   AppIndexRoute: typeof AppIndexRoute
@@ -331,6 +351,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppLocalizationStudioRoute: AppLocalizationStudioRoute,
   AppProjectsRoute: AppProjectsRouteWithChildren,
   AppReportRoute: AppReportRoute,
+  AppReportsRoute: AppReportsRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppStartRoute: AppStartRoute,
   AppIndexRoute: AppIndexRoute,
