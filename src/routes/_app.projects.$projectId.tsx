@@ -12,6 +12,15 @@ export const Route = createFileRoute("/_app/projects/$projectId")({
   component: ProjectDetailPage,
 });
 
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="block">
+      <span className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-[var(--muted-foreground)]">{label}</span>
+      {children}
+    </label>
+  );
+}
+
 function ProjectDetailPage() {
   const { projectId } = Route.useParams();
   const { t } = useI18n();
