@@ -41,6 +41,7 @@ const navSections: {
     labelKey: "nav.section.workspace",
     items: [
       { to: "/", labelKey: "nav.dashboard", icon: LayoutDashboard, exact: true },
+      { to: "/ai-workspace", labelKey: "nav.aiWorkspace", icon: Sparkles },
       { to: "/projects", labelKey: "nav.projects", icon: FolderKanban },
       { to: "/reports", labelKey: "nav.reports", icon: FileBarChart },
     ],
