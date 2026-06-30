@@ -114,34 +114,36 @@ export const placeholderProvider: AIProvider = {
         }
       }
       if (isLoc) {
-        const items = [
+        // declared earlier so we can also include it in the final `done` payload
+      }
+      const LOC_ITEMS = [
           { source: "촉촉하고 깨끗한 한방 스킨케어, 조선미녀.",        target: "源自韩方的清润护肤 ✨ Beauty of Joseon,姐妹们一试就爱。", note: "Hero claim · primary brand line" },
           { source: "민감한 피부를 위한 순한 클렌징 밤.",                target: "敏感肌也能放心用的温和洁颜膏,卸妆零负担。",                   note: "Sensitive skin product line" },
           { source: "비건 처방, 99% 자연유래 성분.",                     target: "纯素配方 · 99% 天然来源成分,成分党安心选。",                    note: "Ingredient story · ingredient-led consumers" },
-        ];
-        for (const it of items) {
+      ];
+      const LOC_INSIGHTS = {
+        reasoning: "Replaced direct Korean phrasing with culturally resonant Chinese metaphors (e.g. 玻璃肌) to feel native rather than translated.",
+        consumer: "Tier-1 Chinese consumers respond to ingredient storytelling and heritage cues; we lead with 韩方 and clinical proof points.",
+        seo: ["玻璃肌", "敏感肌", "韩方护肤", "成分党", "早C晚A"],
+        platform: "Tightened length and added emoji rhythm for Xiaohongshu; CTAs aligned with Tmall PDP conventions.",
+        cultural: "Removed first-person Korean voice; added collective ‘姐妹们’ framing common in RED beauty content.",
+      };
+      const LOC_COMPLIANCE = {
+        advertising: "Pass — no superlatives requiring substantiation under SAMR ad rules.",
+        sensitive: "No restricted terms detected (medical claims, ‘最’, ‘第一’ avoided).",
+        risk: "Low",
+        regulation: "Compliant with NMPA cosmetic labeling guidance for imported skincare.",
+      };
+      const LOC_SCORES = { localization: 94, seo: 88, native: 92, platformMatch: 90 };
+      if (isLoc) {
+        for (const it of LOC_ITEMS) {
           await delay(220, signal);
           yield { type: "data", data: { itemAppend: it } };
         }
         await delay(180, signal);
-        yield {
-          type: "data",
-          data: {
-            compliance: {
-              advertising: "Pass — no superlatives requiring substantiation under SAMR ad rules.",
-              sensitive: "No restricted terms detected (medical claims, ‘最’, ‘第一’ avoided).",
-              risk: "Low",
-              regulation: "Compliant with NMPA cosmetic labeling guidance for imported skincare.",
-            },
-          },
-        };
+        yield { type: "data", data: { compliance: LOC_COMPLIANCE } };
         await delay(120, signal);
-        yield {
-          type: "data",
-          data: {
-            scores: { localization: 94, seo: 88, native: 92, platformMatch: 90 },
-          },
-        };
+        yield { type: "data", data: { scores: LOC_SCORES } };
       }
       // Stream tokens word-by-word so the UI can render progressive text.
       let acc = "";
@@ -175,6 +177,10 @@ export const placeholderProvider: AIProvider = {
             ? {
                 provider: "placeholder",
                 summary: acc.trim(),
+                items: LOC_ITEMS,
+                insights: LOC_INSIGHTS,
+                compliance: LOC_COMPLIANCE,
+                scores: LOC_SCORES,
               }
             : { provider: "placeholder", tokens: acc.split(/\s+/).length },
       };
