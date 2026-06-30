@@ -19,6 +19,7 @@ import { Route as AppSettingsRouteImport } from './routes/_app.settings'
 import { Route as AppReportRouteImport } from './routes/_app.report'
 import { Route as AppProjectsRouteImport } from './routes/_app.projects'
 import { Route as AppLocalizationStudioRouteImport } from './routes/_app.localization-studio'
+import { Route as AppLaunchChecklistRouteImport } from './routes/_app.launch-checklist'
 import { Route as AppConsumerInsightRouteImport } from './routes/_app.consumer-insight'
 import { Route as AppChinaMarketInsightRouteImport } from './routes/_app.china-market-insight'
 import { Route as AppProjectsProjectIdRouteImport } from './routes/_app.projects.$projectId'
@@ -72,6 +73,11 @@ const AppLocalizationStudioRoute = AppLocalizationStudioRouteImport.update({
   path: '/localization-studio',
   getParentRoute: () => AppRoute,
 } as any)
+const AppLaunchChecklistRoute = AppLaunchChecklistRouteImport.update({
+  id: '/launch-checklist',
+  path: '/launch-checklist',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppConsumerInsightRoute = AppConsumerInsightRouteImport.update({
   id: '/consumer-insight',
   path: '/consumer-insight',
@@ -95,6 +101,7 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/china-market-insight': typeof AppChinaMarketInsightRoute
   '/consumer-insight': typeof AppConsumerInsightRoute
+  '/launch-checklist': typeof AppLaunchChecklistRoute
   '/localization-studio': typeof AppLocalizationStudioRoute
   '/projects': typeof AppProjectsRouteWithChildren
   '/report': typeof AppReportRoute
@@ -108,6 +115,7 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/china-market-insight': typeof AppChinaMarketInsightRoute
   '/consumer-insight': typeof AppConsumerInsightRoute
+  '/launch-checklist': typeof AppLaunchChecklistRoute
   '/localization-studio': typeof AppLocalizationStudioRoute
   '/projects': typeof AppProjectsRouteWithChildren
   '/report': typeof AppReportRoute
@@ -124,6 +132,7 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/_app/china-market-insight': typeof AppChinaMarketInsightRoute
   '/_app/consumer-insight': typeof AppConsumerInsightRoute
+  '/_app/launch-checklist': typeof AppLaunchChecklistRoute
   '/_app/localization-studio': typeof AppLocalizationStudioRoute
   '/_app/projects': typeof AppProjectsRouteWithChildren
   '/_app/report': typeof AppReportRoute
@@ -141,6 +150,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/china-market-insight'
     | '/consumer-insight'
+    | '/launch-checklist'
     | '/localization-studio'
     | '/projects'
     | '/report'
@@ -154,6 +164,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/china-market-insight'
     | '/consumer-insight'
+    | '/launch-checklist'
     | '/localization-studio'
     | '/projects'
     | '/report'
@@ -169,6 +180,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/_app/china-market-insight'
     | '/_app/consumer-insight'
+    | '/_app/launch-checklist'
     | '/_app/localization-studio'
     | '/_app/projects'
     | '/_app/report'
@@ -257,6 +269,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppLocalizationStudioRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/launch-checklist': {
+      id: '/_app/launch-checklist'
+      path: '/launch-checklist'
+      fullPath: '/launch-checklist'
+      preLoaderRoute: typeof AppLaunchChecklistRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/consumer-insight': {
       id: '/_app/consumer-insight'
       path: '/consumer-insight'
@@ -296,6 +315,7 @@ const AppProjectsRouteWithChildren = AppProjectsRoute._addFileChildren(
 interface AppRouteChildren {
   AppChinaMarketInsightRoute: typeof AppChinaMarketInsightRoute
   AppConsumerInsightRoute: typeof AppConsumerInsightRoute
+  AppLaunchChecklistRoute: typeof AppLaunchChecklistRoute
   AppLocalizationStudioRoute: typeof AppLocalizationStudioRoute
   AppProjectsRoute: typeof AppProjectsRouteWithChildren
   AppReportRoute: typeof AppReportRoute
@@ -307,6 +327,7 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppChinaMarketInsightRoute: AppChinaMarketInsightRoute,
   AppConsumerInsightRoute: AppConsumerInsightRoute,
+  AppLaunchChecklistRoute: AppLaunchChecklistRoute,
   AppLocalizationStudioRoute: AppLocalizationStudioRoute,
   AppProjectsRoute: AppProjectsRouteWithChildren,
   AppReportRoute: AppReportRoute,
