@@ -3,7 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useWorkspace, type KnowledgeBase } from "@/lib/workspace-context";
 import { Sparkles, ArrowRight, ArrowLeft, Loader2, CheckCircle2, Plus, X, Wand2 } from "lucide-react";
-import { BUILDER_STEPS, BUILDER_STEP_LABEL, synthesizeKnowledgeBase, type BuilderStep } from "@/lib/ai/project-builder";
+import { BUILDER_STEPS, BUILDER_STEP_KEY, synthesizeKnowledgeBase, type BuilderStep } from "@/lib/ai/project-builder";
+import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/start")({
   head: () => ({
@@ -30,6 +31,7 @@ const targetMarkets = [
 function StartPage() {
   const router = useRouter();
   const { createProject, workspaceId } = useWorkspace();
+  const t = useT();
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [name, setName] = useState("");
@@ -47,10 +49,10 @@ function StartPage() {
 
   function startBuild() {
     if (!name.trim() && !website.trim()) {
-      toast.error("Provide a brand name or official website");
+      toast.error(t("start.toast.needInput"));
       return;
     }
-    if (!workspaceId) { toast.error("No workspace selected"); return; }
+    if (!workspaceId) { toast.error(t("start.toast.noWorkspace")); return; }
     cancelledRef.current = false;
     setStep(2);
     setActiveStep(BUILDER_STEPS[0]);
@@ -84,7 +86,7 @@ function StartPage() {
   }
 
   async function saveProject() {
-    if (!workspaceId) { toast.error("No workspace selected"); return; }
+    if (!workspaceId) { toast.error(t("start.toast.noWorkspace")); return; }
     setSaving(true);
     try {
       const created = await createProject({
@@ -95,12 +97,12 @@ function StartPage() {
         website: kb.website || website,
         knowledgeBase: kb,
       });
-      if (!created) { toast.error("Could not create project"); return; }
-      toast.success("Project created");
+      if (!created) { toast.error(t("start.toast.createFailed")); return; }
+      toast.success(t("start.toast.created"));
       router.navigate({ to: "/projects/$projectId", params: { projectId: created.id } });
     } catch (e) {
       console.error(e);
-      toast.error("Could not create project");
+      toast.error(t("start.toast.createFailed"));
     } finally {
       setSaving(false);
     }
@@ -113,17 +115,17 @@ function StartPage() {
       <div className="text-center">
         <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--background)] px-3 py-1 text-xs font-medium text-[var(--muted-foreground)]">
           <Sparkles className="h-3.5 w-3.5 text-[var(--primary)]" />
-          AI Project Builder · Step {step} of 3
+          {t("start.badge", { n: step })}
         </div>
         <h1 className="mt-6 text-4xl font-semibold tracking-[-0.025em] md:text-5xl">
-          {step === 1 && "Start Your China Expansion"}
-          {step === 2 && "Building Your Project"}
-          {step === 3 && "Review & Edit"}
+          {step === 1 && t("start.title.1")}
+          {step === 2 && t("start.title.2")}
+          {step === 3 && t("start.title.3")}
         </h1>
         <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-[var(--muted-foreground)]">
-          {step === 1 && "Give BridgeCN AI a brand name or website. We'll build the full project knowledge base automatically."}
-          {step === 2 && "Reading the brand and generating a knowledge base."}
-          {step === 3 && "Everything is editable. Save to create the project."}
+          {step === 1 && t("start.sub.1")}
+          {step === 2 && t("start.sub.2")}
+          {step === 3 && t("start.sub.3")}
         </p>
       </div>
 
@@ -194,32 +196,33 @@ function StepOne(props: {
   onSubmit: () => void;
 }) {
   const { name, setName, website, setWebsite, targetMarket, setTargetMarket, onSubmit } = props;
+  const t = useT();
   const ready = name.trim().length > 0 || website.trim().length > 0;
   return (
     <>
       <div className="mt-10">
-        <label className="mb-2 block text-xs font-medium uppercase tracking-wider text-[var(--muted-foreground)]">Brand name</label>
+        <label className="mb-2 block text-xs font-medium uppercase tracking-wider text-[var(--muted-foreground)]">{t("start.field.brandName")}</label>
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="e.g. your brand name"
+          placeholder={t("start.field.brandName.placeholder")}
           maxLength={120}
           className="block w-full rounded-2xl border border-[var(--border)] bg-[var(--background)] px-5 py-4 text-[15px] text-[var(--foreground)] shadow-[var(--shadow-card)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-4 focus:ring-[var(--primary-soft)]"
         />
       </div>
       <div className="mt-6">
-        <label className="mb-2 block text-xs font-medium uppercase tracking-wider text-[var(--muted-foreground)]">Official website</label>
+        <label className="mb-2 block text-xs font-medium uppercase tracking-wider text-[var(--muted-foreground)]">{t("start.field.website")}</label>
         <input
           value={website}
           onChange={(e) => setWebsite(e.target.value)}
-          placeholder="https://yourbrand.com"
+          placeholder={t("start.field.website.placeholder")}
           maxLength={300}
           className="block w-full rounded-2xl border border-[var(--border)] bg-[var(--background)] px-5 py-4 text-[15px] text-[var(--foreground)] shadow-[var(--shadow-card)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-4 focus:ring-[var(--primary-soft)]"
         />
-        <p className="mt-2 text-xs text-[var(--muted-foreground)]">Either field is enough. AI will fill in the rest.</p>
+        <p className="mt-2 text-xs text-[var(--muted-foreground)]">{t("start.field.either")}</p>
       </div>
       <div className="mt-10">
-        <Group label="Target market">
+        <Group label={t("start.field.targetMarket")}>
           {targetMarkets.map((m) => (
             <Chip key={m} active={targetMarket === m} onClick={() => setTargetMarket(m)}>{m}</Chip>
           ))}
@@ -233,7 +236,7 @@ function StepOne(props: {
           className="group inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[var(--foreground)] px-6 text-sm font-medium text-[var(--background)] shadow-[var(--shadow-card)] transition-transform hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:px-8"
         >
           <Wand2 className="h-4 w-4" />
-          Build with AI
+          {t("start.cta.build")}
           <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
         </button>
       </div>
@@ -243,6 +246,7 @@ function StepOne(props: {
 
 // ============= Step 2 =============
 function StepTwo({ activeStep, doneSteps, onCancel }: { activeStep: BuilderStep | null; doneSteps: BuilderStep[]; onCancel: () => void }) {
+  const t = useT();
   return (
     <div className="mt-10 rounded-2xl border border-[var(--border)] bg-[var(--background)] p-6 shadow-[var(--shadow-card)]">
       <ol className="space-y-3">
@@ -260,7 +264,7 @@ function StepTwo({ activeStep, doneSteps, onCancel }: { activeStep: BuilderStep 
                 <div className="h-4 w-4 rounded-full border border-[var(--border)]" />
               )}
               <span className={pending ? "text-[var(--muted-foreground)]" : "text-[var(--foreground)]"}>
-                {BUILDER_STEP_LABEL[s]}
+                {t(BUILDER_STEP_KEY[s])}
               </span>
             </li>
           );
@@ -268,7 +272,7 @@ function StepTwo({ activeStep, doneSteps, onCancel }: { activeStep: BuilderStep 
       </ol>
       <div className="mt-6 flex justify-end">
         <button onClick={onCancel} className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs font-medium hover:bg-[var(--muted)]">
-          Cancel
+          {t("start.cta.cancel")}
         </button>
       </div>
     </div>
@@ -278,53 +282,54 @@ function StepTwo({ activeStep, doneSteps, onCancel }: { activeStep: BuilderStep 
 // ============= Step 3 =============
 function StepThree(props: { kb: KnowledgeBase; setKb: (v: KnowledgeBase) => void; saving: boolean; onBack: () => void; onSave: () => void }) {
   const { kb, setKb, saving, onBack, onSave } = props;
+  const t = useT();
   const set = <K extends keyof KnowledgeBase>(k: K, v: KnowledgeBase[K]) => setKb({ ...kb, [k]: v });
   return (
     <div className="mt-10 space-y-6">
-      <Section title="Brand Profile">
+      <Section title={t("kb.section.brand")}>
         <div className="grid gap-4 sm:grid-cols-2">
-          <TextField label="Company" value={kb.company || ""} onChange={(v) => set("company", v)} />
-          <TextField label="Industry" value={kb.industry || ""} onChange={(v) => set("industry", v)} />
-          <TextField label="Category" value={kb.category || ""} onChange={(v) => set("category", v)} />
-          <TextField label="Website" value={kb.website || ""} onChange={(v) => set("website", v)} />
+          <TextField label={t("kb.field.company")} value={kb.company || ""} onChange={(v) => set("company", v)} />
+          <TextField label={t("kb.field.industry")} value={kb.industry || ""} onChange={(v) => set("industry", v)} />
+          <TextField label={t("kb.field.category")} value={kb.category || ""} onChange={(v) => set("category", v)} />
+          <TextField label={t("kb.field.website")} value={kb.website || ""} onChange={(v) => set("website", v)} />
         </div>
       </Section>
 
-      <Section title="Products">
-        <ListEditor items={kb.products || []} onChange={(v) => set("products", v)} placeholder="Add product..." />
+      <Section title={t("kb.section.products")}>
+        <ListEditor items={kb.products || []} onChange={(v) => set("products", v)} placeholder={t("kb.add.product")} />
       </Section>
 
-      <Section title="Brand Story">
+      <Section title={t("kb.section.story")}>
         <TextArea value={kb.brandStory || ""} onChange={(v) => set("brandStory", v)} rows={5} />
       </Section>
 
-      <Section title="Brand Tone">
-        <ListEditor items={kb.brandTone || []} onChange={(v) => set("brandTone", v)} placeholder="Add tone..." />
+      <Section title={t("kb.section.tone")}>
+        <ListEditor items={kb.brandTone || []} onChange={(v) => set("brandTone", v)} placeholder={t("kb.add.tone")} />
       </Section>
 
-      <Section title="Keywords">
-        <ListEditor items={kb.keywords || []} onChange={(v) => set("keywords", v)} placeholder="Add keyword..." />
+      <Section title={t("kb.section.keywords")}>
+        <ListEditor items={kb.keywords || []} onChange={(v) => set("keywords", v)} placeholder={t("kb.add.keyword")} />
       </Section>
 
-      <Section title="Competitors">
-        <ListEditor items={kb.competitors || []} onChange={(v) => set("competitors", v)} placeholder="Add competitor..." />
+      <Section title={t("kb.section.competitors")}>
+        <ListEditor items={kb.competitors || []} onChange={(v) => set("competitors", v)} placeholder={t("kb.add.competitor")} />
       </Section>
 
-      <Section title="Target Audience">
+      <Section title={t("kb.section.audience")}>
         <TextArea value={kb.targetAudience || ""} onChange={(v) => set("targetAudience", v)} rows={3} />
       </Section>
 
-      <Section title="Official Korean Marketing Copy">
+      <Section title={t("kb.section.koreanCopy")}>
         <TextArea value={kb.koreanCopy || ""} onChange={(v) => set("koreanCopy", v)} rows={3} />
       </Section>
 
-      <Section title="Social Channels">
+      <Section title={t("kb.section.channels")}>
         <ChannelEditor items={kb.socialChannels || []} onChange={(v) => set("socialChannels", v)} />
       </Section>
 
       <div className="flex items-center justify-between gap-3 pt-2">
         <button onClick={onBack} className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] px-4 py-2 text-xs font-medium hover:bg-[var(--muted)]">
-          <ArrowLeft className="h-3.5 w-3.5" /> Back
+          <ArrowLeft className="h-3.5 w-3.5" /> {t("common.back")}
         </button>
         <button
           onClick={onSave}
@@ -332,7 +337,7 @@ function StepThree(props: { kb: KnowledgeBase; setKb: (v: KnowledgeBase) => void
           className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[var(--foreground)] px-6 text-sm font-medium text-[var(--background)] shadow-[var(--shadow-card)] hover:-translate-y-0.5 transition-transform disabled:opacity-50"
         >
           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-          Save Project
+          {t("start.cta.save")}
         </button>
       </div>
     </div>
@@ -364,6 +369,7 @@ function TextArea({ value, onChange, rows = 4 }: { value: string; onChange: (v: 
 }
 
 function ListEditor({ items, onChange, placeholder }: { items: string[]; onChange: (v: string[]) => void; placeholder: string }) {
+  const t = useT();
   const [draft, setDraft] = useState("");
   return (
     <div>
@@ -389,7 +395,7 @@ function ListEditor({ items, onChange, placeholder }: { items: string[]; onChang
           onClick={() => { if (draft.trim()) { onChange([...items, draft.trim()]); setDraft(""); } }}
           className="inline-flex items-center gap-1 rounded-md border border-[var(--border)] px-3 text-xs font-medium hover:bg-[var(--muted)]"
         >
-          <Plus className="h-3.5 w-3.5" /> Add
+          <Plus className="h-3.5 w-3.5" /> {t("kb.add.button")}
         </button>
       </div>
     </div>
@@ -397,13 +403,14 @@ function ListEditor({ items, onChange, placeholder }: { items: string[]; onChang
 }
 
 function ChannelEditor({ items, onChange }: { items: { label: string; url: string }[]; onChange: (v: { label: string; url: string }[]) => void }) {
+  const t = useT();
   const update = (i: number, patch: Partial<{ label: string; url: string }>) =>
     onChange(items.map((it, idx) => (idx === i ? { ...it, ...patch } : it)));
   return (
     <div className="space-y-2">
       {items.map((c, i) => (
         <div key={i} className="flex gap-2">
-          <input value={c.label} onChange={(e) => update(i, { label: e.target.value })} placeholder="Channel" className="h-9 w-40 rounded-md border border-[var(--border)] bg-[var(--background)] px-2 text-sm" />
+          <input value={c.label} onChange={(e) => update(i, { label: e.target.value })} placeholder={t("kb.add.channelLabel")} className="h-9 w-40 rounded-md border border-[var(--border)] bg-[var(--background)] px-2 text-sm" />
           <input value={c.url} onChange={(e) => update(i, { url: e.target.value })} placeholder="https://" className="h-9 flex-1 rounded-md border border-[var(--border)] bg-[var(--background)] px-2 text-sm" />
           <button onClick={() => onChange(items.filter((_, idx) => idx !== i))} className="rounded-md border border-[var(--border)] px-2 text-xs hover:bg-[var(--muted)]">
             <X className="h-3.5 w-3.5" />
@@ -411,7 +418,7 @@ function ChannelEditor({ items, onChange }: { items: { label: string; url: strin
         </div>
       ))}
       <button onClick={() => onChange([...items, { label: "", url: "" }])} className="inline-flex items-center gap-1 rounded-md border border-[var(--border)] px-3 py-1.5 text-xs font-medium hover:bg-[var(--muted)]">
-        <Plus className="h-3.5 w-3.5" /> Add channel
+        <Plus className="h-3.5 w-3.5" /> {t("kb.add.channel")}
       </button>
     </div>
   );

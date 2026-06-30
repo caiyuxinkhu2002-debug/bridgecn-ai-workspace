@@ -23,15 +23,17 @@ export const BUILDER_STEPS: BuilderStep[] = [
   "completed",
 ];
 
-export const BUILDER_STEP_LABEL: Record<BuilderStep, string> = {
-  reading: "Reading website...",
-  products: "Finding products...",
-  story: "Extracting brand story...",
-  positioning: "Analyzing positioning...",
-  competitors: "Finding competitors...",
-  knowledge: "Generating knowledge base...",
-  creating: "Creating project...",
-  completed: "Completed",
+// i18n keys for each pipeline step. The English fallback lives in the
+// dictionary (en.json equivalent) — never hardcode UI text here.
+export const BUILDER_STEP_KEY: Record<BuilderStep, string> = {
+  reading: "builder.step.reading",
+  products: "builder.step.products",
+  story: "builder.step.story",
+  positioning: "builder.step.positioning",
+  competitors: "builder.step.competitors",
+  knowledge: "builder.step.knowledge",
+  creating: "builder.step.creating",
+  completed: "builder.step.completed",
 };
 
 function normalizeDomain(website?: string): string {
