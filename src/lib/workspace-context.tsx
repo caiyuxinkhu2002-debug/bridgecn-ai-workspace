@@ -143,6 +143,9 @@ type Ctx = {
   refreshWorkspaces: () => Promise<void>;
   refreshMembers: () => Promise<void>;
   refreshProjects: () => Promise<void>;
+  createProject: (input: { name: string; industry?: string; targetMarket?: string; description?: string }) => Promise<Project | null>;
+  updateProject: (id: string, patch: Partial<{ name: string; industry: string; region: string; targetMarket: string; description: string; summary: string; stage: Stage }>) => Promise<void>;
+  deleteProject: (id: string) => Promise<void>;
 };
 
 const WorkspaceCtx = createContext<Ctx | null>(null);
