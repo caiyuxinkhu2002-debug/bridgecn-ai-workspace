@@ -20,6 +20,13 @@ const PHASE_SCRIPT: { phase: AIJobPhase; message: string; ms: number }[] = [
   { phase: "writing", message: "Writing the response…", ms: 400 },
 ];
 
+const LOC_PHASE_SCRIPT: { phase: AIJobPhase; message: string; ms: number }[] = [
+  { phase: "thinking",  message: "Thinking…",                          ms: 500 },
+  { phase: "searching", message: "Analyzing Brand",                    ms: 700 },
+  { phase: "analyzing", message: "Understanding Chinese Consumers",    ms: 800 },
+  { phase: "writing",   message: "Rewriting",                          ms: 500 },
+];
+
 const GENERIC_PARAGRAPHS = [
   "Based on the active project context, the China market shows strong demand in Tier 1 cities — particularly Shanghai and Hangzhou — with Xiaohongshu being the primary discovery channel.",
   "Recommended positioning leans into ingredient storytelling and heritage cues, paired with a clean, scientific tone that resonates with the 25–34 segment.",
@@ -65,9 +72,11 @@ export const placeholderProvider: AIProvider = {
   async *run({ module, signal }) {
     const events: AIStreamEvent[] = [];
     const isMarket = module === "market";
+    const isLoc = module === "localization";
     const paragraphs = isMarket ? MARKET_PARAGRAPHS : GENERIC_PARAGRAPHS;
+    const script = isLoc ? LOC_PHASE_SCRIPT : PHASE_SCRIPT;
     try {
-      for (const step of PHASE_SCRIPT) {
+      for (const step of script) {
         await delay(step.ms, signal);
         yield { type: "phase", phase: step.phase, message: step.message };
         if (isMarket && step.phase === "searching") {
@@ -90,6 +99,48 @@ export const placeholderProvider: AIProvider = {
           }
           yield { type: "data", data: { confidence: 92 } };
         }
+        if (isLoc) {
+          if (step.phase === "analyzing") {
+            const insights = {
+              reasoning: "Replaced direct Korean phrasing with culturally resonant Chinese metaphors (e.g. 玻璃肌) to feel native rather than translated.",
+              consumer: "Tier-1 Chinese consumers respond to ingredient storytelling and heritage cues; we lead with 韩方 and clinical proof points.",
+              seo: ["玻璃肌", "敏感肌", "韩方护肤", "成分党", "早C晚A"],
+              platform: "Tightened length and added emoji rhythm for Xiaohongshu; CTAs aligned with Tmall PDP conventions.",
+              cultural: "Removed first-person Korean voice; added collective ‘姐妹们’ framing common in RED beauty content.",
+            };
+            await delay(150, signal);
+            yield { type: "data", data: { insights } };
+          }
+        }
+      }
+      const LOC_ITEMS = [
+          { source: "촉촉하고 깨끗한 한방 스킨케어, 조선미녀.",        target: "源自韩方的清润护肤 ✨ Beauty of Joseon,姐妹们一试就爱。", note: "Hero claim · primary brand line" },
+          { source: "민감한 피부를 위한 순한 클렌징 밤.",                target: "敏感肌也能放心用的温和洁颜膏,卸妆零负担。",                   note: "Sensitive skin product line" },
+          { source: "비건 처방, 99% 자연유래 성분.",                     target: "纯素配方 · 99% 天然来源成分,成分党安心选。",                    note: "Ingredient story · ingredient-led consumers" },
+      ];
+      const LOC_INSIGHTS = {
+        reasoning: "Replaced direct Korean phrasing with culturally resonant Chinese metaphors (e.g. 玻璃肌) to feel native rather than translated.",
+        consumer: "Tier-1 Chinese consumers respond to ingredient storytelling and heritage cues; we lead with 韩方 and clinical proof points.",
+        seo: ["玻璃肌", "敏感肌", "韩方护肤", "成分党", "早C晚A"],
+        platform: "Tightened length and added emoji rhythm for Xiaohongshu; CTAs aligned with Tmall PDP conventions.",
+        cultural: "Removed first-person Korean voice; added collective ‘姐妹们’ framing common in RED beauty content.",
+      };
+      const LOC_COMPLIANCE = {
+        advertising: "Pass — no superlatives requiring substantiation under SAMR ad rules.",
+        sensitive: "No restricted terms detected (medical claims, ‘最’, ‘第一’ avoided).",
+        risk: "Low",
+        regulation: "Compliant with NMPA cosmetic labeling guidance for imported skincare.",
+      };
+      const LOC_SCORES = { localization: 94, seo: 88, native: 92, platformMatch: 90 };
+      if (isLoc) {
+        for (const it of LOC_ITEMS) {
+          await delay(220, signal);
+          yield { type: "data", data: { itemAppend: it } };
+        }
+        await delay(180, signal);
+        yield { type: "data", data: { compliance: LOC_COMPLIANCE } };
+        await delay(120, signal);
+        yield { type: "data", data: { scores: LOC_SCORES } };
       }
       // Stream tokens word-by-word so the UI can render progressive text.
       let acc = "";
@@ -119,7 +170,16 @@ export const placeholderProvider: AIProvider = {
               keywords: MARKET_KEYWORDS,
               regions: MARKET_REGIONS,
             }
-          : { provider: "placeholder", tokens: acc.split(/\s+/).length },
+          : isLoc
+            ? {
+                provider: "placeholder",
+                summary: acc.trim(),
+                items: LOC_ITEMS,
+                insights: LOC_INSIGHTS,
+                compliance: LOC_COMPLIANCE,
+                scores: LOC_SCORES,
+              }
+            : { provider: "placeholder", tokens: acc.split(/\s+/).length },
       };
     } catch (e) {
       if ((e as Error)?.name === "AbortError") return;

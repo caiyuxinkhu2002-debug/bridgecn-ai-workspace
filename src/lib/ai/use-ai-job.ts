@@ -68,7 +68,7 @@ export function useAIJob() {
             status: ev.status,
             phase: ev.phase ?? s.phase,
             events: ev.phase
-              ? [...s.events, { ts: Date.now(), kind: "phase", label: phaseLabel(ev.phase) }]
+              ? [...s.events, { ts: Date.now(), kind: "phase", label: ev.label || phaseLabel(ev.phase) }]
               : s.events,
           }));
         } else if (ev.type === "delta") {
@@ -136,6 +136,9 @@ function mergeData(prev: Record<string, unknown>, next: Record<string, unknown>)
     } else if (k === "regionAppend") {
       const arr = (out.regions as unknown[] | undefined) ?? [];
       out.regions = [...arr, v];
+    } else if (k === "itemAppend") {
+      const arr = (out.items as unknown[] | undefined) ?? [];
+      out.items = [...arr, v];
     } else {
       out[k] = v;
     }
@@ -154,5 +157,12 @@ function describeData(d: Record<string, unknown>): string | null {
     return `Trending keyword · ${k?.k ?? "keyword"}`;
   }
   if ("confidence" in d) return `AI Confidence updated · ${String(d.confidence)}%`;
+  if ("itemAppend" in d) {
+    const it = d.itemAppend as { note?: string };
+    return `Localized segment · ${it?.note ?? "ready"}`;
+  }
+  if ("insights" in d) return "Localization insights updated";
+  if ("compliance" in d) return "Compliance check updated";
+  if ("scores" in d) return "Localization scores updated";
   return null;
 }
