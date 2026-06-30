@@ -13,6 +13,7 @@ import { Route as RegisterRouteImport } from './routes/register'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AppRouteImport } from './routes/_app'
+import { Route as AppIndexRouteImport } from './routes/_app.index'
 import { Route as AppStartRouteImport } from './routes/_app.start'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
 import { Route as AppReportRouteImport } from './routes/_app.report'
@@ -36,6 +37,11 @@ const AppRoute = AppRouteImport.update({
   id: '/_app',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppIndexRoute = AppIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppStartRoute = AppStartRouteImport.update({
   id: '/start',
   path: '/start',
@@ -53,7 +59,7 @@ const AppReportRoute = AppReportRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof AppRouteWithChildren
+  '/': typeof AppIndexRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
@@ -62,13 +68,13 @@ export interface FileRoutesByFullPath {
   '/start': typeof AppStartRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof AppRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/report': typeof AppReportRoute
   '/settings': typeof AppSettingsRoute
   '/start': typeof AppStartRoute
+  '/': typeof AppIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -79,6 +85,7 @@ export interface FileRoutesById {
   '/_app/report': typeof AppReportRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/start': typeof AppStartRoute
+  '/_app/': typeof AppIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -92,13 +99,13 @@ export interface FileRouteTypes {
     | '/start'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
     | '/forgot-password'
     | '/login'
     | '/register'
     | '/report'
     | '/settings'
     | '/start'
+    | '/'
   id:
     | '__root__'
     | '/_app'
@@ -108,6 +115,7 @@ export interface FileRouteTypes {
     | '/_app/report'
     | '/_app/settings'
     | '/_app/start'
+    | '/_app/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -147,6 +155,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app/': {
+      id: '/_app/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/start': {
       id: '/_app/start'
       path: '/start'
@@ -175,12 +190,14 @@ interface AppRouteChildren {
   AppReportRoute: typeof AppReportRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppStartRoute: typeof AppStartRoute
+  AppIndexRoute: typeof AppIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppReportRoute: AppReportRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppStartRoute: AppStartRoute,
+  AppIndexRoute: AppIndexRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
