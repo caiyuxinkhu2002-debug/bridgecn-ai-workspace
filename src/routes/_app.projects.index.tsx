@@ -7,7 +7,7 @@ import { useI18n } from "@/lib/i18n";
 import { useWorkspace } from "@/lib/workspace-context";
 import { stageLabelKey } from "@/lib/workflow";
 
-export const Route = createFileRoute("/_app/projects")({
+export const Route = createFileRoute("/_app/projects/")({
   head: () => ({ meta: [{ title: "Projects — BridgeCN AI" }] }),
   component: ProjectsPage,
 });
