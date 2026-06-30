@@ -38,7 +38,7 @@ const MODULE_TO_SUB: SubmoduleMap = {
 export const lovableProvider: AIProvider = {
   id: "lovable",
   label: "Lovable AI (Gemini)",
-  async *run({ module, input, signal }) {
+  async *run({ module, input, signal, prompt }) {
     const ctx = ((input?.projectContext ?? {}) as ProjectContext);
     const sub = MODULE_TO_SUB[module] ?? "market";
 
@@ -94,7 +94,7 @@ export const lovableProvider: AIProvider = {
       const errMsg = (e as Error)?.message || "AI generation failed";
       // Fallback: degrade to placeholder so the user sees something useful.
       console.warn("[lovable provider] falling back to placeholder:", errMsg);
-      const fallback: AsyncGenerator<AIStreamEvent> = placeholderProvider.run({ module, input, signal });
+      const fallback: AsyncGenerator<AIStreamEvent> = placeholderProvider.run({ module, input, signal, prompt });
       for await (const ev of fallback) {
         if (ev.type === "done") {
           const od = (ev.output_data ?? {}) as Record<string, unknown>;
