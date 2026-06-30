@@ -3,7 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useWorkspace, type KnowledgeBase } from "@/lib/workspace-context";
 import { Sparkles, ArrowRight, ArrowLeft, Loader2, CheckCircle2, Plus, X, Wand2 } from "lucide-react";
-import { BUILDER_STEPS, BUILDER_STEP_LABEL, synthesizeKnowledgeBase, type BuilderStep } from "@/lib/ai/project-builder";
+import { BUILDER_STEPS, BUILDER_STEP_KEY, synthesizeKnowledgeBase, type BuilderStep } from "@/lib/ai/project-builder";
+import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/start")({
   head: () => ({
@@ -30,6 +31,7 @@ const targetMarkets = [
 function StartPage() {
   const router = useRouter();
   const { createProject, workspaceId } = useWorkspace();
+  const t = useT();
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [name, setName] = useState("");
@@ -47,10 +49,10 @@ function StartPage() {
 
   function startBuild() {
     if (!name.trim() && !website.trim()) {
-      toast.error("Provide a brand name or official website");
+      toast.error(t("start.toast.needInput"));
       return;
     }
-    if (!workspaceId) { toast.error("No workspace selected"); return; }
+    if (!workspaceId) { toast.error(t("start.toast.noWorkspace")); return; }
     cancelledRef.current = false;
     setStep(2);
     setActiveStep(BUILDER_STEPS[0]);
@@ -84,7 +86,7 @@ function StartPage() {
   }
 
   async function saveProject() {
-    if (!workspaceId) { toast.error("No workspace selected"); return; }
+    if (!workspaceId) { toast.error(t("start.toast.noWorkspace")); return; }
     setSaving(true);
     try {
       const created = await createProject({
@@ -95,12 +97,12 @@ function StartPage() {
         website: kb.website || website,
         knowledgeBase: kb,
       });
-      if (!created) { toast.error("Could not create project"); return; }
-      toast.success("Project created");
+      if (!created) { toast.error(t("start.toast.createFailed")); return; }
+      toast.success(t("start.toast.created"));
       router.navigate({ to: "/projects/$projectId", params: { projectId: created.id } });
     } catch (e) {
       console.error(e);
-      toast.error("Could not create project");
+      toast.error(t("start.toast.createFailed"));
     } finally {
       setSaving(false);
     }
@@ -113,17 +115,17 @@ function StartPage() {
       <div className="text-center">
         <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--background)] px-3 py-1 text-xs font-medium text-[var(--muted-foreground)]">
           <Sparkles className="h-3.5 w-3.5 text-[var(--primary)]" />
-          AI Project Builder · Step {step} of 3
+          {t("start.badge", { n: step })}
         </div>
         <h1 className="mt-6 text-4xl font-semibold tracking-[-0.025em] md:text-5xl">
-          {step === 1 && "Start Your China Expansion"}
-          {step === 2 && "Building Your Project"}
-          {step === 3 && "Review & Edit"}
+          {step === 1 && t("start.title.1")}
+          {step === 2 && t("start.title.2")}
+          {step === 3 && t("start.title.3")}
         </h1>
         <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-[var(--muted-foreground)]">
-          {step === 1 && "Give BridgeCN AI a brand name or website. We'll build the full project knowledge base automatically."}
-          {step === 2 && "Reading the brand and generating a knowledge base."}
-          {step === 3 && "Everything is editable. Save to create the project."}
+          {step === 1 && t("start.sub.1")}
+          {step === 2 && t("start.sub.2")}
+          {step === 3 && t("start.sub.3")}
         </p>
       </div>
 
