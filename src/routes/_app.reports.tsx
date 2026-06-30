@@ -6,6 +6,7 @@ import { WorkflowFooter } from "@/components/workflow-footer";
 import { useI18n } from "@/lib/i18n";
 import { useWorkspace } from "@/lib/workspace-context";
 import { Download, Share2, FileText, Search } from "lucide-react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/reports")({
   head: () => ({ meta: [{ title: "Reports — BridgeCN AI" }] }),
@@ -17,10 +18,30 @@ function ReportsPage() {
   const router = useRouter();
   const { reports, setActiveProjectId, activeProject } = useWorkspace();
   const [q, setQ] = useState("");
-  const scopedRaw = activeProject?.id ? reports.filter((r) => r.projectId === activeProject.id) : [];
-  // Fall back to all reports when the active project has no demo reports linked.
-  const scoped = scopedRaw.length > 0 ? scopedRaw : reports;
+  // Sprint A: never cross-project leak. Show only reports for the active
+  // project, even if that's an empty list — empty state guides the user.
+  const scoped = activeProject?.id ? reports.filter((r) => r.projectId === activeProject.id) : reports;
   const filtered = scoped.filter((r) => r.title.toLowerCase().includes(q.toLowerCase()));
+
+  async function onShare(id: string, title: string) {
+    const url = `${window.location.origin}/report?reportId=${encodeURIComponent(id)}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title, url });
+        return;
+      }
+    } catch { /* fallthrough to clipboard */ }
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success(t("common.linkCopied"));
+    } catch {
+      toast.error(t("common.shareFailed"));
+    }
+  }
+  function onDownload(id: string) {
+    setActiveProjectId(scoped.find((r) => r.id === id)?.projectId || activeProject?.id || "");
+    router.navigate({ to: "/report", search: { reportId: id, print: 1 } as never });
+  }
   return (
     <div>
       <ProjectContextBar />
@@ -40,12 +61,12 @@ function ReportsPage() {
             <li key={r.id} className="flex items-center gap-4 px-5 py-4 transition-colors hover:bg-[var(--muted)]/60">
               <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[var(--muted)]"><FileText className="h-4 w-4" /></div>
               <div className="min-w-0 flex-1">
-                <button onClick={() => { setActiveProjectId(r.projectId); router.navigate({ to: "/report" }); }} className="block w-full truncate text-left text-sm font-medium hover:underline">{r.title}</button>
+                <button onClick={() => { setActiveProjectId(r.projectId); router.navigate({ to: "/report", search: { reportId: r.id } as never }); }} className="block w-full truncate text-left text-sm font-medium hover:underline">{r.title}</button>
                 <p className="truncate text-xs text-[var(--muted-foreground)]">{r.type} · {r.date}</p>
               </div>
               <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-medium ${r.status === "Ready" ? "bg-[oklch(0.96_0.04_150)] text-[oklch(0.42_0.12_150)]" : "bg-[var(--muted)] text-[var(--muted-foreground)]"}`}>{r.status === "Ready" ? t("reports.status.ready") : t("reports.status.draft")}</span>
-              <button className="grid h-8 w-8 place-items-center rounded-md hover:bg-[var(--background)]" aria-label={t("common.share")}><Share2 className="h-3.5 w-3.5" /></button>
-              <button className="grid h-8 w-8 place-items-center rounded-md hover:bg-[var(--background)]" aria-label={t("common.download")}><Download className="h-3.5 w-3.5" /></button>
+              <button onClick={() => onShare(r.id, r.title)} className="grid h-8 w-8 place-items-center rounded-md hover:bg-[var(--background)]" aria-label={t("common.share")}><Share2 className="h-3.5 w-3.5" /></button>
+              <button onClick={() => onDownload(r.id)} className="grid h-8 w-8 place-items-center rounded-md hover:bg-[var(--background)]" aria-label={t("common.download")}><Download className="h-3.5 w-3.5" /></button>
             </li>
           ))}
         </ul>
