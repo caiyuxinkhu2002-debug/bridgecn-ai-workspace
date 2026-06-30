@@ -16,13 +16,33 @@ export const Route = createFileRoute("/_app/localization-studio")({
   component: LocalizationStudioPage,
 });
 
-const CHANNELS = ["Xiaohongshu", "Douyin", "Tmall PDP", "JD.com", "WeChat", "RED KOL"] as const;
-const TONES = ["Luxury", "Scientific", "Friendly", "Natural", "Premium", "Young"] as const;
-const AUDIENCES = ["Gen Z", "Office Workers", "Mothers", "Sensitive Skin", "High-income Consumers"] as const;
+const CHANNELS = [
+  { id: "Xiaohongshu", key: "loc.channel.xiaohongshu" },
+  { id: "Douyin", key: "loc.channel.douyin" },
+  { id: "Tmall PDP", key: "loc.channel.tmall" },
+  { id: "JD.com", key: "loc.channel.jd" },
+  { id: "WeChat", key: "loc.channel.wechat" },
+  { id: "RED KOL", key: "loc.channel.redkol" },
+] as const;
+const TONES = [
+  { id: "Luxury", key: "loc.tone.luxury" },
+  { id: "Scientific", key: "loc.tone.scientific" },
+  { id: "Friendly", key: "loc.tone.friendly" },
+  { id: "Natural", key: "loc.tone.natural" },
+  { id: "Premium", key: "loc.tone.premium" },
+  { id: "Young", key: "loc.tone.young" },
+] as const;
+const AUDIENCES = [
+  { id: "Gen Z", key: "loc.audience.genZ" },
+  { id: "Office Workers", key: "loc.audience.office" },
+  { id: "Mothers", key: "loc.audience.mothers" },
+  { id: "Sensitive Skin", key: "loc.audience.sensitive" },
+  { id: "High-income Consumers", key: "loc.audience.highIncome" },
+] as const;
 
-type Channel = typeof CHANNELS[number];
-type Tone = typeof TONES[number];
-type Audience = typeof AUDIENCES[number];
+type Channel = typeof CHANNELS[number]["id"];
+type Tone = typeof TONES[number]["id"];
+type Audience = typeof AUDIENCES[number]["id"];
 
 type LocItem = { source: string; target: string; note: string };
 type LocInsights = { reasoning?: string; consumer?: string; seo?: string[]; platform?: string; cultural?: string };
@@ -30,12 +50,12 @@ type LocCompliance = { advertising?: string; sensitive?: string; risk?: string; 
 type LocScores = { localization?: number; seo?: number; native?: number; platformMatch?: number };
 
 const PHASE_ORDER: AIJobPhase[] = ["thinking", "searching", "analyzing", "writing", "completed"];
-const PHASE_LABEL: Record<AIJobPhase, string> = {
-  thinking: "Thinking",
-  searching: "Analyzing Brand",
-  analyzing: "Understanding Chinese Consumers",
-  writing: "Rewriting",
-  completed: "Completed",
+const PHASE_KEY: Record<AIJobPhase, string> = {
+  thinking: "phase.thinking",
+  searching: "loc.phase.searching",
+  analyzing: "loc.phase.analyzing",
+  writing: "loc.phase.writing",
+  completed: "phase.completed",
 };
 
 function LocalizationStudioPage() {
@@ -116,13 +136,13 @@ function LocalizationStudioPage() {
   // React to AI status changes
   useEffect(() => {
     if (ai.status === "completed") {
-      toast.success("Localization generated");
+      toast.success(t("loc.toast.generated"));
       refreshHistory();
       if (ai.job) setSelectedJob(ai.job);
     } else if (ai.status === "failed") {
-      toast.error(ai.error || "Generation failed");
+      toast.error(ai.error || t("loc.toast.failed"));
     } else if (ai.status === "cancelled") {
-      toast.message("Generation cancelled");
+      toast.message(t("loc.toast.cancelled"));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ai.status]);
@@ -220,7 +240,7 @@ function LocalizationStudioPage() {
   const onCopy = useCallback(async () => {
     const text = displayed.items.map((it) => it.target).join("\n\n") || displayed.output;
     await navigator.clipboard.writeText(text);
-    toast.success("Copied to clipboard");
+    toast.success(t("common.copied"));
   }, [displayed]);
 
   const onExportMd = useCallback(() => {
@@ -239,14 +259,14 @@ function LocalizationStudioPage() {
       </head><body><pre>${toMarkdown().replace(/[<>&]/g, (c) => ({ "<":"&lt;",">":"&gt;","&":"&amp;" }[c] as string))}</pre>
       <script>window.onload=()=>window.print()</script></body></html>`;
     const w = window.open("", "_blank");
-    if (!w) return toast.error("Pop-up blocked");
+    if (!w) return toast.error(t("loc.toast.popupBlocked"));
     w.document.write(html);
     w.document.close();
   }, [toMarkdown, activeProject?.name]);
 
   const onSaveVersion = useCallback(() => {
-    if (!selectedJob) return toast.message("Generate a localization first");
-    toast.success("Version already saved");
+    if (!selectedJob) return toast.message(t("loc.toast.generateFirst"));
+    toast.success(t("loc.toast.versionSaved"));
   }, [selectedJob]);
 
   // History actions
@@ -260,7 +280,7 @@ function LocalizationStudioPage() {
   const onDeleteJob = async (id: string) => {
     try {
       await deleteJob(id);
-      toast.success("Deleted");
+      toast.success(t("loc.toast.deleted"));
       if (selectedJob?.id === id) setSelectedJob(null);
       if (compareJob?.id === id) setCompareJob(null);
       refreshHistory();
@@ -277,7 +297,7 @@ function LocalizationStudioPage() {
     const j = await getJob(id);
     if (j) {
       setSelectedJob(j);
-      toast.success("Restored version");
+      toast.success(t("loc.toast.restored"));
     }
   };
 
