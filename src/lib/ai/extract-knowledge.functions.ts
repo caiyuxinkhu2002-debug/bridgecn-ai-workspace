@@ -12,6 +12,7 @@ export type ExtractInput = {
   brandName?: string;
   website?: string;
   targetMarket?: string;
+  uiLocale?: "en" | "ko" | "zh";
 };
 
 export type ExtractedKB = {
@@ -29,6 +30,7 @@ export type ExtractedKB = {
   website?: string;
   socialChannels?: { label: string; url: string }[];
   _confidence?: Record<string, "high" | "medium" | "low">;
+  _locale?: "en" | "ko" | "zh";
 };
 
 function normalizeUrl(input: string): string {
@@ -134,11 +136,20 @@ function pickKeyLinks(links: { href: string; text: string }[], origin: string): 
   return out;
 }
 
-async function callLovableAI(payload: { brandName?: string; website?: string; targetMarket?: string; corpus: string }): Promise<ExtractedKB> {
+async function callLovableAI(payload: { brandName?: string; website?: string; targetMarket?: string; corpus: string; uiLocale?: "en" | "ko" | "zh" }): Promise<ExtractedKB> {
   const apiKey = process.env.LOVABLE_API_KEY;
   if (!apiKey) throw new Error("LOVABLE_API_KEY missing");
 
-  const system = `You are a brand research analyst. From the provided website content, extract a structured Knowledge Base for a brand that is preparing to enter the Chinese market. Be specific and grounded in the source — never invent products or competitors that are not implied. If a field cannot be determined, return the most reasonable inference based on industry context, and lower its confidence. Output STRICT JSON only, matching the requested schema.`;
+  const langName = payload.uiLocale === "zh"
+    ? "Simplified Chinese (简体中文)"
+    : payload.uiLocale === "ko"
+      ? "Korean (한국어)"
+      : "English";
+  const system = `You are a brand research analyst. From the provided website content, extract a structured Knowledge Base for a brand that is preparing to enter the Chinese market. Be specific and grounded in the source — never invent products or competitors that are not implied. If a field cannot be determined, return the most reasonable inference based on industry context, and lower its confidence.
+
+LANGUAGE: Write ALL free-text values (industry, category, brandStory, brandPositioning, brandTone, keywords, competitors, targetAudience, koreanCopy, product descriptions) in ${langName}. Keep JSON KEYS in English. Keep brand names, product SKU codes, URLs, social handles, and platform names (Xiaohongshu/Tmall/TikTok/Instagram) in their original form.
+
+Output STRICT JSON only, matching the requested schema.`;
 
   const schemaHint = `{
   "company": string,
@@ -242,6 +253,7 @@ export const extractKnowledgeFromWebsite = createServerFn({ method: "POST" })
       website,
       targetMarket: data.targetMarket,
       corpus,
+      uiLocale: data.uiLocale,
     });
 
     // Merge: prefer scraped socials when AI returned none, dedupe by label.
@@ -266,6 +278,7 @@ export const extractKnowledgeFromWebsite = createServerFn({ method: "POST" })
       website: website || data.website || "",
       socialChannels,
       _confidence: ai._confidence,
+      _locale: data.uiLocale ?? "en",
     };
     return result;
   });

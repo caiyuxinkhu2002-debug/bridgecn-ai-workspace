@@ -1,11 +1,13 @@
 import { createFileRoute, Link, useRouter, notFound } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowRight, CheckCircle2, Circle, Pencil, Trash2, Loader2, Copy, Archive, ArchiveRestore } from "lucide-react";
+import { ArrowRight, CheckCircle2, Circle, Pencil, Trash2, Loader2, Copy, Archive, ArchiveRestore, Languages } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/app-shell";
 import { useI18n } from "@/lib/i18n";
 import { useWorkspace, type Project, type KnowledgeBase } from "@/lib/workspace-context";
 import { stageLabelKey, stageOrder, stageToPath, type Stage } from "@/lib/workflow";
+import { useServerFn } from "@tanstack/react-start";
+import { translateProjectContent } from "@/lib/ai/translate.functions";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -136,10 +138,12 @@ function KVList({ label, items }: { label: string; items?: string[] }) {
 
 function ProjectDetailPage() {
   const { projectId } = Route.useParams();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const router = useRouter();
-  const { allProjects, setActiveProjectId, activeProjectId, updateProject, deleteProject, duplicateProject, archiveProject, unarchiveProject } = useWorkspace();
+  const { allProjects, setActiveProjectId, activeProjectId, updateProject, deleteProject, duplicateProject, archiveProject, unarchiveProject, refreshProjects } = useWorkspace();
   const project = allProjects.find((p) => p.id === projectId);
+  const translate = useServerFn(translateProjectContent);
+  const [translating, setTranslating] = useState(false);
 
   useEffect(() => {
     if (project && project.id !== activeProjectId) setActiveProjectId(project.id);
@@ -207,6 +211,26 @@ function ProjectDetailPage() {
 
   const currentIdx = stageOrder.indexOf(project.stage);
 
+  const kbLocale = (project.knowledgeBase?._locale as "en" | "ko" | "zh" | undefined) ?? "en";
+  const localeMismatch = kbLocale !== locale;
+  const translateLabel =
+    locale === "zh" ? t("pd.translate.toZh") : locale === "ko" ? t("pd.translate.toKo") : t("pd.translate.toEn");
+  const localeDisplay = (l: string) => (l === "zh" ? "中文" : l === "ko" ? "한국어" : "English");
+
+  async function onTranslate() {
+    setTranslating(true);
+    try {
+      await translate({ data: { projectId: project!.id, targetLocale: locale } });
+      await refreshProjects();
+      toast.success(t("pd.translate.success", { v: localeDisplay(locale) }));
+    } catch (e) {
+      console.error(e);
+      toast.error((e as Error)?.message || t("pd.translate.fail"));
+    } finally {
+      setTranslating(false);
+    }
+  }
+
   return (
     <div>
       <Link to="/projects" className="mb-4 inline-block text-xs font-medium text-[var(--muted-foreground)] hover:text-[var(--foreground)]">
@@ -215,6 +239,15 @@ function ProjectDetailPage() {
       <div className="mb-6 flex items-start justify-between gap-4">
         <PageHeader title={project.name} description={project.summary || project.description} />
         <div className="flex shrink-0 items-center gap-2">
+          <button
+            onClick={onTranslate}
+            disabled={translating}
+            title={localeMismatch ? t("pd.translate.hint", { v: localeDisplay(kbLocale) }) : undefined}
+            className={`inline-flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-xs font-medium hover:bg-[var(--muted)] disabled:opacity-50 ${localeMismatch ? "border-[var(--primary)] text-[var(--primary)]" : "border-[var(--border)]"}`}
+          >
+            {translating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Languages className="h-3.5 w-3.5" />}
+            {translating ? t("pd.translate.busy") : translateLabel}
+          </button>
           <button
             onClick={() => setEditing((v) => !v)}
             className="inline-flex h-8 items-center gap-1.5 rounded-md border border-[var(--border)] px-2.5 text-xs font-medium hover:bg-[var(--muted)]"

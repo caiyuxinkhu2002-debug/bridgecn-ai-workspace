@@ -665,6 +665,13 @@ const enExtras2: Dict = {
   "projects.action.restore": "Restore",
   "projects.action.delete": "Delete",
   "projects.delete.confirm": "Delete \"{v}\"?",
+  "pd.translate.toZh": "Translate to 中文",
+  "pd.translate.toKo": "Translate to 한국어",
+  "pd.translate.toEn": "Translate to English",
+  "pd.translate.busy": "Translating…",
+  "pd.translate.success": "Translated to {v}",
+  "pd.translate.fail": "Could not translate",
+  "pd.translate.hint": "Stored content is in {v}. Click to translate.",
 };
 
 const koExtras2: Dict = {
@@ -730,6 +737,13 @@ const koExtras2: Dict = {
   "projects.action.restore": "복원",
   "projects.action.delete": "삭제",
   "projects.delete.confirm": "\"{v}\" 프로젝트를 삭제할까요?",
+  "pd.translate.toZh": "中文으로 번역",
+  "pd.translate.toKo": "한국어로 번역",
+  "pd.translate.toEn": "영어로 번역",
+  "pd.translate.busy": "번역 중…",
+  "pd.translate.success": "{v}(으)로 번역되었습니다",
+  "pd.translate.fail": "번역하지 못했습니다",
+  "pd.translate.hint": "저장된 콘텐츠가 {v}입니다. 클릭하여 번역하세요.",
 };
 
 const zhExtras2: Dict = {
@@ -795,6 +809,13 @@ const zhExtras2: Dict = {
   "projects.action.restore": "恢复",
   "projects.action.delete": "删除",
   "projects.delete.confirm": "删除 \"{v}\"?",
+  "pd.translate.toZh": "翻译为中文",
+  "pd.translate.toKo": "翻译为韩语",
+  "pd.translate.toEn": "翻译为英文",
+  "pd.translate.busy": "翻译中…",
+  "pd.translate.success": "已翻译为{v}",
+  "pd.translate.fail": "翻译失败",
+  "pd.translate.hint": "当前内容为{v}，点击翻译。",
 };
 
 const koExtras: Dict = {

@@ -18,6 +18,10 @@ export type KnowledgeBase = {
   koreanCopy?: string;
   website?: string;
   socialChannels?: { label: string; url: string }[];
+  /** UI language of the persisted free-text fields (set after translate / extract). */
+  _locale?: "en" | "ko" | "zh";
+  /** First-time English snapshot so users can switch back later. */
+  _originalEn?: Partial<KnowledgeBase> & { description?: string };
 };
 
 export type Project = {
