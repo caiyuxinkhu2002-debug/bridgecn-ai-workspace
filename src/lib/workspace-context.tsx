@@ -317,7 +317,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const FALLBACK_WS: Workspace = { id: "", name: "—", plan: "Free", region: "KR", logo_url: null };
-  const FALLBACK_PROJECT: Project = { id: "", workspaceId: "", name: "—", initials: "—", industry: "—", region: "—", stage: "research" as Stage, owner: "—", progress: 0, updated: "", kpi: [], summary: "" };
+  const FALLBACK_PROJECT: Project = { id: "", workspaceId: "", name: "—", initials: "—", industry: "—", region: "—", stage: "research" as Stage, owner: "—", progress: 0, updated: "", kpi: [], summary: "", description: "", targetMarket: "" };
   const activeWorkspace = useMemo<Workspace>(() => workspaces.find((w) => w.id === workspaceId) ?? workspaces[0] ?? FALLBACK_WS, [workspaces, workspaceId]);
   const projects = useMemo(() => projectsState.filter((p) => p.workspaceId === workspaceId), [projectsState, workspaceId]);
   const activeProject = useMemo<Project>(() => projectsState.find((p) => p.id === activeProjectId) ?? projectsState[0] ?? FALLBACK_PROJECT, [projectsState, activeProjectId]);
