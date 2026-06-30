@@ -711,10 +711,6 @@ const zhExtras: Dict = {
   "launch.item.review": "效果复盘",
 };
 
-Object.assign(en, enExtras);
-Object.assign(ko, koExtras);
-Object.assign(zh, zhExtras);
-
 const ko: Dict = {
   "brand.tag": "한국 → 중국",
   "nav.section.workspace": "워크스페이스",
