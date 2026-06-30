@@ -6,6 +6,16 @@ import { PageHeader } from "@/components/app-shell";
 import { useI18n } from "@/lib/i18n";
 import { useWorkspace, type Project, type KnowledgeBase } from "@/lib/workspace-context";
 import { stageLabelKey, stageOrder, stageToPath, type Stage } from "@/lib/workflow";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/_app/projects/$projectId")({
   head: () => ({ meta: [{ title: "Project — BridgeCN AI" }] }),
@@ -23,6 +33,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 function KnowledgeBasePanel({ project }: { project: Project }) {
   const { updateProject } = useWorkspace();
+  const { t } = useI18n();
   const [editing, setEditing] = useState(false);
   const [busy, setBusy] = useState(false);
   const [kb, setKb] = useState<KnowledgeBase>(project.knowledgeBase || {});
@@ -34,9 +45,9 @@ function KnowledgeBasePanel({ project }: { project: Project }) {
     setBusy(true);
     try {
       await updateProject(project.id, { knowledgeBase: kb, website: kb.website });
-      toast.success("Knowledge base updated");
+      toast.success(t("pd.toast.kbSaved"));
       setEditing(false);
-    } catch { toast.error("Could not save"); } finally { setBusy(false); }
+    } catch { toast.error(t("pd.toast.kbSaveFailed")); } finally { setBusy(false); }
   }
 
   const set = <K extends keyof KnowledgeBase>(k: K, v: KnowledgeBase[K]) => setKb({ ...kb, [k]: v });
@@ -44,35 +55,35 @@ function KnowledgeBasePanel({ project }: { project: Project }) {
   return (
     <div className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-6 shadow-[var(--shadow-soft)]">
       <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-sm font-semibold">Knowledge Base</h3>
+        <h3 className="text-sm font-semibold">{t("kb.title")}</h3>
         {editing ? (
           <div className="flex gap-2">
-            <button onClick={() => { setEditing(false); setKb(project.knowledgeBase || {}); }} className="rounded-md border border-[var(--border)] px-2.5 py-1 text-xs font-medium hover:bg-[var(--muted)]">Cancel</button>
+            <button onClick={() => { setEditing(false); setKb(project.knowledgeBase || {}); }} className="rounded-md border border-[var(--border)] px-2.5 py-1 text-xs font-medium hover:bg-[var(--muted)]">{t("pd.action.cancel")}</button>
             <button onClick={save} disabled={busy} className="inline-flex items-center gap-1 rounded-md bg-[var(--foreground)] px-2.5 py-1 text-xs font-medium text-[var(--background)] hover:opacity-90 disabled:opacity-50">
-              {busy && <Loader2 className="h-3 w-3 animate-spin" />} Save
+              {busy && <Loader2 className="h-3 w-3 animate-spin" />} {t("pd.action.save")}
             </button>
           </div>
         ) : (
-          <button onClick={() => setEditing(true)} className="rounded-md border border-[var(--border)] px-2.5 py-1 text-xs font-medium hover:bg-[var(--muted)]">Edit</button>
+          <button onClick={() => setEditing(true)} className="rounded-md border border-[var(--border)] px-2.5 py-1 text-xs font-medium hover:bg-[var(--muted)]">{t("pd.action.edit")}</button>
         )}
       </div>
 
       {!editing ? (
         <dl className="space-y-3 text-sm">
-          <KV label="Company" value={kb.company} />
-          <KV label="Industry" value={kb.industry} />
-          <KV label="Category" value={kb.category} />
-          <KVList label="Products" items={kb.products} />
-          <KV label="Brand Story" value={kb.brandStory} multiline />
-          <KVList label="Brand Tone" items={kb.brandTone} />
-          <KVList label="Keywords" items={kb.keywords} />
-          <KVList label="Competitors" items={kb.competitors} />
-          <KV label="Target Audience" value={kb.targetAudience} multiline />
-          <KV label="Korean Marketing Copy" value={kb.koreanCopy} multiline />
-          <KV label="Website" value={kb.website} />
+          <KV label={t("kb.field.company")} value={kb.company} />
+          <KV label={t("kb.field.industry")} value={kb.industry} />
+          <KV label={t("kb.field.category")} value={kb.category} />
+          <KVList label={t("kb.field.products")} items={kb.products} />
+          <KV label={t("kb.field.brandStory")} value={kb.brandStory} multiline />
+          <KVList label={t("kb.field.brandTone")} items={kb.brandTone} />
+          <KVList label={t("kb.field.keywords")} items={kb.keywords} />
+          <KVList label={t("kb.field.competitors")} items={kb.competitors} />
+          <KV label={t("kb.field.targetAudience")} value={kb.targetAudience} multiline />
+          <KV label={t("kb.field.koreanCopy")} value={kb.koreanCopy} multiline />
+          <KV label={t("kb.field.website")} value={kb.website} />
           {kb.socialChannels && kb.socialChannels.length > 0 && (
             <div>
-              <dt className="text-[11px] font-medium uppercase tracking-wider text-[var(--muted-foreground)]">Social Channels</dt>
+              <dt className="text-[11px] font-medium uppercase tracking-wider text-[var(--muted-foreground)]">{t("kb.field.socialChannels")}</dt>
               <dd className="mt-1 flex flex-wrap gap-2">
                 {kb.socialChannels.map((c, i) => (
                   <a key={i} href={c.url} target="_blank" rel="noreferrer" className="rounded-full bg-[var(--muted)] px-2 py-0.5 text-xs hover:opacity-80">{c.label}</a>
@@ -83,19 +94,19 @@ function KnowledgeBasePanel({ project }: { project: Project }) {
         </dl>
       ) : (
         <div className="space-y-3 text-sm">
-          <Field label="Company"><input value={kbAny("company")} onChange={(e) => set("company", e.target.value)} className="h-9 w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-2 text-sm" /></Field>
+          <Field label={t("kb.field.company")}><input value={kbAny("company")} onChange={(e) => set("company", e.target.value)} className="h-9 w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-2 text-sm" /></Field>
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Industry"><input value={kbAny("industry")} onChange={(e) => set("industry", e.target.value)} className="h-9 w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-2 text-sm" /></Field>
-            <Field label="Category"><input value={kbAny("category")} onChange={(e) => set("category", e.target.value)} className="h-9 w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-2 text-sm" /></Field>
+            <Field label={t("kb.field.industry")}><input value={kbAny("industry")} onChange={(e) => set("industry", e.target.value)} className="h-9 w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-2 text-sm" /></Field>
+            <Field label={t("kb.field.category")}><input value={kbAny("category")} onChange={(e) => set("category", e.target.value)} className="h-9 w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-2 text-sm" /></Field>
           </div>
-          <Field label="Products (comma-separated)"><input value={(kb.products || []).join(", ")} onChange={(e) => set("products", e.target.value.split(",").map((s) => s.trim()).filter(Boolean))} className="h-9 w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-2 text-sm" /></Field>
-          <Field label="Brand Story"><textarea rows={4} value={kbAny("brandStory")} onChange={(e) => set("brandStory", e.target.value)} className="w-full rounded-md border border-[var(--border)] bg-[var(--background)] p-2 text-sm" /></Field>
-          <Field label="Brand Tone (comma-separated)"><input value={(kb.brandTone || []).join(", ")} onChange={(e) => set("brandTone", e.target.value.split(",").map((s) => s.trim()).filter(Boolean))} className="h-9 w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-2 text-sm" /></Field>
-          <Field label="Keywords (comma-separated)"><input value={(kb.keywords || []).join(", ")} onChange={(e) => set("keywords", e.target.value.split(",").map((s) => s.trim()).filter(Boolean))} className="h-9 w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-2 text-sm" /></Field>
-          <Field label="Competitors (comma-separated)"><input value={(kb.competitors || []).join(", ")} onChange={(e) => set("competitors", e.target.value.split(",").map((s) => s.trim()).filter(Boolean))} className="h-9 w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-2 text-sm" /></Field>
-          <Field label="Target Audience"><textarea rows={3} value={kbAny("targetAudience")} onChange={(e) => set("targetAudience", e.target.value)} className="w-full rounded-md border border-[var(--border)] bg-[var(--background)] p-2 text-sm" /></Field>
-          <Field label="Korean Marketing Copy"><textarea rows={3} value={kbAny("koreanCopy")} onChange={(e) => set("koreanCopy", e.target.value)} className="w-full rounded-md border border-[var(--border)] bg-[var(--background)] p-2 text-sm" /></Field>
-          <Field label="Website"><input value={kbAny("website")} onChange={(e) => set("website", e.target.value)} className="h-9 w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-2 text-sm" /></Field>
+          <Field label={`${t("kb.field.products")} (${t("kb.hint.commaSeparated")})`}><input value={(kb.products || []).join(", ")} onChange={(e) => set("products", e.target.value.split(",").map((s) => s.trim()).filter(Boolean))} className="h-9 w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-2 text-sm" /></Field>
+          <Field label={t("kb.field.brandStory")}><textarea rows={4} value={kbAny("brandStory")} onChange={(e) => set("brandStory", e.target.value)} className="w-full rounded-md border border-[var(--border)] bg-[var(--background)] p-2 text-sm" /></Field>
+          <Field label={`${t("kb.field.brandTone")} (${t("kb.hint.commaSeparated")})`}><input value={(kb.brandTone || []).join(", ")} onChange={(e) => set("brandTone", e.target.value.split(",").map((s) => s.trim()).filter(Boolean))} className="h-9 w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-2 text-sm" /></Field>
+          <Field label={`${t("kb.field.keywords")} (${t("kb.hint.commaSeparated")})`}><input value={(kb.keywords || []).join(", ")} onChange={(e) => set("keywords", e.target.value.split(",").map((s) => s.trim()).filter(Boolean))} className="h-9 w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-2 text-sm" /></Field>
+          <Field label={`${t("kb.field.competitors")} (${t("kb.hint.commaSeparated")})`}><input value={(kb.competitors || []).join(", ")} onChange={(e) => set("competitors", e.target.value.split(",").map((s) => s.trim()).filter(Boolean))} className="h-9 w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-2 text-sm" /></Field>
+          <Field label={t("kb.field.targetAudience")}><textarea rows={3} value={kbAny("targetAudience")} onChange={(e) => set("targetAudience", e.target.value)} className="w-full rounded-md border border-[var(--border)] bg-[var(--background)] p-2 text-sm" /></Field>
+          <Field label={t("kb.field.koreanCopy")}><textarea rows={3} value={kbAny("koreanCopy")} onChange={(e) => set("koreanCopy", e.target.value)} className="w-full rounded-md border border-[var(--border)] bg-[var(--background)] p-2 text-sm" /></Field>
+          <Field label={t("kb.field.website")}><input value={kbAny("website")} onChange={(e) => set("website", e.target.value)} className="h-9 w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-2 text-sm" /></Field>
         </div>
       )}
     </div>
@@ -136,6 +147,7 @@ function ProjectDetailPage() {
 
   const [editing, setEditing] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [draft, setDraft] = useState({ name: "", industry: "", targetMarket: "", description: "", stage: "research" as Stage });
   useEffect(() => {
     if (project) setDraft({
@@ -155,20 +167,19 @@ function ProjectDetailPage() {
     setBusy(true);
     try {
       await updateProject(project!.id, draft);
-      toast.success("Project updated");
+      toast.success(t("pd.toast.updated"));
       setEditing(false);
-    } catch (e) { console.error(e); toast.error("Could not save project"); }
+    } catch (e) { console.error(e); toast.error(t("pd.toast.updateFailed")); }
     finally { setBusy(false); }
   }
 
   async function onDelete() {
-    if (!confirm(`Delete "${project!.name}"? This can be restored from the database.`)) return;
     setBusy(true);
     try {
       await deleteProject(project!.id);
-      toast.success("Project deleted");
+      toast.success(t("pd.toast.deleted"));
       router.navigate({ to: "/projects" });
-    } catch (e) { console.error(e); toast.error("Could not delete"); }
+    } catch (e) { console.error(e); toast.error(t("pd.toast.deleteFailed")); }
     finally { setBusy(false); }
   }
 
@@ -177,20 +188,20 @@ function ProjectDetailPage() {
     try {
       const dup = await duplicateProject(project!.id);
       if (dup) {
-        toast.success("Project duplicated");
+        toast.success(t("pd.toast.duplicated"));
         setActiveProjectId(dup.id);
         router.navigate({ to: "/projects/$projectId", params: { projectId: dup.id } });
       }
-    } catch { toast.error("Could not duplicate"); }
+    } catch { toast.error(t("pd.toast.duplicateFailed")); }
     finally { setBusy(false); }
   }
 
   async function onArchive() {
     setBusy(true);
     try {
-      if (project!.archived) { await unarchiveProject(project!.id); toast.success("Project restored"); }
-      else { await archiveProject(project!.id); toast.success("Project archived"); }
-    } catch { toast.error("Could not archive"); }
+      if (project!.archived) { await unarchiveProject(project!.id); toast.success(t("pd.toast.restored")); }
+      else { await archiveProject(project!.id); toast.success(t("pd.toast.archived")); }
+    } catch { toast.error(t("pd.toast.archiveFailed")); }
     finally { setBusy(false); }
   }
 
@@ -209,7 +220,7 @@ function ProjectDetailPage() {
             className="inline-flex h-8 items-center gap-1.5 rounded-md border border-[var(--border)] px-2.5 text-xs font-medium hover:bg-[var(--muted)]"
           >
             <Pencil className="h-3.5 w-3.5" />
-            {editing ? "Cancel" : "Edit"}
+            {editing ? t("pd.action.cancel") : t("pd.action.edit")}
           </button>
           <button
             onClick={onDuplicate}
@@ -217,7 +228,7 @@ function ProjectDetailPage() {
             className="inline-flex h-8 items-center gap-1.5 rounded-md border border-[var(--border)] px-2.5 text-xs font-medium hover:bg-[var(--muted)] disabled:opacity-50"
           >
             <Copy className="h-3.5 w-3.5" />
-            Duplicate
+            {t("pd.action.duplicate")}
           </button>
           <button
             onClick={onArchive}
@@ -225,47 +236,47 @@ function ProjectDetailPage() {
             className="inline-flex h-8 items-center gap-1.5 rounded-md border border-[var(--border)] px-2.5 text-xs font-medium hover:bg-[var(--muted)] disabled:opacity-50"
           >
             {project.archived ? <ArchiveRestore className="h-3.5 w-3.5" /> : <Archive className="h-3.5 w-3.5" />}
-            {project.archived ? "Restore" : "Archive"}
+            {project.archived ? t("pd.action.restore") : t("pd.action.archive")}
           </button>
           <button
-            onClick={onDelete}
+            onClick={() => setConfirmDelete(true)}
             disabled={busy}
             className="inline-flex h-8 items-center gap-1.5 rounded-md border border-[var(--border)] px-2.5 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-50 dark:hover:bg-red-950/40"
           >
             <Trash2 className="h-3.5 w-3.5" />
-            Delete
+            {t("pd.action.delete")}
           </button>
         </div>
       </div>
 
       {editing && (
         <div className="mb-6 rounded-2xl border border-[var(--border)] bg-[var(--background)] p-6 shadow-[var(--shadow-soft)]">
-          <h3 className="mb-4 text-sm font-semibold">Edit project</h3>
+          <h3 className="mb-4 text-sm font-semibold">{t("pd.edit.title")}</h3>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Brand name">
+            <Field label={t("pd.field.brandName")}>
               <input value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} className="h-9 w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-2 text-sm" />
             </Field>
-            <Field label="Industry">
+            <Field label={t("pd.field.industry")}>
               <input value={draft.industry} onChange={(e) => setDraft({ ...draft, industry: e.target.value })} className="h-9 w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-2 text-sm" />
             </Field>
-            <Field label="Target market">
+            <Field label={t("pd.field.targetMarket")}>
               <input value={draft.targetMarket} onChange={(e) => setDraft({ ...draft, targetMarket: e.target.value })} className="h-9 w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-2 text-sm" />
             </Field>
-            <Field label="Status">
+            <Field label={t("pd.field.status")}>
               <select value={draft.stage} onChange={(e) => setDraft({ ...draft, stage: e.target.value as Stage })} className="h-9 w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-2 text-sm">
                 {stageOrder.map((s) => <option key={s} value={s}>{t(stageLabelKey[s])}</option>)}
               </select>
             </Field>
             <div className="sm:col-span-2">
-              <Field label="Description">
+              <Field label={t("pd.field.description")}>
                 <textarea rows={4} value={draft.description} onChange={(e) => setDraft({ ...draft, description: e.target.value })} className="w-full rounded-md border border-[var(--border)] bg-[var(--background)] p-2 text-sm" />
               </Field>
             </div>
           </div>
           <div className="mt-4 flex justify-end gap-2">
-            <button onClick={() => setEditing(false)} className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs font-medium hover:bg-[var(--muted)]">Cancel</button>
+            <button onClick={() => setEditing(false)} className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs font-medium hover:bg-[var(--muted)]">{t("pd.action.cancel")}</button>
             <button onClick={save} disabled={busy || !draft.name.trim()} className="inline-flex items-center gap-1.5 rounded-md bg-[var(--foreground)] px-3 py-1.5 text-xs font-medium text-[var(--background)] hover:opacity-90 disabled:opacity-50">
-              {busy && <Loader2 className="h-3 w-3 animate-spin" />} Save
+              {busy && <Loader2 className="h-3 w-3 animate-spin" />} {t("pd.action.save")}
             </button>
           </div>
         </div>
@@ -335,6 +346,18 @@ function ProjectDetailPage() {
           </button>
         </div>
       </div>
+      <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("pd.delete.confirmTitle")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("pd.delete.confirmBody", { v: project.name })}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("pd.action.cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { setConfirmDelete(false); onDelete(); }}>{t("pd.action.delete")}</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
