@@ -18,6 +18,7 @@ import { Route as AppStartRouteImport } from './routes/_app.start'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
 import { Route as AppReportRouteImport } from './routes/_app.report'
 import { Route as AppProjectsRouteImport } from './routes/_app.projects'
+import { Route as AppChinaMarketInsightRouteImport } from './routes/_app.china-market-insight'
 import { Route as AppProjectsProjectIdRouteImport } from './routes/_app.projects.$projectId'
 
 const RegisterRoute = RegisterRouteImport.update({
@@ -64,6 +65,11 @@ const AppProjectsRoute = AppProjectsRouteImport.update({
   path: '/projects',
   getParentRoute: () => AppRoute,
 } as any)
+const AppChinaMarketInsightRoute = AppChinaMarketInsightRouteImport.update({
+  id: '/china-market-insight',
+  path: '/china-market-insight',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppProjectsProjectIdRoute = AppProjectsProjectIdRouteImport.update({
   id: '/$projectId',
   path: '/$projectId',
@@ -75,6 +81,7 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/china-market-insight': typeof AppChinaMarketInsightRoute
   '/projects': typeof AppProjectsRouteWithChildren
   '/report': typeof AppReportRoute
   '/settings': typeof AppSettingsRoute
@@ -85,6 +92,7 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/china-market-insight': typeof AppChinaMarketInsightRoute
   '/projects': typeof AppProjectsRouteWithChildren
   '/report': typeof AppReportRoute
   '/settings': typeof AppSettingsRoute
@@ -98,6 +106,7 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/_app/china-market-insight': typeof AppChinaMarketInsightRoute
   '/_app/projects': typeof AppProjectsRouteWithChildren
   '/_app/report': typeof AppReportRoute
   '/_app/settings': typeof AppSettingsRoute
@@ -112,6 +121,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/register'
+    | '/china-market-insight'
     | '/projects'
     | '/report'
     | '/settings'
@@ -122,6 +132,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/register'
+    | '/china-market-insight'
     | '/projects'
     | '/report'
     | '/settings'
@@ -134,6 +145,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/register'
+    | '/_app/china-market-insight'
     | '/_app/projects'
     | '/_app/report'
     | '/_app/settings'
@@ -214,6 +226,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProjectsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/china-market-insight': {
+      id: '/_app/china-market-insight'
+      path: '/china-market-insight'
+      fullPath: '/china-market-insight'
+      preLoaderRoute: typeof AppChinaMarketInsightRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/projects/$projectId': {
       id: '/_app/projects/$projectId'
       path: '/$projectId'
@@ -237,6 +256,7 @@ const AppProjectsRouteWithChildren = AppProjectsRoute._addFileChildren(
 )
 
 interface AppRouteChildren {
+  AppChinaMarketInsightRoute: typeof AppChinaMarketInsightRoute
   AppProjectsRoute: typeof AppProjectsRouteWithChildren
   AppReportRoute: typeof AppReportRoute
   AppSettingsRoute: typeof AppSettingsRoute
@@ -245,6 +265,7 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppChinaMarketInsightRoute: AppChinaMarketInsightRoute,
   AppProjectsRoute: AppProjectsRouteWithChildren,
   AppReportRoute: AppReportRoute,
   AppSettingsRoute: AppSettingsRoute,
