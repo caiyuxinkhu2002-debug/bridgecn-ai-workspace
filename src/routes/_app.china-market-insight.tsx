@@ -84,11 +84,11 @@ function MarketInsightPage() {
     if (ai.isRunning || ai.status === "completed" && !selectedJob) {
       const d = ai.data || {};
       return {
-        summary: ai.output || (d.summary as string | undefined) || "",
+      summary: ai.output || (d.summary as string | undefined) || "",
         confidence: (d.confidence as number | undefined) ?? null,
         sources: (d.sources as string[] | undefined) ?? [],
-        keywords: (d.keywords as typeof FALLBACK_KEYWORDS | undefined) ?? [],
-        regions: (d.regions as typeof FALLBACK_REGIONS | undefined) ?? [],
+        keywords: (d.keywords as KeywordRow[] | undefined) ?? [],
+        regions: (d.regions as RegionRow[] | undefined) ?? [],
         updatedAt: null as string | null,
         live: true as const,
       };
@@ -99,27 +99,29 @@ function MarketInsightPage() {
         summary: selectedJob.output || (d.summary as string | undefined) || "",
         confidence: (d.confidence as number | undefined) ?? null,
         sources: (d.sources as string[] | undefined) ?? [],
-        keywords: (d.keywords as typeof FALLBACK_KEYWORDS | undefined) ?? [],
-        regions: (d.regions as typeof FALLBACK_REGIONS | undefined) ?? [],
+        keywords: (d.keywords as KeywordRow[] | undefined) ?? [],
+        regions: (d.regions as RegionRow[] | undefined) ?? [],
         updatedAt: selectedJob.completed_at || selectedJob.created_at,
         live: false as const,
       };
     }
     return {
-      summary: FALLBACK_SUMMARY,
-      confidence: 96 as number | null,
-      sources: FALLBACK_SOURCES,
-      keywords: FALLBACK_KEYWORDS,
-      regions: FALLBACK_REGIONS,
+      summary: "",
+      confidence: null as number | null,
+      sources: [] as string[],
+      keywords: [] as KeywordRow[],
+      regions: [] as RegionRow[],
       updatedAt: null,
       live: false as const,
     };
   }, [ai.isRunning, ai.status, ai.output, ai.data, selectedJob]);
 
-  const sources = displayed.sources.length ? displayed.sources : FALLBACK_SOURCES;
-  const keywords = displayed.keywords.length ? displayed.keywords : FALLBACK_KEYWORDS;
-  const regions = displayed.regions.length ? displayed.regions : FALLBACK_REGIONS;
-  const confidence = displayed.confidence ?? 96;
+  const sources = displayed.sources;
+  const keywords = displayed.keywords;
+  const regions = displayed.regions;
+  const growth = (((ai.data?.growth as GrowthRow[] | undefined) ?? (selectedJob?.output_data as { growth?: GrowthRow[] } | undefined)?.growth) ?? []) as GrowthRow[];
+  const confidence = displayed.confidence;
+  const hasAnyData = Boolean(displayed.summary) || sources.length > 0 || keywords.length > 0 || regions.length > 0;
   const lastUpdated = displayed.updatedAt
     ? new Date(displayed.updatedAt).toLocaleString()
     : ai.isRunning ? t("market.summary.generating") : t("common.dash");
