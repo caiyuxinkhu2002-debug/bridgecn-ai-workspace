@@ -17,39 +17,11 @@ export const Route = createFileRoute("/_app/china-market-insight")({
   component: MarketInsightPage,
 });
 
-const growth = [
-  { m: "Jul 25", v: 132 }, { m: "Aug", v: 138 }, { m: "Sep", v: 145 },
-  { m: "Oct", v: 151 }, { m: "Nov", v: 162 }, { m: "Dec", v: 171 },
-  { m: "Jan 26", v: 176 }, { m: "Feb", v: 182 }, { m: "Mar", v: 191 },
-  { m: "Apr", v: 198 }, { m: "May", v: 207 }, { m: "Jun", v: 218 },
-];
-const FALLBACK_REGIONS = [
-  { name: "Shanghai", v: 94, growth: "+21.4%" },
-  { name: "Beijing",  v: 88, growth: "+18.7%" },
-  { name: "Hangzhou", v: 76, growth: "+24.1%" },
-  { name: "Shenzhen", v: 71, growth: "+16.2%" },
-  { name: "Guangzhou", v: 63, growth: "+12.8%" },
-  { name: "Chengdu",  v: 58, growth: "+19.5%" },
-];
-const FALLBACK_KEYWORDS = [
-  { k: "Glass Skin · 玻璃肌",        growth: "+42%", platform: "Xiaohongshu", score: 98 },
-  { k: "Ingredient-led · 成分党",    growth: "+35%", platform: "Douyin",      score: 91 },
-  { k: "Sensitive Skin · 敏感肌",    growth: "+28%", platform: "Xiaohongshu", score: 87 },
-  { k: "K-beauty Routine · 韩系护肤", growth: "+27%", platform: "Weibo",       score: 84 },
-  { k: "Morning C / Night A · 早C晚A", growth: "+19%", platform: "Douyin",      score: 78 },
-  { k: "Clean Beauty · 纯净护肤",    growth: "+14%", platform: "Tmall",       score: 72 },
-];
-
-const FALLBACK_SOURCES = [
-  "Xiaohongshu (小红书)",
-  "Douyin (抖音)",
-  "QuestMobile",
-  "iiMedia Research",
-  "National Bureau of Statistics of China",
-  "Tmall Global Insights",
-];
-const FALLBACK_SUMMARY =
-  "The K-beauty skincare market in China continues to grow at double-digit rates, driven by ingredient-focused consumers and accelerating demand in Tier-1 cities. Over the last 30 days, Xiaohongshu discussions around glass skin and sensitive skin care have increased significantly, while Douyin live commerce for Korean derma brands posted record GMV. Premium positioning at ¥350–¥450 basket size remains the strongest opportunity for new entrants.";
+// Sprint 9: no hardcoded demo data. All market data is derived from the
+// active project's AI jobs; charts/lists render empty state when missing.
+type KeywordRow = { k: string; growth: string; platform: string; score: number };
+type RegionRow = { name: string; v: number; growth: string };
+type GrowthRow = { m: string; v: number };
 
 function MarketInsightPage() {
   const { t } = useI18n();
@@ -112,11 +84,11 @@ function MarketInsightPage() {
     if (ai.isRunning || ai.status === "completed" && !selectedJob) {
       const d = ai.data || {};
       return {
-        summary: ai.output || (d.summary as string | undefined) || "",
+      summary: ai.output || (d.summary as string | undefined) || "",
         confidence: (d.confidence as number | undefined) ?? null,
         sources: (d.sources as string[] | undefined) ?? [],
-        keywords: (d.keywords as typeof FALLBACK_KEYWORDS | undefined) ?? [],
-        regions: (d.regions as typeof FALLBACK_REGIONS | undefined) ?? [],
+        keywords: (d.keywords as KeywordRow[] | undefined) ?? [],
+        regions: (d.regions as RegionRow[] | undefined) ?? [],
         updatedAt: null as string | null,
         live: true as const,
       };
@@ -127,27 +99,29 @@ function MarketInsightPage() {
         summary: selectedJob.output || (d.summary as string | undefined) || "",
         confidence: (d.confidence as number | undefined) ?? null,
         sources: (d.sources as string[] | undefined) ?? [],
-        keywords: (d.keywords as typeof FALLBACK_KEYWORDS | undefined) ?? [],
-        regions: (d.regions as typeof FALLBACK_REGIONS | undefined) ?? [],
+        keywords: (d.keywords as KeywordRow[] | undefined) ?? [],
+        regions: (d.regions as RegionRow[] | undefined) ?? [],
         updatedAt: selectedJob.completed_at || selectedJob.created_at,
         live: false as const,
       };
     }
     return {
-      summary: FALLBACK_SUMMARY,
-      confidence: 96 as number | null,
-      sources: FALLBACK_SOURCES,
-      keywords: FALLBACK_KEYWORDS,
-      regions: FALLBACK_REGIONS,
+      summary: "",
+      confidence: null as number | null,
+      sources: [] as string[],
+      keywords: [] as KeywordRow[],
+      regions: [] as RegionRow[],
       updatedAt: null,
       live: false as const,
     };
   }, [ai.isRunning, ai.status, ai.output, ai.data, selectedJob]);
 
-  const sources = displayed.sources.length ? displayed.sources : FALLBACK_SOURCES;
-  const keywords = displayed.keywords.length ? displayed.keywords : FALLBACK_KEYWORDS;
-  const regions = displayed.regions.length ? displayed.regions : FALLBACK_REGIONS;
-  const confidence = displayed.confidence ?? 96;
+  const sources = displayed.sources;
+  const keywords = displayed.keywords;
+  const regions = displayed.regions;
+  const growth = (((ai.data?.growth as GrowthRow[] | undefined) ?? (selectedJob?.output_data as { growth?: GrowthRow[] } | undefined)?.growth) ?? []) as GrowthRow[];
+  const confidence = displayed.confidence;
+  const hasAnyData = Boolean(displayed.summary) || sources.length > 0 || keywords.length > 0 || regions.length > 0;
   const lastUpdated = displayed.updatedAt
     ? new Date(displayed.updatedAt).toLocaleString()
     : ai.isRunning ? t("market.summary.generating") : t("common.dash");
@@ -233,15 +207,21 @@ function MarketInsightPage() {
                 </span>
               ) : null}
             </div>
-            <div className="flex items-center gap-2 text-xs">
-              <span className="inline-flex items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--muted)]/40 px-2 py-1 font-medium">
-                <ShieldCheck className="h-3 w-3 text-[oklch(0.55_0.14_150)]" />
-                {t("market.summary.confidence")} <span className="tabular-nums text-[var(--foreground)]">{confidence}%</span>
-              </span>
-            </div>
+            {confidence != null && (
+              <div className="flex items-center gap-2 text-xs">
+                <span className="inline-flex items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--muted)]/40 px-2 py-1 font-medium">
+                  <ShieldCheck className="h-3 w-3 text-[oklch(0.55_0.14_150)]" />
+                  {t("market.summary.confidence")} <span className="tabular-nums text-[var(--foreground)]">{confidence}%</span>
+                </span>
+              </div>
+            )}
           </div>
           <p className="mt-4 whitespace-pre-wrap text-sm leading-relaxed text-[var(--foreground)]/85">
-            {displayed.summary || (ai.isRunning ? "" : FALLBACK_SUMMARY)}
+            {displayed.summary || (
+              <span className="text-[var(--muted-foreground)]">
+                {ai.isRunning ? "" : t("market.history.empty")}
+              </span>
+            )}
             {ai.isRunning ? <span className="ml-0.5 inline-block h-3 w-1.5 translate-y-0.5 animate-pulse bg-[var(--primary)]" /> : null}
           </p>
           <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-[var(--border)] pt-3 text-[11px] text-[var(--muted-foreground)]">
@@ -253,31 +233,30 @@ function MarketInsightPage() {
           </div>
         </div>
 
-        {/* KPI cards */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {[
-            { label: t("market.kpi.marketSize"),     value: "¥48.2B", sub: t("market.kpi.marketSize.sub"),     src: "iiMedia Research",     conf: 97 },
-            { label: t("market.kpi.annualGrowth"),   value: "+18.4%", sub: t("market.kpi.annualGrowth.sub"),   src: "QuestMobile",          conf: 94 },
-            { label: t("market.kpi.basketTitle"),    value: "¥384",   sub: t("market.kpi.basket.sub"),         src: "Tmall Global",         conf: 92 },
-            { label: t("market.kpi.tier1Title"),     value: "62%",    sub: t("market.kpi.tier1.sub"),          src: "Nat. Bureau of Stats", conf: 95 },
-            { label: t("market.kpi.topChannel"),     value: "Tmall",  sub: t("market.kpi.topChannel.sub"),     src: "QuestMobile",          conf: 93 },
-            { label: t("market.kpi.mau"),            value: "312M",   sub: t("market.kpi.mau.sub"),            src: "Xiaohongshu",          conf: 96 },
-            { label: t("market.kpi.searchVolume"),   value: "8.4M",   sub: t("market.kpi.searchVolume.sub"),   src: "Douyin Search",        conf: 90 },
-            { label: t("market.kpi.categoryGrowth"), value: "+24.1%", sub: t("market.kpi.categoryGrowth.sub"), src: "iiMedia Research",     conf: 91 },
-          ].map((s) => (
-            <div key={s.label} className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-5 shadow-[var(--shadow-soft)]">
-              <div className="flex items-center justify-between">
-                <p className="text-xs text-[var(--muted-foreground)]">{s.label}</p>
-                <span className="rounded-full bg-[var(--muted)]/60 px-1.5 py-0.5 text-[10px] font-medium text-[var(--muted-foreground)] tabular-nums">
-                  {s.conf}%
-                </span>
-              </div>
-              <p className="mt-2 text-2xl font-semibold tracking-tight">{s.value}</p>
-              <p className="mt-0.5 text-[11px] leading-snug text-[var(--muted-foreground)]">{s.sub}</p>
-              <p className="mt-2 text-[10px] text-[var(--muted-foreground)]/80">{t("market.kpi.source", { v: s.src })}</p>
+        {/* KPI cards — derived from AI output */}
+        {(() => {
+          const rawKpis = ((ai.data?.kpis as { label: string; value: string; sub?: string; src?: string; conf?: number }[] | undefined)
+            ?? ((selectedJob?.output_data as { kpis?: { label: string; value: string; sub?: string; src?: string; conf?: number }[] } | undefined)?.kpis)
+            ?? []);
+          if (rawKpis.length === 0) return null;
+          return (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {rawKpis.map((s) => (
+                <div key={s.label} className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-5 shadow-[var(--shadow-soft)]">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-[var(--muted-foreground)]">{s.label}</p>
+                    {s.conf != null && (
+                      <span className="rounded-full bg-[var(--muted)]/60 px-1.5 py-0.5 text-[10px] font-medium text-[var(--muted-foreground)] tabular-nums">{s.conf}%</span>
+                    )}
+                  </div>
+                  <p className="mt-2 text-2xl font-semibold tracking-tight">{s.value}</p>
+                  {s.sub && <p className="mt-0.5 text-[11px] leading-snug text-[var(--muted-foreground)]">{s.sub}</p>}
+                  {s.src && <p className="mt-2 text-[10px] text-[var(--muted-foreground)]/80">{t("market.kpi.source", { v: s.src })}</p>}
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          );
+        })()}
 
         <div className="grid gap-4 lg:grid-cols-3">
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-6 shadow-[var(--shadow-soft)] lg:col-span-2">
@@ -286,16 +265,21 @@ function MarketInsightPage() {
                 <h3 className="text-sm font-semibold">{t("market.growth")}</h3>
                 <p className="text-xs text-[var(--muted-foreground)]">{t("market.growth.sub")} · {t("market.chart.indexed")}</p>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="rounded-full bg-[var(--muted)]/60 px-2 py-0.5 text-[10px] font-medium text-[var(--muted-foreground)]">
-                  {t("market.summary.confidence")} {confidence}%
-                </span>
-                <span className="inline-flex items-center gap-1 text-xs font-medium text-[oklch(0.55_0.14_150)]"><TrendingUp className="h-3 w-3" />+18.4%</span>
-              </div>
+              {confidence != null && (
+                <div className="flex items-center gap-2">
+                  <span className="rounded-full bg-[var(--muted)]/60 px-2 py-0.5 text-[10px] font-medium text-[var(--muted-foreground)]">
+                    {t("market.summary.confidence")} {confidence}%
+                  </span>
+                  <TrendingUp className="h-3 w-3 text-[oklch(0.55_0.14_150)]" />
+                </div>
+              )}
             </div>
-            <div className="h-56">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={growth} margin={{ top: 4, right: 4, bottom: 0, left: -16 }}>
+            {growth.length === 0 ? (
+              <p className="py-8 text-center text-xs text-[var(--muted-foreground)]">{t("market.history.empty")}</p>
+            ) : (
+              <div className="h-56">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={growth} margin={{ top: 4, right: 4, bottom: 0, left: -16 }}>
                   <defs>
                     <linearGradient id="mg" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.3} />
@@ -306,9 +290,10 @@ function MarketInsightPage() {
                   <XAxis dataKey="m" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} />
                   <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid var(--border)", fontSize: 12 }} />
                   <Area type="monotone" dataKey="v" stroke="var(--primary)" strokeWidth={2} fill="url(#mg)" />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            )}
             <p className="mt-3 text-[10px] text-[var(--muted-foreground)]">
               {t("market.chart.source", { v: lastUpdated })}
             </p>
@@ -319,10 +304,15 @@ function MarketInsightPage() {
                 <Flame className="h-4 w-4 text-[var(--primary)]" />
                 <h3 className="text-sm font-semibold">{t("market.keywords")}</h3>
               </div>
-              <span className="rounded-full bg-[var(--muted)]/60 px-2 py-0.5 text-[10px] font-medium text-[var(--muted-foreground)]">
-                {t("market.summary.confidence")} {confidence}%
-              </span>
+              {confidence != null && (
+                <span className="rounded-full bg-[var(--muted)]/60 px-2 py-0.5 text-[10px] font-medium text-[var(--muted-foreground)]">
+                  {t("market.summary.confidence")} {confidence}%
+                </span>
+              )}
             </div>
+            {keywords.length === 0 ? (
+              <p className="py-8 text-center text-xs text-[var(--muted-foreground)]">{t("market.history.empty")}</p>
+            ) : (
             <div className="grid grid-cols-[1.6rem_1fr_auto] gap-x-3 gap-y-3 text-xs">
               <span className="text-[10px] uppercase tracking-wide text-[var(--muted-foreground)]">#</span>
               <span className="text-[10px] uppercase tracking-wide text-[var(--muted-foreground)]">{t("market.kw.header")}</span>
@@ -331,6 +321,7 @@ function MarketInsightPage() {
                 <FragmentRow key={k.k} index={i} k={k} scoreLabel={t("market.kw.score", { v: k.score })} />
               ))}
             </div>
+            )}
             <p className="mt-4 text-[10px] text-[var(--muted-foreground)]">
               {t("market.kw.source", { v: lastUpdated })}
             </p>
@@ -343,10 +334,15 @@ function MarketInsightPage() {
               <MapPin className="h-4 w-4 text-[var(--primary)]" />
               <h3 className="text-sm font-semibold">{t("market.regions")}</h3>
             </div>
-            <span className="rounded-full bg-[var(--muted)]/60 px-2 py-0.5 text-[10px] font-medium text-[var(--muted-foreground)]">
-              {t("market.summary.confidence")} {confidence}%
-            </span>
+            {confidence != null && (
+              <span className="rounded-full bg-[var(--muted)]/60 px-2 py-0.5 text-[10px] font-medium text-[var(--muted-foreground)]">
+                {t("market.summary.confidence")} {confidence}%
+              </span>
+            )}
           </div>
+          {regions.length === 0 ? (
+            <p className="py-8 text-center text-xs text-[var(--muted-foreground)]">{t("market.history.empty")}</p>
+          ) : (
           <div className="grid gap-6 lg:grid-cols-5">
             <div className="h-64 lg:col-span-3">
               <ResponsiveContainer width="100%" height="100%">
@@ -369,6 +365,7 @@ function MarketInsightPage() {
               </div>
             </div>
           </div>
+          )}
           <p className="mt-4 text-[10px] text-[var(--muted-foreground)]">
             {t("market.regions.source", { v: lastUpdated })}
           </p>

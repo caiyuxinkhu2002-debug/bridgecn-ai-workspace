@@ -202,7 +202,7 @@ function StepOne(props: {
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="e.g. Beauty of Joseon"
+          placeholder="e.g. your brand name"
           maxLength={120}
           className="block w-full rounded-2xl border border-[var(--border)] bg-[var(--background)] px-5 py-4 text-[15px] text-[var(--foreground)] shadow-[var(--shadow-card)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-4 focus:ring-[var(--primary-soft)]"
         />

@@ -31,10 +31,13 @@ function DashboardPage() {
   const router = useRouter();
   const { activeProject, projects, reports, setActiveProjectId } = useWorkspace();
 
-  const suggestions = [1, 2, 3];
-  const trends = [1, 2, 3, 4];
-  const activity = [1, 2, 3, 4];
-  const tasks = [1, 2, 3, 4];
+  // Sprint 9: removed hardcoded suggestions/trends/activity/tasks. These
+  // surfaces now render KB-driven content; empty arrays trigger empty
+  // states instead of falling back to demo brand examples.
+  const suggestions: string[] = [];
+  const trends: string[] = [];
+  const activity: string[] = [];
+  const tasks: string[] = [];
 
   return (
     <div className="space-y-8">
@@ -138,10 +141,13 @@ function DashboardPage() {
             {t("dash.suggestions")}
           </h2>
           <div className="space-y-3">
-            {suggestions.map((i) => (
-              <div key={i} className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-4 shadow-[var(--shadow-soft)]">
-                <p className="text-sm font-medium">{t(`sugg.${i}.title`)}</p>
-                <p className="mt-1 text-xs text-[var(--muted-foreground)]">{t(`sugg.${i}.body`)}</p>
+            {suggestions.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--background)] p-4 text-xs text-[var(--muted-foreground)]">
+                {t("common.empty")}
+              </div>
+            ) : suggestions.map((s) => (
+              <div key={s} className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-4 shadow-[var(--shadow-soft)]">
+                <p className="text-sm font-medium">{s}</p>
               </div>
             ))}
           </div>
@@ -156,33 +162,39 @@ function DashboardPage() {
             {t("dash.trends")}
           </h2>
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--background)] shadow-[var(--shadow-soft)]">
-            <ul className="divide-y divide-[var(--border)]">
-              {trends.map((i) => (
-                <li key={i} className="flex items-center justify-between gap-3 px-4 py-3">
-                  <span className="text-sm">{t(`trend.${i}`)}</span>
-                  <Link to="/china-market-insight" className="text-xs font-medium text-[var(--muted-foreground)] hover:text-[var(--foreground)]">
-                    {t("common.open")} →
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            {trends.length === 0 ? (
+              <p className="px-4 py-4 text-xs text-[var(--muted-foreground)]">{t("common.empty")}</p>
+            ) : (
+              <ul className="divide-y divide-[var(--border)]">
+                {trends.map((tr) => (
+                  <li key={tr} className="flex items-center justify-between gap-3 px-4 py-3">
+                    <span className="text-sm">{tr}</span>
+                    <Link to="/china-market-insight" className="text-xs font-medium text-[var(--muted-foreground)] hover:text-[var(--foreground)]">
+                      {t("common.open")} →
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </div>
         <div>
           <h2 className="mb-3 text-sm font-semibold">{t("dash.recentReports")}</h2>
           <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--background)] shadow-[var(--shadow-soft)]">
-            <ul className="divide-y divide-[var(--border)]">
-              {reports.slice(0, 4).map((r) => (
-                <li key={r.id} className="flex items-center justify-between gap-3 px-4 py-3">
-                  <div className="min-w-0">
-                    <Link to="/report" className="block truncate text-sm font-medium hover:underline">
-                      {r.title}
-                    </Link>
-                    <p className="truncate text-xs text-[var(--muted-foreground)]">{r.type} · {r.date}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
+            {reports.length === 0 ? (
+              <p className="px-4 py-4 text-xs text-[var(--muted-foreground)]">{t("common.empty")}</p>
+            ) : (
+              <ul className="divide-y divide-[var(--border)]">
+                {reports.slice(0, 4).map((r) => (
+                  <li key={r.id} className="flex items-center justify-between gap-3 px-4 py-3">
+                    <div className="min-w-0">
+                      <Link to="/report" className="block truncate text-sm font-medium hover:underline">{r.title}</Link>
+                      <p className="truncate text-xs text-[var(--muted-foreground)]">{r.type} · {r.date}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </div>
       </section>
@@ -195,14 +207,18 @@ function DashboardPage() {
             {t("dash.activity")}
           </h2>
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--background)] shadow-[var(--shadow-soft)]">
-            <ul className="divide-y divide-[var(--border)]">
-              {activity.map((i) => (
-                <li key={i} className="flex items-start gap-3 px-4 py-3 text-sm">
-                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--primary)]" />
-                  <span>{t(`act.${i}`)}</span>
-                </li>
-              ))}
-            </ul>
+            {activity.length === 0 ? (
+              <p className="px-4 py-4 text-xs text-[var(--muted-foreground)]">{t("common.empty")}</p>
+            ) : (
+              <ul className="divide-y divide-[var(--border)]">
+                {activity.map((a) => (
+                  <li key={a} className="flex items-start gap-3 px-4 py-3 text-sm">
+                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--primary)]" />
+                    <span>{a}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </div>
         <div>
@@ -211,14 +227,18 @@ function DashboardPage() {
             {t("dash.tasks")}
           </h2>
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--background)] shadow-[var(--shadow-soft)]">
-            <ul className="divide-y divide-[var(--border)]">
-              {tasks.map((i) => (
-                <li key={i} className="flex items-center gap-3 px-4 py-3 text-sm">
-                  <input type="checkbox" className="h-3.5 w-3.5 rounded border-[var(--border)] accent-[var(--primary)]" />
-                  <span className="flex-1">{t(`task.${i}`)}</span>
-                </li>
-              ))}
-            </ul>
+            {tasks.length === 0 ? (
+              <p className="px-4 py-4 text-xs text-[var(--muted-foreground)]">{t("common.empty")}</p>
+            ) : (
+              <ul className="divide-y divide-[var(--border)]">
+                {tasks.map((tk) => (
+                  <li key={tk} className="flex items-center gap-3 px-4 py-3 text-sm">
+                    <input type="checkbox" className="h-3.5 w-3.5 rounded border-[var(--border)] accent-[var(--primary)]" />
+                    <span className="flex-1">{tk}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </div>
       </section>

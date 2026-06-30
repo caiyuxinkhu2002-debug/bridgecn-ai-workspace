@@ -99,39 +99,15 @@ function relativeTime(iso: string): string {
   return `${w}w ago`;
 }
 
-const REPORTS = [
-  { id: "r1", projectId: "boj", title: "Beauty of Joseon · China Expansion", type: "Market Entry", date: "Jun 24, 2026", status: "Ready" },
-  { id: "r2", projectId: "anua", title: "ANUA · Xiaohongshu Strategy", type: "Channel Strategy", date: "Jun 18, 2026", status: "Ready" },
-  { id: "r3", projectId: "medicube", title: "Medicube · Tmall Launch Plan", type: "Launch Plan", date: "Jun 12, 2026", status: "Ready" },
-  { id: "r4", projectId: "roundlab", title: "Round Lab · Consumer Insight", type: "Consumer Research", date: "Jun 03, 2026", status: "Ready" },
-  { id: "r5", projectId: "torriden", title: "Torriden · Douyin Campaign", type: "Campaign Brief", date: "May 28, 2026", status: "Draft" },
-];
+// Sprint 9: removed hardcoded demo arrays. Reports, localization jobs,
+// market/consumer research items and notifications come from the active
+// project Knowledge Base + AI jobs; pages render empty states when missing.
+const REPORTS: { id: string; projectId: string; title: string; type: string; date: string; status: string }[] = [];
+const LOC_JOBS: { id: string; projectId: string; title: string; lang: string; date: string; status: string }[] = [];
+const MARKET_RESEARCH: { id: string; projectId: string; title: string; date: string }[] = [];
+const CONSUMER_RESEARCH: { id: string; projectId: string; title: string; date: string }[] = [];
 
-const LOC_JOBS = [
-  { id: "l1", projectId: "boj", title: "Tmall PDP · Glow Serum", lang: "KR → CN", date: "Today", status: "In review" },
-  { id: "l2", projectId: "anua", title: "Xiaohongshu caption · Heartleaf 77", lang: "KR → CN", date: "Yesterday", status: "Approved" },
-  { id: "l3", projectId: "medicube", title: "Douyin live script · Booster", lang: "KR → CN", date: "Jun 21", status: "Draft" },
-];
-
-const MARKET_RESEARCH = [
-  { id: "m1", projectId: "boj", title: "K-beauty TAM in Tier 1 cities", date: "Jun 20" },
-  { id: "m2", projectId: "anua", title: "Xiaohongshu glass-skin trend brief", date: "Jun 14" },
-  { id: "m3", projectId: "roundlab", title: "Cleanser category share — Tmall", date: "Jun 09" },
-];
-
-const CONSUMER_RESEARCH = [
-  { id: "c1", projectId: "boj", title: "Persona · Xiao Ya, 24–32, Shanghai", date: "Jun 22" },
-  { id: "c2", projectId: "anua", title: "Sentiment · ANUA reviews on Tmall", date: "Jun 17" },
-  { id: "c3", projectId: "medicube", title: "Repurchase drivers · derma cosmetics", date: "Jun 10" },
-];
-
-const DEFAULT_NOTIFICATIONS: Notification[] = [
-  { id: "n1", group: "today", titleKey: "notif.1.title", bodyKey: "notif.1.body", time: "12m", read: false, link: "/reports", projectId: "boj" },
-  { id: "n2", group: "today", titleKey: "notif.2.title", bodyKey: "notif.2.body", time: "1h", read: false, link: "/china-market-insight", projectId: "boj" },
-  { id: "n3", group: "today", titleKey: "notif.3.title", bodyKey: "notif.3.body", time: "3h", read: false, link: "/localization-studio", projectId: "anua" },
-  { id: "n4", group: "yesterday", titleKey: "notif.4.title", bodyKey: "notif.4.body", time: "1d", read: true, link: "/projects", projectId: "medicube" },
-  { id: "n5", group: "earlier", titleKey: "notif.5.title", bodyKey: "notif.5.body", time: "3d", read: true, link: "/launch-checklist" },
-];
+const DEFAULT_NOTIFICATIONS: Notification[] = [];
 
 type Ctx = {
   workspaces: Workspace[];
