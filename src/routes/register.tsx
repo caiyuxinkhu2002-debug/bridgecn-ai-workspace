@@ -57,7 +57,7 @@ function RegisterPage() {
       <Divider label={t("auth.continueWith")} />
       <form onSubmit={submit} className="space-y-4">
         <Field label={t("auth.name")} required value={name} onChange={setName} placeholder="Sora Kim" autoComplete="name" />
-        <Field label={t("auth.company")} value={company} onChange={setCompany} placeholder="Beauty of Joseon" autoComplete="organization" />
+        <Field label={t("auth.company")} value={company} onChange={setCompany} placeholder="Your company" autoComplete="organization" />
         <Field label={t("auth.email")} type="email" required value={email} onChange={setEmail} placeholder="you@company.com" autoComplete="email" />
         <Field label={t("auth.password")} type="password" required value={password} onChange={setPassword} placeholder="••••••••" autoComplete="new-password" />
         <button
