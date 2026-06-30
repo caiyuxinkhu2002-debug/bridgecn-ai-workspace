@@ -141,6 +141,7 @@ export const fetchSemrushSnapshot = createServerFn({ method: "POST" })
     const db = marketToDatabase(data.targetMarket);
     const domain = normalizeDomain(data.domain);
     const errors: string[] = [];
+    console.log("[semrush.snapshot]", { targetMarket: data.targetMarket, mappedDb: db, domain });
 
     const snapshot: SemrushSnapshot = {
       market: db,
