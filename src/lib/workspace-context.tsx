@@ -20,6 +20,7 @@ export type Project = {
   summary: string;
   description: string;
   targetMarket: string;
+  archived: boolean;
 };
 
 export type Profile = {
@@ -122,6 +123,7 @@ type Ctx = {
   activeWorkspace: Workspace;
   projects: Project[];
   allProjects: Project[];
+  archivedProjects: Project[];
   activeProjectId: string;
   setActiveProjectId: (id: string) => void;
   activeProject: Project;
@@ -146,6 +148,9 @@ type Ctx = {
   createProject: (input: { name: string; industry?: string; targetMarket?: string; description?: string }) => Promise<Project | null>;
   updateProject: (id: string, patch: Partial<{ name: string; industry: string; region: string; targetMarket: string; description: string; summary: string; stage: Stage }>) => Promise<void>;
   deleteProject: (id: string) => Promise<void>;
+  archiveProject: (id: string) => Promise<void>;
+  unarchiveProject: (id: string) => Promise<void>;
+  duplicateProject: (id: string) => Promise<Project | null>;
 };
 
 const WorkspaceCtx = createContext<Ctx | null>(null);
@@ -195,6 +200,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       summary: r.summary || "",
       description: r.description || "",
       targetMarket: r.target_market || "",
+      archived: Boolean((r as { archived_at?: string | null }).archived_at),
     }),
     [],
   );
@@ -242,9 +248,10 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       .order("created_at", { ascending: true });
     const mapped = (data || []).map(mapProject);
     setProjectsState(mapped);
-    if (mapped.length && !mapped.find((p) => p.id === activeProjectId)) {
+    const active = mapped.filter((p) => !p.archived);
+    if (active.length && !active.find((p) => p.id === activeProjectId)) {
       const saved = typeof window !== "undefined" ? localStorage.getItem(AP_KEY) : null;
-      const chosen = (saved && mapped.find((p) => p.id === saved)) ? saved : mapped[0].id;
+      const chosen = (saved && active.find((p) => p.id === saved)) ? saved : active[0].id;
       setActiveProjectIdState(chosen);
     }
   }, [workspaceId, activeProjectId, mapProject]);
@@ -386,7 +393,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       if (error) throw error;
       setProjectsState((list) => list.filter((p) => p.id !== id));
       if (activeProjectId === id) {
-        const next = projectsState.find((p) => p.id !== id);
+        const next = projectsState.find((p) => p.id !== id && !p.archived);
         if (next) {
           setActiveProjectIdState(next.id);
           try { localStorage.setItem(AP_KEY, next.id); } catch { /* ignore */ }
@@ -396,16 +403,64 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     [activeProjectId, projectsState],
   );
 
+  const archiveProject = useCallback(async (id: string) => {
+    const { error } = await supabase.from("projects").update({ archived_at: new Date().toISOString() } as never).eq("id", id);
+    if (error) throw error;
+    setProjectsState((list) => list.map((p) => (p.id === id ? { ...p, archived: true } : p)));
+    if (activeProjectId === id) {
+      const next = projectsState.find((p) => p.id !== id && !p.archived);
+      if (next) {
+        setActiveProjectIdState(next.id);
+        try { localStorage.setItem(AP_KEY, next.id); } catch { /* ignore */ }
+      }
+    }
+  }, [activeProjectId, projectsState]);
+
+  const unarchiveProject = useCallback(async (id: string) => {
+    const { error } = await supabase.from("projects").update({ archived_at: null } as never).eq("id", id);
+    if (error) throw error;
+    setProjectsState((list) => list.map((p) => (p.id === id ? { ...p, archived: false } : p)));
+  }, []);
+
+  const duplicateProject = useCallback(async (id: string): Promise<Project | null> => {
+    const src = projectsState.find((p) => p.id === id);
+    if (!src || !workspaceId) return null;
+    const newName = `${src.name} (Copy)`;
+    const { data, error } = await supabase
+      .from("projects")
+      .insert({
+        workspace_id: workspaceId,
+        name: newName,
+        initials: initialsOf(newName),
+        industry: src.industry === "—" ? null : src.industry,
+        region: src.region === "—" ? null : src.region,
+        target_market: src.targetMarket || null,
+        description: src.description || null,
+        summary: src.summary || null,
+        owner_name: profile?.name || src.owner || null,
+        created_by: user?.id || null,
+        stage: "research",
+        progress: 0,
+      })
+      .select("*")
+      .maybeSingle();
+    if (error || !data) return null;
+    const mapped = mapProject(data);
+    setProjectsState((list) => [...list, mapped]);
+    return mapped;
+  }, [projectsState, workspaceId, profile?.name, user?.id, mapProject]);
+
   const markAllRead = useCallback(() => {
     setNotifications((n) => n.map((x) => ({ ...x, read: true })));
     try { localStorage.setItem(NR_KEY, "1"); } catch { /* ignore */ }
   }, []);
 
   const FALLBACK_WS: Workspace = { id: "", name: "—", plan: "Free", region: "KR", logo_url: null };
-  const FALLBACK_PROJECT: Project = { id: "", workspaceId: "", name: "—", initials: "—", industry: "—", region: "—", stage: "research" as Stage, owner: "—", progress: 0, updated: "", kpi: [], summary: "", description: "", targetMarket: "" };
+  const FALLBACK_PROJECT: Project = { id: "", workspaceId: "", name: "—", initials: "—", industry: "—", region: "—", stage: "research" as Stage, owner: "—", progress: 0, updated: "", kpi: [], summary: "", description: "", targetMarket: "", archived: false };
   const activeWorkspace = useMemo<Workspace>(() => workspaces.find((w) => w.id === workspaceId) ?? workspaces[0] ?? FALLBACK_WS, [workspaces, workspaceId]);
-  const projects = useMemo(() => projectsState.filter((p) => p.workspaceId === workspaceId), [projectsState, workspaceId]);
-  const activeProject = useMemo<Project>(() => projectsState.find((p) => p.id === activeProjectId) ?? projectsState[0] ?? FALLBACK_PROJECT, [projectsState, activeProjectId]);
+  const projects = useMemo(() => projectsState.filter((p) => p.workspaceId === workspaceId && !p.archived), [projectsState, workspaceId]);
+  const archivedProjects = useMemo(() => projectsState.filter((p) => p.workspaceId === workspaceId && p.archived), [projectsState, workspaceId]);
+  const activeProject = useMemo<Project>(() => projectsState.find((p) => p.id === activeProjectId) ?? projects[0] ?? FALLBACK_PROJECT, [projectsState, activeProjectId, projects]);
 
   const searchIndex = useMemo<SearchItem[]>(() => {
     const items: SearchItem[] = [];
@@ -434,6 +489,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     activeWorkspace,
     projects,
     allProjects: projectsState,
+    archivedProjects,
     activeProjectId,
     setActiveProjectId,
     activeProject,
@@ -457,6 +513,9 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     createProject,
     updateProject,
     deleteProject,
+    archiveProject,
+    unarchiveProject,
+    duplicateProject,
   };
 
   return <WorkspaceCtx.Provider value={value}>{children}</WorkspaceCtx.Provider>;

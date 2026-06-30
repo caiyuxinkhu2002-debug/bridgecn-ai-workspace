@@ -55,6 +55,7 @@ export type Database = {
       }
       projects: {
         Row: {
+          archived_at: string | null
           created_at: string
           created_by: string | null
           deleted_at: string | null
@@ -73,6 +74,7 @@ export type Database = {
           workspace_id: string
         }
         Insert: {
+          archived_at?: string | null
           created_at?: string
           created_by?: string | null
           deleted_at?: string | null
@@ -91,6 +93,7 @@ export type Database = {
           workspace_id: string
         }
         Update: {
+          archived_at?: string | null
           created_at?: string
           created_by?: string | null
           deleted_at?: string | null
