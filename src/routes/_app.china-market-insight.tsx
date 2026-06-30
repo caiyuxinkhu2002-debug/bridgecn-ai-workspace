@@ -38,6 +38,9 @@ function MarketInsightPage() {
   const refreshHistory = useCallback(async () => {
     if (!activeWorkspace?.id) return;
     try {
+      // Reap any AI jobs that have been stuck in queued/running for >5min
+      // (e.g. browser closed mid-stream). Fire-and-forget; ignore errors.
+      try { await (supabase as unknown as { rpc: (n: string) => Promise<unknown> }).rpc("reap_stale_ai_jobs"); } catch { /* noop */ }
       const list = await listJobs({
         workspaceId: activeWorkspace.id,
         projectId: activeProject?.id || null,
