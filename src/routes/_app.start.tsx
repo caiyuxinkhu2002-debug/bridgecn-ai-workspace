@@ -3,7 +3,9 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useWorkspace, type KnowledgeBase } from "@/lib/workspace-context";
 import { Sparkles, ArrowRight, ArrowLeft, Loader2, CheckCircle2, Plus, X, Wand2 } from "lucide-react";
-import { BUILDER_STEPS, BUILDER_STEP_KEY, synthesizeKnowledgeBase, type BuilderStep } from "@/lib/ai/project-builder";
+import { BUILDER_STEPS, BUILDER_STEP_KEY, type BuilderStep } from "@/lib/ai/project-builder";
+import { extractKnowledgeFromWebsite } from "@/lib/ai/extract-knowledge.functions";
+import { useServerFn } from "@tanstack/react-start";
 import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/start")({
@@ -32,6 +34,7 @@ function StartPage() {
   const router = useRouter();
   const { createProject, workspaceId } = useWorkspace();
   const t = useT();
+  const extract = useServerFn(extractKnowledgeFromWebsite);
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [name, setName] = useState("");
@@ -58,21 +61,62 @@ function StartPage() {
     setActiveStep(BUILDER_STEPS[0]);
     setDoneSteps([]);
 
-    // Simulate streaming AI pipeline through the placeholder provider.
-    const synth = synthesizeKnowledgeBase({ brandName: name || website, website, targetMarket });
+    // Kick off the real extraction in parallel with the visual pipeline.
+    const extractionPromise = extract({
+      data: { brandName: name.trim(), website: website.trim(), targetMarket },
+    }).catch((err: unknown) => {
+      console.error("[builder] extraction failed", err);
+      return null;
+    });
+
+    // Visual pipeline: tick through steps. Hold on the last "active" step
+    // until the network call resolves so progress reflects reality.
     let i = 0;
-    const tick = () => {
+    const tick = async () => {
       if (cancelledRef.current) return;
       const s = BUILDER_STEPS[i];
       setActiveStep(s);
       setDoneSteps((d) => (d.includes(s) ? d : [...d, s]));
       i += 1;
-      if (i < BUILDER_STEPS.length) {
-        setTimeout(tick, 650 + Math.random() * 350);
+      if (i < BUILDER_STEPS.length - 1) {
+        setTimeout(tick, 700 + Math.random() * 400);
       } else {
-        // populate draft and move on
-        setKb(synth);
-        setTimeout(() => { if (!cancelledRef.current) setStep(3); }, 400);
+        // Wait for the real call, then complete.
+        const ext = await extractionPromise;
+        if (cancelledRef.current) return;
+        const finalStep = BUILDER_STEPS[BUILDER_STEPS.length - 1];
+        setActiveStep(finalStep);
+        setDoneSteps((d) => (d.includes(finalStep) ? d : [...d, finalStep]));
+
+        if (!ext) {
+          // Network/AI failed — keep what the user typed and let them edit.
+          setKb({
+            company: name || undefined,
+            website: website || undefined,
+            products: [], brandTone: [], keywords: [], competitors: [], socialChannels: [],
+          });
+          toast.error(t("start.toast.extractFailed") || "Could not read the website. You can fill in the details manually.");
+        } else {
+          // Drop fields not part of KnowledgeBase (e.g. brandPositioning,
+          // _confidence) but fold positioning into the brand story.
+          const story = [ext.brandPositioning, ext.brandStory].filter(Boolean).join("\n\n").trim();
+          const merged: KnowledgeBase = {
+            company: ext.company,
+            industry: ext.industry,
+            category: ext.category,
+            products: ext.products || [],
+            brandStory: story,
+            brandTone: ext.brandTone || [],
+            keywords: ext.keywords || [],
+            competitors: ext.competitors || [],
+            targetAudience: ext.targetAudience,
+            koreanCopy: ext.koreanCopy,
+            website: ext.website || website,
+            socialChannels: ext.socialChannels || [],
+          };
+          setKb(merged);
+        }
+        setTimeout(() => { if (!cancelledRef.current) setStep(3); }, 350);
       }
     };
     setTimeout(tick, 250);
