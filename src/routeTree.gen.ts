@@ -17,6 +17,7 @@ import { Route as AppIndexRouteImport } from './routes/_app.index'
 import { Route as AppStartRouteImport } from './routes/_app.start'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
 import { Route as AppReportRouteImport } from './routes/_app.report'
+import { Route as AppProjectsRouteImport } from './routes/_app.projects'
 
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
@@ -57,12 +58,18 @@ const AppReportRoute = AppReportRouteImport.update({
   path: '/report',
   getParentRoute: () => AppRoute,
 } as any)
+const AppProjectsRoute = AppProjectsRouteImport.update({
+  id: '/projects',
+  path: '/projects',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/projects': typeof AppProjectsRoute
   '/report': typeof AppReportRoute
   '/settings': typeof AppSettingsRoute
   '/start': typeof AppStartRoute
@@ -71,6 +78,7 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/projects': typeof AppProjectsRoute
   '/report': typeof AppReportRoute
   '/settings': typeof AppSettingsRoute
   '/start': typeof AppStartRoute
@@ -82,6 +90,7 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/_app/projects': typeof AppProjectsRoute
   '/_app/report': typeof AppReportRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/start': typeof AppStartRoute
@@ -94,6 +103,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/register'
+    | '/projects'
     | '/report'
     | '/settings'
     | '/start'
@@ -102,6 +112,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/register'
+    | '/projects'
     | '/report'
     | '/settings'
     | '/start'
@@ -112,6 +123,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/register'
+    | '/_app/projects'
     | '/_app/report'
     | '/_app/settings'
     | '/_app/start'
@@ -183,10 +195,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppReportRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/projects': {
+      id: '/_app/projects'
+      path: '/projects'
+      fullPath: '/projects'
+      preLoaderRoute: typeof AppProjectsRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
 interface AppRouteChildren {
+  AppProjectsRoute: typeof AppProjectsRoute
   AppReportRoute: typeof AppReportRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppStartRoute: typeof AppStartRoute
@@ -194,6 +214,7 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppProjectsRoute: AppProjectsRoute,
   AppReportRoute: AppReportRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppStartRoute: AppStartRoute,
