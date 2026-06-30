@@ -43,6 +43,11 @@ export type SemrushSnapshot = {
 // database code. Defaults to "us" when nothing matches.
 function marketToDatabase(market: string): string {
   const m = market.toLowerCase();
+  // Hong Kong / Taiwan / Singapore must be matched BEFORE the generic
+  // "china" / "中国" rule, otherwise "Hong Kong, China" falls into cn.
+  if (/hong\s*kong|香港|hk\b/.test(m)) return "hk";
+  if (/taiwan|台湾|台灣|\btw\b/.test(m)) return "tw";
+  if (/singapore|新加坡|\bsg\b/.test(m)) return "sg";
   if (/china|中国|cn|大陆|prc/.test(m)) return "cn";
   if (/korea|한국|kr|韩国/.test(m)) return "kr";
   if (/japan|日本|jp/.test(m)) return "jp";
