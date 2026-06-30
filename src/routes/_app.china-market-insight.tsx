@@ -86,13 +86,13 @@ function MarketInsightPage() {
 
   useEffect(() => {
     if (ai.status === "completed") {
-      toast.success("Market Insight generated");
+      toast.success(t("market.toast.generated"));
       refreshHistory();
       if (ai.job) setSelectedJob(ai.job);
     } else if (ai.status === "failed") {
-      toast.error(ai.error || "Generation failed");
+      toast.error(ai.error || t("market.toast.failed"));
     } else if (ai.status === "cancelled") {
-      toast.message("Generation cancelled");
+      toast.message(t("market.toast.cancelled"));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ai.status]);
@@ -150,7 +150,7 @@ function MarketInsightPage() {
   const confidence = displayed.confidence ?? 96;
   const lastUpdated = displayed.updatedAt
     ? new Date(displayed.updatedAt).toLocaleString()
-    : ai.isRunning ? "Generating…" : "—";
+    : ai.isRunning ? t("market.summary.generating") : t("common.dash");
 
   const onOpenJob = async (id: string) => {
     const j = await getJob(id);
@@ -159,7 +159,7 @@ function MarketInsightPage() {
   const onDeleteJob = async (id: string) => {
     try {
       await deleteJob(id);
-      toast.success("Deleted");
+      toast.success(t("market.toast.deleted"));
       if (selectedJob?.id === id) setSelectedJob(null);
       refreshHistory();
     } catch (e) {
