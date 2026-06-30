@@ -1,6 +1,6 @@
-export type Stage = "research" | "consumer" | "localization" | "launch" | "reports";
+export type Stage = "research" | "consumer" | "localization" | "launch" | "reports" | "completed";
 
-export const stageOrder: Stage[] = ["research", "consumer", "localization", "launch", "reports"];
+export const stageOrder: Stage[] = ["research", "consumer", "localization", "launch", "reports", "completed"];
 
 export const stageToPath: Record<Stage, string> = {
   research: "/china-market-insight",
@@ -8,6 +8,7 @@ export const stageToPath: Record<Stage, string> = {
   localization: "/localization-studio",
   launch: "/launch-checklist",
   reports: "/reports",
+  completed: "/projects",
 };
 
 export const stageLabelKey: Record<Stage, string> = {
@@ -16,6 +17,7 @@ export const stageLabelKey: Record<Stage, string> = {
   localization: "stage.localization",
   launch: "stage.launch",
   reports: "stage.reports",
+  completed: "stage.completed",
 };
 
 export function nextStage(s: Stage): Stage | null {
