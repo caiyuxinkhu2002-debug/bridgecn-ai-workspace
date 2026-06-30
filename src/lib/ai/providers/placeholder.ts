@@ -113,9 +113,6 @@ export const placeholderProvider: AIProvider = {
           }
         }
       }
-      if (isLoc) {
-        // declared earlier so we can also include it in the final `done` payload
-      }
       const LOC_ITEMS = [
           { source: "촉촉하고 깨끗한 한방 스킨케어, 조선미녀.",        target: "源自韩方的清润护肤 ✨ Beauty of Joseon,姐妹们一试就爱。", note: "Hero claim · primary brand line" },
           { source: "민감한 피부를 위한 순한 클렌징 밤.",                target: "敏感肌也能放心用的温和洁颜膏,卸妆零负担。",                   note: "Sensitive skin product line" },
