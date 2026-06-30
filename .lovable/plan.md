@@ -1,79 +1,93 @@
-## 老实说:现在能用,但"数据准确"达不到
+## 数据真实性审核结论
 
-先把现状说清楚,再说怎么改。
+**结论：现在页面上 95% 的数字都不是真实数据。** SEMrush 虽然连上了，但只成功拉到一条"域名总览"的空数据，剩下所有 KPI、关键词、城市、增长曲线、来源引用全部仍是 AI 编的。
 
-### 现在跑起来后实际发生了什么
+### 具体问题
 
-1. **新建项目时**(`extract-knowledge.functions.ts`):✅ 真的去抓你填的官网 HTML(home + about/product 子页),然后丢给 `google/gemini-3-flash-preview` 让它提取品牌/产品/卖点。这一步是**真实的**——基于你网站上真实存在的内容。
-2. **市场洞察 / 消费者洞察 / 本地化 / 上市清单 / 报告**(`generate.functions.ts`):⚠️ 全部是 LLM**凭训练知识"编"出来的**。
-   - "数据来源:艾瑞咨询/QuestMobile/天猫国际"——是模型自己写的字符串,**没有真的查过**这些库。
-   - KPI 数字、地域销量柱状图、月度增长指数、关键词热度分——都是模型**合理猜测**,不是从百度指数/小红书/Tmall 拉的真实数据。
-   - 信心度百分比也是模型自评。
-3. 也就是说:文字分析框架"看起来很专业"且符合品类逻辑,但**任何具体数字都不能直接给客户当决策依据**。
+1. **市场代码映射错了**
+   - 项目目标市场是"Hong Kong / 中国香港"，但 SEMrush 实际查的是 **US 数据库**（绿色卡里写着 `SEMrush · US`）
+   - `marketToDatabase()` 里没有 Hong Kong / HK 的正则，香港落入了默认 `us`
+   - 域名 `3cecosmetics.co.kr` 在 US 库里当然查不到 → "0 keywords · 0 monthly traffic" + `domain_domains: Bad request`
 
-如果你的标准是"让客户百分百投入使用、数据准确",当前形态**不达标**,必须接真实数据源。
+2. **真数据没流进 KPI / 图表**
+   - 即便 SEMrush 返回了 organicTraffic，UI 上的 4 个 KPI（+22.5%、HK$480、4.8%、12%）、12 个月增长曲线、6 个 trending keywords、5 个城市 demand 全是 AI 凭空写的
+   - 顶部仍标"AI estimate · Beauty category benchmark" → 说明 prompt 里 `extra.semrush` 即使有数据，模型也没被强制使用
 
----
+3. **来源引用是假的（最严重）**
+   - "Euromonitor"、"HKRMA"、"QuestMobile"、"Tmall Global Insights"、"Xiaohongshu Red Trend Report"、"Sasa & Sephora Performance Data" —— 这些 BridgeCN 一个都没真的查过
+   - 系统提示词里其实写了"不许引用没查过的机构"，但模型还是编了 → 约束没生效
 
-## 修复方案
+4. **Report 页 provenance 错乱**
+   - 报告第一段还写着"Click 'Refresh with SEMrush' above to ground numbers" —— 但 Report 页根本没这个按钮，按钮在 China Market Insight 页
+   - 而且 market job 的 output_data 没真的把 SEMrush 快照带进 report 的 extra
 
-分两层做:**底层接真数据源**(SEMrush + 实时网页搜索)+ **UI 诚实标注**(哪些是真数据、哪些是 AI 推断)。
+5. **Consumer Insight / Localization / Launch Checklist 完全没接真数据**
+   - 三个页面顶部都还挂着橙色"AI strategic estimate"横幅，但根本没有"Refresh with real data"按钮 → 用户没有任何途径让这些页面用上真数据
+   - Launch Checklist 里出现 `Market_localization_compliance` 这种 raw key 当成阶段名显示 → i18n / fallback bug
 
-### 1. 接入 SEMrush 作为关键词/竞品/SEO 真实数据源
-本环境已经有 `semrush--*` 工具族(keyword_research、serp_analysis、competitive_analysis、domain_analysis、top_pages、backlink_analysis 等),这是**业内付费数据库**,数字真实。
-
-新建 `src/lib/data/semrush.functions.ts`(`createServerFn` + `requireSupabaseAuth`),封装:
-- `fetchKeywordData(keywords[], market)` → 真实月搜索量、CPC、竞争度、趋势
-- `fetchCompetitorData(domain, market)` → 真实流量、关键词重叠、反链
-- `fetchSerpData(keyword, market)` → 真实 SERP 前 10
-
-市场洞察页生成时:
-- 先用 KB 里的 `keywords[] + competitors[] + website` 调 SEMrush 拿**真实数字**
-- 再把真实数字作为 `extra` 喂给 Gemini,让它**只负责解读**,不再编数字
-- UI 上的"趋势关键词表/地域柱状图/竞品对比"全部换成 SEMrush 返回的字段,每行加 `Source: SEMrush · {date}` 角标
-
-### 2. 实时网页搜索为 LLM 提供 grounding
-新建 `src/lib/data/web-research.functions.ts`,用 `websearch--web_search` 工具风格的服务端实现(或直接调用 Brave/Tavily;若仅用现成的,先以服务端 `fetch` + Bing Web Search 公开 API 通过 `add_secret` 引导用户加 Key)。
-- 在市场/消费者洞察生成前,自动跑 3–5 条针对性查询(品牌名+目标市场、品类+小红书/Tmall、竞品+评测)
-- 摘要前 5 条结果(标题+片段+URL)拼进 `extra.webContext`
-- system prompt 改成"严格基于 PROJECT CONTEXT + SEMrush DATA + WEB SEARCH RESULTS,如无证据则写 'Insufficient data',禁止编造数据"
-- 报告里的"数据来源"列**只显示真正用到的 URL/SEMrush 报表**,不再让模型自由生成来源名
-
-### 3. 让生成步骤"按顺序"且每步可验证
-当前 china-market-insight / consumer / localization / launch / report 各自独立按钮,顺序靠用户记。改成在项目详情页加 **"开始市场进入分析"主流程**:
-- 步骤 1 知识库就绪 → 2 市场洞察 → 3 消费者洞察 → 4 本地化 → 5 上市清单 → 6 报告
-- 后一步自动把前一步的 `output_data` 通过 `extra` 透传(报告已经做了,扩展到 2→3→4→5)
-- 每步完成后才解锁下一步按钮;失败不能跳过
-- 顶部固定显示一条进度条,与 `project_checklist` 表同步
-
-### 4. UI 诚实标注 + 数据溯源
-- 每张卡片右上角加"数据等级"徽章:`Verified`(SEMrush/网页抓取)/`AI estimate`(模型推断)/`Manual`(用户输入)
-- 每个 KPI / 关键词行 hover 弹出 popover 显示**真实来源 URL** 或 "AI inferred — no public dataset"
-- 报告导出顶部加 disclaimer:"Numbers marked AI estimate are model inferences, not verified market data. Verified rows use SEMrush + cited web sources."
-
-### 5. 后端数据持久化
-- `ai_jobs.output_data` 已存,够用;再加一个新表 `data_snapshots(project_id, source, payload jsonb, fetched_at)` 缓存 SEMrush 结果 24h,避免重复消耗 API quota
-- 迁移文件含 GRANT + RLS(scoped to workspace member)
-
-### 6. 必需密钥
-- SEMrush 工具走 Lovable 内置(已可用,不需要用户密钥)
-- Web search:如果选 Tavily/Brave,会触发 `add_secret` 流程问用户要 Key;Bing Web Search 也是
-- 如果你不想让用户出 Key,可以仅用 SEMrush(已经能覆盖 60% 的"真实数据"诉求)
+6. **小 UI bug**
+   - Regional demand 柱状图 x 轴少了第一根柱（Causeway Bay）的标签
+   - Localization Studio 上方步骤条永远显示"Completed"灰色态，不区分当前进度
 
 ---
 
-## 技术要点
-- 所有外部数据调用都在 `createServerFn` + `requireSupabaseAuth` 里,Key 走 `process.env`,不暴露前端
-- LLM 调用从"自由发挥"改成"strict grounding":system prompt 明确"missing data → write Insufficient data,don't fabricate"
-- 失败降级:SEMrush 429 → UI 显示"数据源限流,2 分钟后重试",**不**让 LLM 编一份顶上(这是目前最大问题)
-- i18n:新增字段(data badge、来源、disclaimer)按之前模式补 en/ko/zh
+## 优化计划（按优先级）
+
+### P0 · 真把数据接进去（最关键）
+
+**a. 修复市场代码映射**
+- 在 `src/lib/data/semrush.functions.ts` 的 `marketToDatabase()` 里加：
+  - `hong kong / 香港 / hk` → `hk`
+  - `taiwan / 台湾 / 台灣 / tw` → `tw`
+  - `singapore / 新加坡 / sg` → `sg`
+- 当 targetMarket 含"Hong Kong"时优先匹配 `hk` 而不是被 `china` 抢走
+
+**b. domain_domains Bad request 兜底**
+- 部分 SEMrush 免费档不开放 `domain_domains`（竞品接口）—— 收到 Bad request 时跳过竞品调用、只保留 domain_ranks + 关键词，避免一个接口失败带崩整个快照
+
+**c. 把真数据 hard-wire 进 UI，不再依赖 AI "选择性使用"**
+- China Market Insight 页加一个 `useVerifiedSnapshot` hook：
+  - 当 SEMrush 快照存在时，直接用真值覆盖：
+    - "Brand Search Interest" KPI → SEMrush organic traffic 月环比
+    - "Trending keywords" 表 → SEMrush phrase_this 返回的 volume/cpc
+    - 顶部 chip 标签从橙色"AI estimate"变绿色"Verified · SEMrush · HK"
+  - AI 只负责写文字 summary，不再负责造数字
+- 把 AI 生成的"虚 KPI"和真 KPI 视觉上分开（绿勾 vs 黄三角）
+
+**d. 砍掉假来源**
+- 强化系统提示词：`sources` 数组只允许两类值
+  1. `Verified · SEMrush (<database>)` —— 当且仅当有 SEMrush 快照
+  2. `AI inference · category benchmark` —— 兜底
+- 任何机构名（Euromonitor、QuestMobile、HKRMA、Tmall Insights 等）一律禁止出现
+- 在 server 端 post-process：用正则把已知机构名从 sources 里直接删掉，模型再调皮也兜得住
+
+### P1 · Report 页真的引用 market job 的真数据
+
+- Report 生成时检查 latest market job 的 `output_data.semrush` 字段是否存在
+  - 有 → executive summary 第一段改为"Verified data from SEMrush HK as of {date}; AI 解读基于此"
+  - 无 → 提示用户"先去 China Market Insight 页点 Refresh with SEMrush，否则报告里的数字仅供参考"
+- Report 顶部加一个 `Data sources` 区块，列出真实用到的接口名 + 拉取时间
+
+### P2 · 其他三个页面也接上 SEMrush（可选）
+
+- Consumer Insight：把 SEMrush keyword volume 当作 "audience search interest" 真信号灌进 personas
+- Localization Studio：用 SEMrush 关键词的 HK 中文 phrase_this 结果作为 SEO keywords，不要让 AI 自己造词
+- Launch Checklist：去掉橙色 banner，因为这页本来就是流程清单不需要数据
+
+### P3 · UI/i18n 小修
+
+- Launch Checklist 阶段名 `Market_localization_compliance` 改成正常的 i18n key
+- Regional demand 图 x 轴补全 Causeway Bay 标签
+- 把"Refresh with SEMrush"按钮迁移成全局可见，4 个页面都能触发，统一一次拉、四处用
 
 ---
 
-## 你需要先决定 2 件事
+## 实施顺序建议
 
-1. **数据源范围**:只接 SEMrush(免费、立即可用、覆盖关键词/竞品/SEO),还是再加 Web Search(需要你出一个 API Key)?
-2. **接下来要不要保留"AI estimate"的卡片**?保留 = 信息全但要标注;只显示 verified = 干净但数据少很多。
+1. **本轮**：P0 全做完（市场映射 + 兜底 + 真数据 hard-wire + 砍假来源）
+2. **下一轮**：P1（Report 页 provenance）
+3. **再下一轮**：P2 + P3 按需
 
-确认后我开工。
+做完 P0 之后，你在 China Market Insight 页再点一次 Refresh with SEMrush，绿卡里应该会显示 `Verified · SEMrush · HK · 3cecosmetics.co.kr · X keywords · Y monthly traffic`，下方 4 个 KPI 至少有 1-2 个变绿勾，AI summary 第一句话会明确写"基于 SEMrush HK 实测数据"，而且 sources 里不会再出现 Euromonitor / QuestMobile 等编出来的名字。
 
+要我现在就执行 P0 吗？还是先调整下优先级？

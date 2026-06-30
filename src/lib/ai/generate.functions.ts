@@ -29,6 +29,54 @@ export type GenerateResult = {
 
 const MODEL = "google/gemini-3-flash-preview";
 
+// Institutions / data vendors the AI tends to hallucinate as "sources".
+// BridgeCN never queries any of these directly — if SEMrush isn't connected,
+// the only honest label is "AI inference". This regex is used to scrub the
+// `sources` array (and any per-KPI `src` field) before the result reaches UI.
+const FAKE_SOURCE_RE = /(euromonitor|questmobile|iimedia|nielsen|tmall(\s+global)?\s+insights?|xiaohongshu.*(trend|report)|red\s+(trend|report)|sasa|sephora|hkrma|hong\s*kong\s+retail\s+management|kantar|mintel|statista|frost\s*&?\s*sullivan|china\s+national\s+bureau|national\s+bureau\s+of\s+statistics|baidu\s+index|douyin\s+(trend|report)|weibo\s+(trend|report)|l'?or[ée]al.*(review|annual))/i;
+
+function isFakeSource(s: string): boolean {
+  if (!s) return true;
+  if (/^verified\s*·?\s*semrush/i.test(s)) return false;
+  if (/^ai\s+(inference|estimate|strategic)/i.test(s)) return false;
+  return FAKE_SOURCE_RE.test(s);
+}
+
+function sanitizeSources(value: unknown, hasSemrush: boolean, market: string): string[] {
+  const arr = Array.isArray(value) ? value.filter((v) => typeof v === "string") as string[] : [];
+  const cleaned = arr.filter((s) => !isFakeSource(s));
+  if (cleaned.length === 0) {
+    return hasSemrush
+      ? [`Verified · SEMrush · ${market.toUpperCase()}`, "AI inference · category benchmark"]
+      : ["AI inference · category benchmark"];
+  }
+  return cleaned;
+}
+
+function sanitizeKpiSrc(src: unknown, hasSemrush: boolean, market: string): string {
+  const s = typeof src === "string" ? src : "";
+  if (!s) return hasSemrush ? `AI inference (SEMrush ${market.toUpperCase()} unavailable for this metric)` : "AI inference · category benchmark";
+  if (isFakeSource(s)) return "AI inference · category benchmark";
+  return s;
+}
+
+function scrubOutput(parsed: { [k: string]: JsonValue }, hasSemrush: boolean, market: string): { [k: string]: JsonValue } {
+  const out = { ...parsed };
+  if ("sources" in out) {
+    out.sources = sanitizeSources(out.sources, hasSemrush, market) as JsonValue;
+  }
+  if (Array.isArray(out.kpis)) {
+    out.kpis = (out.kpis as JsonValue[]).map((k) => {
+      if (k && typeof k === "object" && !Array.isArray(k)) {
+        const obj = k as { [key: string]: JsonValue };
+        return { ...obj, src: sanitizeKpiSrc(obj.src, hasSemrush, market) };
+      }
+      return k;
+    }) as JsonValue;
+  }
+  return out;
+}
+
 function contextBrief(ctx: ProjectContext): string {
   const lines: string[] = [];
   if (ctx.company) lines.push(`Company: ${ctx.company}`);
@@ -58,12 +106,15 @@ function schemaFor(module: AIModuleKey, uiLocale?: string): { system: string; us
   const common = `You are a senior market entry strategist. Ground every claim in the Project Context. Be specific to the company, category and target market provided — do NOT default to skincare or any unrelated category. If the project says "Beverage / Natural Mineral Water", write about mineral water, not beauty.
 
 DATA INTEGRITY (CRITICAL):
-- If a "SEMRUSH DATA" block is present in the user message, those numbers (organicTraffic, organicKeywords, volume, cpc, competition, competitor domains, etc.) are REAL data from SEMrush. You MUST use them verbatim in the relevant fields (KPIs, keywords table, sources) — do NOT round, invent, or replace them. Tag every KPI/keyword built from this block with "src": "SEMrush · <market> · <today>". For these verified numbers, you may write "Verified via SEMrush" in the sources array.
-- Anything NOT covered by SEMRUSH DATA is still a strategic ESTIMATE derived from category knowledge and the brand's Knowledge Base. Numbers you invent must be tagged with "src": "AI estimate · {category benchmark}" — do NOT cite specific firms (iiMedia, QuestMobile, Nielsen, Tmall Insights, etc.) you did not actually query.
-- The FIRST sentence of the "summary" field MUST disclose data provenance (translated to ${lang}):
-  · If SEMRUSH DATA was provided: "Note: KPIs and keyword volumes below are verified SEMrush data for the {market} market as of {today}; narrative and forecasts are AI strategic inference."
-  · Otherwise: "Note: The following analysis is an AI strategic estimate based on your Knowledge Base and category benchmarks. Numbers are model inferences, not measurements from live market databases. Click 'Refresh with SEMrush' above to ground numbers in verified data."
-- Keep numeric outputs reasonable for the category and target market, but do NOT present AI-estimated numbers as authoritative.
+- If a "SEMRUSH DATA" block is present, those numbers (organicTraffic, organicKeywords, volume, cpc, competition, competitor domains) are REAL data from SEMrush. Use them VERBATIM in KPIs and the keywords table — do NOT round or replace. Tag those entries with "src": "Verified · SEMrush · <market>".
+- Anything NOT covered by SEMRUSH DATA is a strategic ESTIMATE. Numbers you invent MUST be tagged "src": "AI inference · category benchmark".
+- SOURCES ARRAY RULE (ABSOLUTE): The "sources" array may contain ONLY these literal strings:
+    1. "Verified · SEMrush · <market>"  ← only when SEMRUSH DATA is present
+    2. "AI inference · category benchmark"
+  You are FORBIDDEN from naming any third-party data vendor or research firm — including but not limited to: Euromonitor, QuestMobile, iiMedia, Nielsen, Kantar, Mintel, Statista, Frost & Sullivan, Tmall Insights, Tmall Global Insights, Xiaohongshu/Red trend reports, Sasa, Sephora, HKRMA, National Bureau of Statistics, Baidu Index, Douyin/Weibo trend reports, L'Oréal annual reviews. BridgeCN has NOT queried any of these. Naming them is a hallucination and will be stripped server-side.
+- The FIRST sentence of "summary" MUST disclose provenance (translated to ${lang}):
+  · With SEMRUSH DATA: "Note: KPIs and keyword volumes below are verified SEMrush data for the {market} market as of {today}; narrative and forecasts are AI strategic inference."
+  · Without: "Note: The following analysis is an AI strategic inference based on your Knowledge Base and category benchmarks. Numbers are model inferences, not measurements. Click 'Refresh with SEMrush' on the China Market Insight page to ground numbers in verified data."
 
 LANGUAGE: Write ALL free-text values (summary, sections, notes, labels, items, descriptions, signals, painPoints, purchaseDrivers, recommendations, risks, persona fields, channel roles, etc.) in ${lang}. Keep JSON KEYS in English. Keep proper nouns (brand names, platforms like Xiaohongshu/Tmall, regulators like NMPA/KFTC) in their original form.
 
@@ -219,12 +270,25 @@ export const generateAIOutput = createServerFn({ method: "POST" })
     const { system, user: userTpl } = schemaFor(module, uiLocale);
     const ctxLines = contextBrief(projectContext);
     let extraBlock = "";
+    let hasSemrush = false;
+    let semrushMarket = "";
     if (extra && Object.keys(extra).length) {
-      extraBlock = `\n\n--- ADDITIONAL CONTEXT ---\n${JSON.stringify(extra).slice(0, 6000)}`;
+      const sem = (extra as { semrush?: { market?: string; domainOverview?: unknown; keywords?: unknown[]; competitors?: unknown[] } }).semrush;
+      if (sem && (sem.domainOverview || (sem.keywords && sem.keywords.length) || (sem.competitors && sem.competitors.length))) {
+        hasSemrush = true;
+        semrushMarket = sem.market || "";
+        extraBlock = `\n\n--- SEMRUSH DATA (REAL, VERIFIED — USE VERBATIM) ---\n${JSON.stringify(sem).slice(0, 5000)}`;
+      }
+      const other = { ...(extra as Record<string, unknown>) };
+      delete (other as Record<string, unknown>).semrush;
+      if (Object.keys(other).length) {
+        extraBlock += `\n\n--- ADDITIONAL CONTEXT ---\n${JSON.stringify(other).slice(0, 4000)}`;
+      }
     }
     const userPrompt = `--- PROJECT CONTEXT ---\n${ctxLines}${extraBlock}\n\n--- TASK ---\n${userTpl}`;
 
-    const parsed = await callGateway(system, userPrompt);
+    const raw = await callGateway(system, userPrompt);
+    const parsed = scrubOutput(raw, hasSemrush, semrushMarket || "n/a");
 
     // Build a free-text summary that the existing UI streaming text uses.
     let summary = "";
