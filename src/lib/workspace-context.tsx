@@ -349,7 +349,17 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
 
   const updateProject = useCallback(
     async (id: string, patch: Partial<{ name: string; industry: string; region: string; targetMarket: string; description: string; summary: string; stage: Stage }>) => {
-      const dbPatch: Record<string, unknown> = {};
+      type ProjectUpdate = {
+        name?: string;
+        initials?: string;
+        industry?: string | null;
+        region?: string | null;
+        target_market?: string | null;
+        description?: string | null;
+        summary?: string | null;
+        stage?: Stage;
+      };
+      const dbPatch: ProjectUpdate = {};
       if (patch.name !== undefined) { dbPatch.name = patch.name.trim(); dbPatch.initials = initialsOf(patch.name); }
       if (patch.industry !== undefined) dbPatch.industry = patch.industry.trim() || null;
       if (patch.region !== undefined) dbPatch.region = patch.region.trim() || null;
@@ -363,7 +373,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       }
       if (patch.summary !== undefined) dbPatch.summary = patch.summary.trim() || null;
       if (patch.stage !== undefined) dbPatch.stage = patch.stage;
-      const { error } = await supabase.from("projects").update(dbPatch).eq("id", id);
+      const { error } = await supabase.from("projects").update(dbPatch as never).eq("id", id);
       if (error) throw error;
       await refreshProjects();
     },
