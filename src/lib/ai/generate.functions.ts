@@ -270,12 +270,25 @@ export const generateAIOutput = createServerFn({ method: "POST" })
     const { system, user: userTpl } = schemaFor(module, uiLocale);
     const ctxLines = contextBrief(projectContext);
     let extraBlock = "";
+    let hasSemrush = false;
+    let semrushMarket = "";
     if (extra && Object.keys(extra).length) {
-      extraBlock = `\n\n--- ADDITIONAL CONTEXT ---\n${JSON.stringify(extra).slice(0, 6000)}`;
+      const sem = (extra as { semrush?: { market?: string; domainOverview?: unknown; keywords?: unknown[]; competitors?: unknown[] } }).semrush;
+      if (sem && (sem.domainOverview || (sem.keywords && sem.keywords.length) || (sem.competitors && sem.competitors.length))) {
+        hasSemrush = true;
+        semrushMarket = sem.market || "";
+        extraBlock = `\n\n--- SEMRUSH DATA (REAL, VERIFIED — USE VERBATIM) ---\n${JSON.stringify(sem).slice(0, 5000)}`;
+      }
+      const other = { ...(extra as Record<string, unknown>) };
+      delete (other as Record<string, unknown>).semrush;
+      if (Object.keys(other).length) {
+        extraBlock += `\n\n--- ADDITIONAL CONTEXT ---\n${JSON.stringify(other).slice(0, 4000)}`;
+      }
     }
     const userPrompt = `--- PROJECT CONTEXT ---\n${ctxLines}${extraBlock}\n\n--- TASK ---\n${userTpl}`;
 
-    const parsed = await callGateway(system, userPrompt);
+    const raw = await callGateway(system, userPrompt);
+    const parsed = scrubOutput(raw, hasSemrush, semrushMarket || "n/a");
 
     // Build a free-text summary that the existing UI streaming text uses.
     let summary = "";
