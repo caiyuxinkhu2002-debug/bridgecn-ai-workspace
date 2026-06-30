@@ -24,6 +24,7 @@ import { Route as AppLocalizationStudioRouteImport } from './routes/_app.localiz
 import { Route as AppLaunchChecklistRouteImport } from './routes/_app.launch-checklist'
 import { Route as AppConsumerInsightRouteImport } from './routes/_app.consumer-insight'
 import { Route as AppChinaMarketInsightRouteImport } from './routes/_app.china-market-insight'
+import { Route as AppAiWorkspaceRouteImport } from './routes/_app.ai-workspace'
 import { Route as AppProjectsProjectIdRouteImport } from './routes/_app.projects.$projectId'
 
 const RegisterRoute = RegisterRouteImport.update({
@@ -100,6 +101,11 @@ const AppChinaMarketInsightRoute = AppChinaMarketInsightRouteImport.update({
   path: '/china-market-insight',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAiWorkspaceRoute = AppAiWorkspaceRouteImport.update({
+  id: '/ai-workspace',
+  path: '/ai-workspace',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppProjectsProjectIdRoute = AppProjectsProjectIdRouteImport.update({
   id: '/$projectId',
   path: '/$projectId',
@@ -111,6 +117,7 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/ai-workspace': typeof AppAiWorkspaceRoute
   '/china-market-insight': typeof AppChinaMarketInsightRoute
   '/consumer-insight': typeof AppConsumerInsightRoute
   '/launch-checklist': typeof AppLaunchChecklistRoute
@@ -127,6 +134,7 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/ai-workspace': typeof AppAiWorkspaceRoute
   '/china-market-insight': typeof AppChinaMarketInsightRoute
   '/consumer-insight': typeof AppConsumerInsightRoute
   '/launch-checklist': typeof AppLaunchChecklistRoute
@@ -146,6 +154,7 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/_app/ai-workspace': typeof AppAiWorkspaceRoute
   '/_app/china-market-insight': typeof AppChinaMarketInsightRoute
   '/_app/consumer-insight': typeof AppConsumerInsightRoute
   '/_app/launch-checklist': typeof AppLaunchChecklistRoute
@@ -166,6 +175,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/register'
+    | '/ai-workspace'
     | '/china-market-insight'
     | '/consumer-insight'
     | '/launch-checklist'
@@ -182,6 +192,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/register'
+    | '/ai-workspace'
     | '/china-market-insight'
     | '/consumer-insight'
     | '/launch-checklist'
@@ -200,6 +211,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/register'
+    | '/_app/ai-workspace'
     | '/_app/china-market-insight'
     | '/_app/consumer-insight'
     | '/_app/launch-checklist'
@@ -328,6 +340,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppChinaMarketInsightRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/ai-workspace': {
+      id: '/_app/ai-workspace'
+      path: '/ai-workspace'
+      fullPath: '/ai-workspace'
+      preLoaderRoute: typeof AppAiWorkspaceRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/projects/$projectId': {
       id: '/_app/projects/$projectId'
       path: '/$projectId'
@@ -351,6 +370,7 @@ const AppProjectsRouteWithChildren = AppProjectsRoute._addFileChildren(
 )
 
 interface AppRouteChildren {
+  AppAiWorkspaceRoute: typeof AppAiWorkspaceRoute
   AppChinaMarketInsightRoute: typeof AppChinaMarketInsightRoute
   AppConsumerInsightRoute: typeof AppConsumerInsightRoute
   AppLaunchChecklistRoute: typeof AppLaunchChecklistRoute
@@ -365,6 +385,7 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppAiWorkspaceRoute: AppAiWorkspaceRoute,
   AppChinaMarketInsightRoute: AppChinaMarketInsightRoute,
   AppConsumerInsightRoute: AppConsumerInsightRoute,
   AppLaunchChecklistRoute: AppLaunchChecklistRoute,
