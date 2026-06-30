@@ -211,13 +211,13 @@ const en: Dict = {
   // Trends
   "trend.1": "Glass skin · Xiaohongshu +42%",
   "trend.2": "Clean beauty · Douyin +29%",
-  "trend.3": "Hanbang heritage · Xiaohongshu +18%",
+  "trend.3": "Heritage skincare · +18%",
   "trend.4": "Derma-grade SPF · Tmall +14%",
   // Activity feed
   "act.1": "Sora generated a China Market Report",
   "act.2": "AI translated 12 Tmall PDPs to 简体中文",
-  "act.3": "Minji moved Medicube to Launch",
-  "act.4": "Jihoon shared ANUA Xiaohongshu brief",
+  "act.3": "A teammate advanced a project to Launch",
+  "act.4": "A teammate shared a creator-platform brief",
   // Tasks
   "task.1": "Review Tmall flagship PDP copy",
   "task.2": "Approve Xiaohongshu KOC list",
@@ -506,7 +506,7 @@ const en: Dict = {
   "market.kpi.searchVolume": "Search Volume",
   "market.kpi.searchVolume.sub": "K-beauty queries · 30d",
   "market.kpi.categoryGrowth": "Category Growth",
-  "market.kpi.categoryGrowth.sub": "Hanbang / herbal skincare YoY",
+  "market.kpi.categoryGrowth.sub": "Category YoY",
   "market.kpi.source": "Source: {v}",
 };
 
@@ -647,8 +647,8 @@ const ko: Dict = {
   "trend.4": "더마 SPF · 티몰 +14%",
   "act.1": "Sora님이 중국 시장 리포트를 생성했습니다",
   "act.2": "AI가 티몰 PDP 12개를 简体中文로 번역했습니다",
-  "act.3": "Minji님이 Medicube를 런칭 단계로 이동",
-  "act.4": "Jihoon님이 ANUA 샤오훙슈 브리프를 공유",
+  "act.3": "팀원이 프로젝트를 런칭 단계로 이동했습니다",
+  "act.4": "팀원이 크리에이터 플랫폼 브리프를 공유했습니다",
   "task.1": "티몰 플래그십 PDP 카피 검토",
   "task.2": "샤오훙슈 KOC 리스트 승인",
   "task.3": "NMPA 제출 패키지 확정",
@@ -1067,8 +1067,8 @@ const zh: Dict = {
   "trend.4": "皮肤级 SPF · 天猫 +14%",
   "act.1": "Sora 生成了中国市场报告",
   "act.2": "AI 将 12 个天猫商品页翻译为简体中文",
-  "act.3": "Minji 将 Medicube 推进到上市阶段",
-  "act.4": "Jihoon 共享了 ANUA 小红书简报",
+  "act.3": "团队成员将一个项目推进到上市阶段",
+  "act.4": "团队成员共享了一份创作者平台简报",
   "task.1": "审核天猫旗舰店商品页文案",
   "task.2": "审批小红书 KOC 名单",
   "task.3": "确认 NMPA 申报材料",
