@@ -56,6 +56,9 @@ export type Database = {
       projects: {
         Row: {
           created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          description: string | null
           id: string
           industry: string | null
           initials: string | null
@@ -65,11 +68,15 @@ export type Database = {
           region: string | null
           stage: Database["public"]["Enums"]["project_stage"]
           summary: string | null
+          target_market: string | null
           updated_at: string
           workspace_id: string
         }
         Insert: {
           created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          description?: string | null
           id?: string
           industry?: string | null
           initials?: string | null
@@ -79,11 +86,15 @@ export type Database = {
           region?: string | null
           stage?: Database["public"]["Enums"]["project_stage"]
           summary?: string | null
+          target_market?: string | null
           updated_at?: string
           workspace_id: string
         }
         Update: {
           created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          description?: string | null
           id?: string
           industry?: string | null
           initials?: string | null
@@ -93,6 +104,7 @@ export type Database = {
           region?: string | null
           stage?: Database["public"]["Enums"]["project_stage"]
           summary?: string | null
+          target_market?: string | null
           updated_at?: string
           workspace_id?: string
         }
@@ -205,6 +217,7 @@ export type Database = {
         | "localization"
         | "launch"
         | "reports"
+        | "completed"
       workspace_role: "owner" | "admin" | "editor" | "viewer"
     }
     CompositeTypes: {
@@ -339,6 +352,7 @@ export const Constants = {
         "localization",
         "launch",
         "reports",
+        "completed",
       ],
       workspace_role: ["owner", "admin", "editor", "viewer"],
     },
