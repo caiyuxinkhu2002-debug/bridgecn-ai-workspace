@@ -86,12 +86,18 @@ function LocalizationStudioPage() {
 
   const buildPrompt = useCallback(() => {
     const p = activeProject;
+    const kb = p?.knowledgeBase || {};
     return [
       `Localize the following brand content for Mainland China.`,
-      `Brand: ${p?.name ?? "(unnamed)"}`,
-      `Industry: ${p?.industry ?? "n/a"}`,
+      `Brand: ${kb.company || p?.name || "(unnamed)"}`,
+      `Industry: ${kb.industry || p?.industry || "n/a"}`,
+      `Category: ${kb.category || "n/a"}`,
       `Target market: ${p?.targetMarket ?? p?.region ?? "n/a"}`,
-      `Description: ${source.description || "(none)"}`,
+      `Brand story: ${kb.brandStory || source.description || "(none)"}`,
+      `Brand tone: ${(kb.brandTone || []).join(", ") || "n/a"}`,
+      `Keywords: ${(kb.keywords || []).join(", ") || "n/a"}`,
+      `Target audience: ${kb.targetAudience || "n/a"}`,
+      `Korean source copy: ${kb.koreanCopy || "n/a"}`,
       `Channel: ${channel}`,
       `Tone: ${tone}`,
       `Audience: ${audience}`,
