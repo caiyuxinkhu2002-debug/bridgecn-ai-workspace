@@ -54,7 +54,7 @@ export const deleteReport = createServerFn({ method: "POST" })
 
 export const generateReportNow = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { workspaceId: string; projectId: string; projectContext: ProjectContext }) => input)
+  .inputValidator((input: { workspaceId: string; projectId: string; projectContext: ProjectContext; uiLocale?: "en" | "ko" | "zh" }) => input)
   .handler(async ({ data, context }) => {
     // Pull the latest completed market/consumer/localization jobs to enrich the report.
     const sb = context.supabase;
@@ -77,7 +77,7 @@ export const generateReportNow = createServerFn({ method: "POST" })
     };
 
     const result = await generateAIOutput({
-      data: { module: "report", projectContext: data.projectContext, extra: extra as unknown as Record<string, unknown> },
+      data: { module: "report", projectContext: data.projectContext, uiLocale: data.uiLocale, extra: extra as unknown as Record<string, unknown> },
     });
 
     const payload = result.output_data;

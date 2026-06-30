@@ -41,10 +41,11 @@ export const lovableProvider: AIProvider = {
   async *run({ module, input, signal, prompt }) {
     const ctx = ((input?.projectContext ?? {}) as ProjectContext);
     const sub = MODULE_TO_SUB[module] ?? "market";
+    const uiLocale = (input?.uiLocale as "en" | "ko" | "zh" | undefined);
 
     // Phases for visual feedback while the real call is in flight.
     const callPromise = generateAIOutput({
-      data: { module: sub, projectContext: ctx, extra: (input?.extra as Record<string, unknown> | undefined) },
+      data: { module: sub, projectContext: ctx, uiLocale, extra: (input?.extra as Record<string, unknown> | undefined) },
     });
 
     try {

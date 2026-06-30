@@ -3,6 +3,7 @@ import { useWorkspace } from "@/lib/workspace-context";
 import { createAndRunJob, type CreateJobInput } from "./service";
 import type { AIJob, AIJobPhase, AIModule } from "./types";
 import { buildProjectContext } from "./project-context";
+import { useI18n } from "@/lib/i18n";
 
 // AI activity event. Carries an i18n key + params so the UI can re-translate
 // instantly when the user switches language. `fallback` is the raw provider
@@ -34,6 +35,7 @@ export type UseAIJobState = {
 
 export function useAIJob() {
   const { activeWorkspace, activeProject, user } = useWorkspace();
+  const { locale } = useI18n();
   const [state, setState] = useState<UseAIJobState>({
     status: "idle",
     phase: null,
@@ -81,7 +83,7 @@ export function useAIJob() {
       userId: user.id,
       module: req.module,
       prompt: req.prompt,
-      input: { ...(req.input ?? {}), projectContext },
+      input: { ...(req.input ?? {}), projectContext, uiLocale: locale },
     };
 
     let finalJob: AIJob | null = null;
@@ -150,7 +152,7 @@ export function useAIJob() {
       setState((s) => ({ ...s, status: "failed", error: (e as Error)?.message || "Unknown error", isRunning: false }));
     }
     return finalJob;
-  }, [user, activeWorkspace?.id, activeProject]);
+  }, [user, activeWorkspace?.id, activeProject, locale]);
 
   const reset = useCallback(() => {
     setState({ status: "idle", phase: null, output: "", error: null, job: null, isRunning: false, data: {}, events: [] });

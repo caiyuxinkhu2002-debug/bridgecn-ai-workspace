@@ -40,22 +40,22 @@ export const Route = createFileRoute("/_app/report")({
 });
 
 function ReportPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { activeProject, activeWorkspace } = useWorkspace();
   const { print, reportId } = Route.useSearch();
   const router = useRouter();
   const [generating, setGenerating] = useState(false);
   const onGenerate = useCallback(async () => {
-    if (!activeWorkspace?.id || !activeProject?.id) { toast.error("Open a project first"); return; }
+    if (!activeWorkspace?.id || !activeProject?.id) { toast.error(t("reports.toast.noProject")); return; }
     setGenerating(true);
     try {
       const ctx = buildProjectContext(activeProject);
-      const row = await generateReportNow({ data: { workspaceId: activeWorkspace.id, projectId: activeProject.id, projectContext: ctx } });
-      toast.success("Report generated");
+      const row = await generateReportNow({ data: { workspaceId: activeWorkspace.id, projectId: activeProject.id, projectContext: ctx, uiLocale: locale } });
+      toast.success(t("reports.toast.generated"));
       router.navigate({ to: "/report", search: { reportId: row.id } as never });
     } catch (e) { toast.error((e as Error).message); }
     finally { setGenerating(false); }
-  }, [activeWorkspace?.id, activeProject, router]);
+  }, [activeWorkspace?.id, activeProject, router, t, locale]);
   const kb = activeProject?.knowledgeBase || {};
 
   // Load either a specific report by id, or fall back to the latest
@@ -216,7 +216,7 @@ function ReportPage() {
                 className="inline-flex h-9 items-center gap-1.5 rounded-md bg-[var(--primary)] px-3 text-xs font-medium text-white hover:opacity-90 disabled:opacity-50"
               >
                 {generating ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
-                {generating ? t("common.generating") : "Generate report with AI"}
+                {generating ? t("common.generating") : t("report.action.generateWithAI")}
               </button>
             </div>
           </div>
@@ -233,37 +233,37 @@ function ReportPage() {
             )}
             {data.marketSection && (
               <section>
-                <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">Market</h2>
+                <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">{t("report.section.market")}</h2>
                 <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-[var(--foreground)]/90">{data.marketSection}</p>
               </section>
             )}
             {data.consumerSection && (
               <section>
-                <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">Consumer</h2>
+                <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">{t("report.section.consumer")}</h2>
                 <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-[var(--foreground)]/90">{data.consumerSection}</p>
               </section>
             )}
             {data.localizationSection && (
               <section>
-                <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">Localization</h2>
+                <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">{t("report.section.localization")}</h2>
                 <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-[var(--foreground)]/90">{data.localizationSection}</p>
               </section>
             )}
             {data.launchPlan && (
               <section>
-                <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">Launch plan</h2>
+                <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">{t("report.section.launchPlan")}</h2>
                 <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-[var(--foreground)]/90">{data.launchPlan}</p>
               </section>
             )}
             {(data.risks?.length ?? 0) > 0 && (
               <section>
-                <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">Risks</h2>
+                <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">{t("report.section.risks")}</h2>
                 <ul className="list-disc space-y-1 pl-5">{data.risks!.map((r) => <li key={r}>{r}</li>)}</ul>
               </section>
             )}
             {(data.recommendations?.length ?? 0) > 0 && (
               <section>
-                <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">Recommendations</h2>
+                <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">{t("report.section.recommendations")}</h2>
                 <ul className="list-disc space-y-1 pl-5">{data.recommendations!.map((r) => <li key={r}>{r}</li>)}</ul>
               </section>
             )}

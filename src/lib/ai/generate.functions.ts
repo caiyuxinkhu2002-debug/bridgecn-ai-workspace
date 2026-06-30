@@ -11,6 +11,8 @@ export type AIModuleKey = "market" | "consumer" | "localization" | "launch" | "r
 export type GenerateInput = {
   module: AIModuleKey;
   projectContext: ProjectContext;
+  /** UI language for free-text fields. JSON keys stay English. */
+  uiLocale?: "en" | "ko" | "zh";
   // Module-specific extras (e.g. existing job outputs feeding the report)
   extra?: Record<string, unknown>;
 };
@@ -45,8 +47,19 @@ function contextBrief(ctx: ProjectContext): string {
   return lines.join("\n");
 }
 
-function schemaFor(module: AIModuleKey): { system: string; user: string } {
-  const common = `You are a senior market entry strategist. Ground every claim in the Project Context. Be specific to the company, category and target market provided — do NOT default to skincare or any unrelated category. If the project says "Beverage / Natural Mineral Water", write about mineral water, not beauty. Return ONLY a JSON object matching the schema. No prose, no markdown fences.`;
+function localeName(loc?: string): string {
+  if (loc === "zh") return "Simplified Chinese (简体中文)";
+  if (loc === "ko") return "Korean (한국어)";
+  return "English";
+}
+
+function schemaFor(module: AIModuleKey, uiLocale?: string): { system: string; user: string } {
+  const lang = localeName(uiLocale);
+  const common = `You are a senior market entry strategist. Ground every claim in the Project Context. Be specific to the company, category and target market provided — do NOT default to skincare or any unrelated category. If the project says "Beverage / Natural Mineral Water", write about mineral water, not beauty.
+
+LANGUAGE: Write ALL free-text values (summary, sections, notes, labels, items, descriptions, signals, painPoints, purchaseDrivers, recommendations, risks, persona fields, channel roles, etc.) in ${lang}. Keep JSON KEYS in English. Keep proper nouns (brand names, platforms like Xiaohongshu/Tmall, regulators like NMPA/KFTC) in their original form.
+
+Return ONLY a JSON object matching the schema. No prose, no markdown fences.`;
 
   if (module === "market") {
     return {
@@ -194,8 +207,8 @@ export const generateAIOutput = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: GenerateInput) => input)
   .handler(async ({ data }) => {
-    const { module, projectContext, extra } = data;
-    const { system, user: userTpl } = schemaFor(module);
+    const { module, projectContext, extra, uiLocale } = data;
+    const { system, user: userTpl } = schemaFor(module, uiLocale);
     const ctxLines = contextBrief(projectContext);
     let extraBlock = "";
     if (extra && Object.keys(extra).length) {
