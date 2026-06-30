@@ -887,7 +887,7 @@ export const localeLabels: Record<Locale, string> = {
   zh: "简体中文",
 };
 
-type Ctx = { locale: Locale; setLocale: (l: Locale) => void; t: (k: string) => string };
+type Ctx = { locale: Locale; setLocale: (l: Locale) => void; t: (k: string, params?: Record<string, string | number>) => string };
 const I18nCtx = createContext<Ctx | null>(null);
 
 const STORAGE_KEY = "bridgecn.locale";
@@ -915,10 +915,12 @@ export function I18nProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<Ctx>(() => {
     const dict = dicts[locale];
+    const format = (s: string, params?: Record<string, string | number>) =>
+      params ? s.replace(/\{(\w+)\}/g, (_, k) => (params[k] != null ? String(params[k]) : `{${k}}`)) : s;
     return {
       locale,
       setLocale,
-      t: (k: string) => dict[k] ?? en[k] ?? k,
+      t: (k: string, params?: Record<string, string | number>) => format(dict[k] ?? en[k] ?? k, params),
     };
   }, [locale, setLocale]);
 
