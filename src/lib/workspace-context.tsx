@@ -182,7 +182,21 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) { setUser(null); setProfile(null); return; }
     setUser(u.user);
-    const { data: p } = await supabase.from("profiles").select("*").eq("id", u.user.id).maybeSingle();
+    let { data: p } = await supabase.from("profiles").select("*").eq("id", u.user.id).maybeSingle();
+    if (!p) {
+      // Auto-create a profile row on first login if the signup trigger didn't run.
+      const meta = (u.user.user_metadata ?? {}) as Record<string, unknown>;
+      const fallbackName =
+        (typeof meta.name === "string" && meta.name) ||
+        (typeof meta.full_name === "string" && meta.full_name) ||
+        (u.user.email ? u.user.email.split("@")[0] : null);
+      const { data: created } = await supabase
+        .from("profiles")
+        .insert({ id: u.user.id, email: u.user.email ?? null, name: fallbackName })
+        .select("*")
+        .maybeSingle();
+      p = created;
+    }
     if (p) setProfile(p as Profile);
   }, []);
 
