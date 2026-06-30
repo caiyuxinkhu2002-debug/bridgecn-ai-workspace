@@ -1827,6 +1827,24 @@ Object.assign(en, enExtras2);
 Object.assign(ko, koExtras2);
 Object.assign(zh, zhExtras2);
 
+// Data-integrity banner: shown on every analysis page so users understand
+// that, without a connected real-data source, every number is an AI estimate.
+Object.assign(en, {
+  "data.banner.title": "AI strategic estimate — not verified market data",
+  "data.banner.body":
+    "No live data source (SEMrush, Tmall, Xiaohongshu, Baidu Index, etc.) is connected. Numbers, KPIs, growth charts and source citations on this page are model inferences based on your Knowledge Base and category benchmarks — not measurements. Use them for strategic framing, not for final business decisions. Connect a data source in Settings to ground future runs in verified data.",
+});
+Object.assign(ko, {
+  "data.banner.title": "AI 전략적 추정치 — 검증된 시장 데이터가 아닙니다",
+  "data.banner.body":
+    "실시간 데이터 소스(SEMrush, Tmall, 샤오훙슈, 바이두 지수 등)가 연결되어 있지 않습니다. 이 페이지의 수치, KPI, 성장 차트, 출처 인용은 지식베이스와 카테고리 벤치마크를 바탕으로 한 모델 추론이며 실측값이 아닙니다. 전략적 방향 설정용으로만 활용하시고 최종 비즈니스 결정 근거로 사용하지 마세요. 검증된 데이터로 분석을 진행하려면 설정에서 데이터 소스를 연결하세요.",
+});
+Object.assign(zh, {
+  "data.banner.title": "AI 战略推断 —— 非已验证市场数据",
+  "data.banner.body":
+    "当前未连接任何实时数据源(SEMrush、天猫、小红书、百度指数等)。本页的所有数字、KPI、增长曲线和数据来源标注均为模型基于您的知识库与品类基准做出的推断,并非实测数据。请仅作为战略方向参考,不可直接作为最终商业决策依据。如需基于真实数据生成分析,请到「设置」中连接数据源。",
+});
+
 export const localeLabels: Record<Locale, string> = {
   en: "English",
   ko: "한국어",
