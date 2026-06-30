@@ -26,9 +26,12 @@ import {
   Wand2,
   ShareIcon,
   TrendingUp,
+  FileText,
+  Languages as LangIcon,
 } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { localeLabels, useI18n, type Locale } from "@/lib/i18n";
+import { useWorkspace } from "@/lib/workspace-context";
 
 const navSections: {
   labelKey: string;
@@ -106,16 +109,22 @@ function LanguageSwitcher() {
 
 function NotificationBell() {
   const { t } = useI18n();
+  const router = useRouter();
+  const { notifications, unreadCount, markAllRead } = useWorkspace();
   const [open, setOpen] = useState(false);
   const ref = useOutside<HTMLDivElement>(() => setOpen(false));
-  const items = [
-    { id: 1, icon: FileBarChart, unread: true, time: "2m" },
-    { id: 2, icon: TrendingUp, unread: true, time: "1h" },
-    { id: 3, icon: Wand2, unread: true, time: "3h" },
-    { id: 4, icon: ShareIcon, unread: false, time: "Yesterday" },
-    { id: 5, icon: Sparkle, unread: false, time: "2d" },
+  const groupIcons: Record<string, typeof FileBarChart> = {
+    n1: FileBarChart,
+    n2: TrendingUp,
+    n3: Wand2,
+    n4: ShareIcon,
+    n5: Sparkle,
+  };
+  const groups: { key: "today" | "yesterday" | "earlier"; labelKey: string }[] = [
+    { key: "today", labelKey: "notifs.today" },
+    { key: "yesterday", labelKey: "notifs.yesterday" },
+    { key: "earlier", labelKey: "notifs.earlier" },
   ];
-  const unread = items.filter((i) => i.unread).length;
   return (
     <div className="relative" ref={ref}>
       <button
@@ -124,7 +133,7 @@ function NotificationBell() {
         aria-label={t("menu.notifications")}
       >
         <Bell className="h-4 w-4 text-[var(--muted-foreground)]" />
-        {unread > 0 && (
+        {unreadCount > 0 && (
           <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-[var(--primary)] ring-2 ring-[var(--background)]" />
         )}
       </button>
@@ -132,36 +141,61 @@ function NotificationBell() {
         <div className="absolute right-0 z-50 mt-2 w-[340px] overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--popover)] shadow-[var(--shadow-card)]">
           <div className="flex items-center justify-between border-b border-[var(--border)] px-4 py-3">
             <div className="text-sm font-semibold">{t("notif.title")}</div>
-            <button className="text-xs font-medium text-[var(--muted-foreground)] hover:text-[var(--foreground)]">
+            <button
+              onClick={markAllRead}
+              className="text-xs font-medium text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+            >
               {t("notif.markAll")}
             </button>
           </div>
-          <ul className="max-h-[360px] divide-y divide-[var(--border)] overflow-auto">
-            {items.map((n) => {
-              const Icon = n.icon;
+          <div className="max-h-[420px] overflow-auto">
+            {groups.map((g) => {
+              const list = notifications.filter((n) => n.group === g.key);
+              if (list.length === 0) return null;
               return (
-                <li key={n.id} className="flex items-start gap-3 px-4 py-3 hover:bg-[var(--muted)]/60">
-                  <div className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-[var(--muted)]">
-                    <Icon className="h-3.5 w-3.5 text-[var(--foreground)]" />
+                <div key={g.key}>
+                  <div className="border-b border-[var(--border)] bg-[var(--muted)]/40 px-4 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">
+                    {t(g.labelKey)}
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <p className="truncate text-sm font-medium">{t(`notif.${n.id}.title`)}</p>
-                      {n.unread && <span className="h-1.5 w-1.5 rounded-full bg-[var(--primary)]" />}
-                    </div>
-                    <p className="truncate text-xs text-[var(--muted-foreground)]">
-                      {t(`notif.${n.id}.body`)}
-                    </p>
-                  </div>
-                  <span className="shrink-0 text-[11px] text-[var(--muted-foreground)]">{n.time}</span>
-                </li>
+                  <ul className="divide-y divide-[var(--border)]">
+                    {list.map((n) => {
+                      const Icon = groupIcons[n.id] ?? Bell;
+                      return (
+                        <li
+                          key={n.id}
+                          onClick={() => {
+                            if (n.link) router.navigate({ to: n.link });
+                            setOpen(false);
+                          }}
+                          className="flex cursor-pointer items-start gap-3 px-4 py-3 hover:bg-[var(--muted)]/60"
+                        >
+                          <div className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-[var(--muted)]">
+                            <Icon className="h-3.5 w-3.5 text-[var(--foreground)]" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                              <p className="truncate text-sm font-medium">{t(n.titleKey)}</p>
+                              {!n.read && <span className="h-1.5 w-1.5 rounded-full bg-[var(--primary)]" />}
+                            </div>
+                            <p className="truncate text-xs text-[var(--muted-foreground)]">{t(n.bodyKey)}</p>
+                          </div>
+                          <span className="shrink-0 text-[11px] text-[var(--muted-foreground)]">{n.time}</span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
               );
             })}
-          </ul>
+          </div>
           <div className="border-t border-[var(--border)] px-4 py-2 text-center">
-            <button className="text-xs font-medium text-[var(--muted-foreground)] hover:text-[var(--foreground)]">
+            <Link
+              to="/notifications"
+              onClick={() => setOpen(false)}
+              className="text-xs font-medium text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+            >
               {t("notif.viewAll")}
-            </button>
+            </Link>
           </div>
         </div>
       )}
@@ -171,14 +205,15 @@ function NotificationBell() {
 
 function WorkspaceSwitcher() {
   const { t } = useI18n();
+  const { workspaces, workspaceId, setWorkspaceId, activeWorkspace } = useWorkspace();
   const [open, setOpen] = useState(false);
   const ref = useOutside<HTMLDivElement>(() => setOpen(false));
-  const workspaces = [
-    { name: t("top.workspace"), plan: "Free" },
-    { name: "Beauty of Joseon", plan: "Pro" },
-    { name: "ANUA Global", plan: "Pro" },
-  ];
-  const [current, setCurrent] = useState(workspaces[0].name);
+  const labelKey: Record<string, string> = {
+    seoul: "ws.seoul",
+    shanghai: "ws.shanghai",
+    beijing: "ws.beijing",
+    global: "ws.global",
+  };
   return (
     <div className="relative" ref={ref}>
       <button
@@ -186,26 +221,26 @@ function WorkspaceSwitcher() {
         className="hidden sm:inline-flex h-9 items-center gap-2 rounded-md border border-[var(--border)] bg-[var(--background)] px-2.5 text-xs font-medium hover:bg-[var(--muted)]"
       >
         <div className="grid h-5 w-5 place-items-center rounded bg-gradient-to-br from-[var(--primary)] to-[oklch(0.62_0.22_300)] text-[10px] font-bold text-white">
-          B
+          {activeWorkspace.region[0]}
         </div>
-        <span className="max-w-[120px] truncate">{current}</span>
+        <span className="max-w-[140px] truncate">{t(labelKey[activeWorkspace.id])}</span>
         <ChevronsUpDown className="h-3 w-3 text-[var(--muted-foreground)]" />
       </button>
       {open && (
         <div className="absolute right-0 z-50 mt-2 w-60 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--popover)] p-1 shadow-[var(--shadow-card)]">
           {workspaces.map((w) => (
             <button
-              key={w.name}
+              key={w.id}
               onClick={() => {
-                setCurrent(w.name);
+                setWorkspaceId(w.id);
                 setOpen(false);
               }}
               className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-sm hover:bg-[var(--muted)]"
             >
               <Building2 className="h-3.5 w-3.5 text-[var(--muted-foreground)]" />
-              <span className="flex-1 truncate text-left">{w.name}</span>
+              <span className="flex-1 truncate text-left">{t(labelKey[w.id])}</span>
               <span className="text-[10px] uppercase text-[var(--muted-foreground)]">{w.plan}</span>
-              {w.name === current && <Check className="h-3.5 w-3.5 text-[var(--primary)]" />}
+              {w.id === workspaceId && <Check className="h-3.5 w-3.5 text-[var(--primary)]" />}
             </button>
           ))}
         </div>
@@ -219,13 +254,14 @@ function UserMenu() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const ref = useOutside<HTMLDivElement>(() => setOpen(false));
-  const items: { label: string; icon: typeof CircleUser; to?: string }[] = [
-    { label: t("menu.profile"), icon: CircleUser, to: "/settings" },
-    { label: t("menu.workspace"), icon: Building2, to: "/settings" },
-    { label: t("menu.notifications"), icon: Bell, to: "/settings" },
-    { label: t("menu.appearance"), icon: Palette, to: "/settings" },
-    { label: t("menu.billing"), icon: CreditCard, to: "/settings" },
-    { label: t("menu.apiKeys"), icon: KeyRound, to: "/settings" },
+  const items: { label: string; icon: typeof CircleUser; to: string; search?: Record<string, string> }[] = [
+    { label: t("menu.profile"), icon: CircleUser, to: "/settings", search: { tab: "profile" } },
+    { label: t("menu.workspace"), icon: Building2, to: "/settings", search: { tab: "workspace" } },
+    { label: t("menu.notifications"), icon: Bell, to: "/notifications" },
+    { label: t("menu.appearance"), icon: Palette, to: "/settings", search: { tab: "appearance" } },
+    { label: t("menu.language"), icon: LangIcon, to: "/settings", search: { tab: "language" } },
+    { label: t("menu.billing"), icon: CreditCard, to: "/settings", search: { tab: "billing" } },
+    { label: t("menu.apiKeys"), icon: KeyRound, to: "/settings", search: { tab: "apikeys" } },
   ];
   return (
     <div className="relative" ref={ref}>
@@ -250,7 +286,7 @@ function UserMenu() {
                   key={item.label}
                   onClick={() => {
                     setOpen(false);
-                    if (item.to) router.navigate({ to: item.to });
+                    router.navigate({ to: item.to, search: item.search ?? {} } as never);
                   }}
                   className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-sm hover:bg-[var(--muted)]"
                 >
@@ -272,6 +308,107 @@ function UserMenu() {
               {t("menu.logout")}
             </button>
           </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function GlobalSearch() {
+  const { t } = useI18n();
+  const router = useRouter();
+  const { searchIndex, setActiveProjectId } = useWorkspace();
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const ref = useOutside<HTMLDivElement>(() => setOpen(false));
+  const [q, setQ] = useState("");
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        inputRef.current?.focus();
+        setOpen(true);
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  const query = q.trim().toLowerCase();
+  const results = !query
+    ? searchIndex.slice(0, 8)
+    : searchIndex.filter((i) => i.title.toLowerCase().includes(query) || i.subtitle.toLowerCase().includes(query)).slice(0, 12);
+
+  const grouped = {
+    project: results.filter((r) => r.kind === "project"),
+    report: results.filter((r) => r.kind === "report"),
+    localization: results.filter((r) => r.kind === "localization"),
+    market: results.filter((r) => r.kind === "market"),
+    consumer: results.filter((r) => r.kind === "consumer"),
+  };
+  const iconByKind: Record<string, typeof FolderKanban> = {
+    project: FolderKanban,
+    report: FileText,
+    localization: Languages,
+    market: LineChart,
+    consumer: Users,
+  };
+
+  return (
+    <div className="relative flex-1 max-w-md" ref={ref}>
+      <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted-foreground)]" />
+      <input
+        ref={inputRef}
+        value={q}
+        onChange={(e) => {
+          setQ(e.target.value);
+          setOpen(true);
+        }}
+        onFocus={() => setOpen(true)}
+        type="search"
+        placeholder={t("top.search")}
+        className="h-9 w-full rounded-md border border-[var(--border)] bg-[var(--muted)] pl-9 pr-12 text-sm placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/30"
+      />
+      <kbd className="pointer-events-none absolute right-2 top-1/2 hidden h-5 -translate-y-1/2 items-center gap-0.5 rounded border border-[var(--border)] bg-[var(--background)] px-1.5 font-mono text-[10px] text-[var(--muted-foreground)] sm:inline-flex">
+        ⌘K
+      </kbd>
+      {open && (
+        <div className="absolute left-0 right-0 z-50 mt-2 max-h-[480px] overflow-auto rounded-2xl border border-[var(--border)] bg-[var(--popover)] p-1 shadow-[var(--shadow-card)]">
+          {results.length === 0 ? (
+            <div className="px-4 py-6 text-center text-xs text-[var(--muted-foreground)]">{t("top.noResults")}</div>
+          ) : (
+            (Object.entries(grouped) as [keyof typeof grouped, typeof results][]).map(([k, list]) =>
+              list.length === 0 ? null : (
+                <div key={k}>
+                  <div className="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">
+                    {t(`top.cat.${k}`)}
+                  </div>
+                  {list.map((r) => {
+                    const Icon = iconByKind[r.kind];
+                    return (
+                      <button
+                        key={`${r.kind}-${r.id}`}
+                        onClick={() => {
+                          if (r.projectId) setActiveProjectId(r.projectId);
+                          router.navigate({ to: r.link });
+                          setOpen(false);
+                          setQ("");
+                        }}
+                        className="flex w-full items-start gap-2.5 rounded-md px-3 py-2 text-left hover:bg-[var(--muted)]"
+                      >
+                        <Icon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--muted-foreground)]" />
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium">{r.title}</p>
+                          <p className="truncate text-xs text-[var(--muted-foreground)]">{r.subtitle}</p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              ),
+            )
+          )}
         </div>
       )}
     </div>
@@ -348,17 +485,7 @@ export function AppShell({ children }: { children?: ReactNode }) {
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-20 flex h-14 items-center gap-2 border-b border-[var(--border)] bg-[var(--background)]/80 px-4 backdrop-blur md:px-6">
           <WorkspaceSwitcher />
-          <div className="relative flex-1 max-w-md">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted-foreground)]" />
-            <input
-              type="search"
-              placeholder={t("top.search")}
-              className="h-9 w-full rounded-md border border-[var(--border)] bg-[var(--muted)] pl-9 pr-12 text-sm placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/30"
-            />
-            <kbd className="pointer-events-none absolute right-2 top-1/2 hidden h-5 -translate-y-1/2 items-center gap-0.5 rounded border border-[var(--border)] bg-[var(--background)] px-1.5 font-mono text-[10px] text-[var(--muted-foreground)] sm:inline-flex">
-              ⌘K
-            </kbd>
-          </div>
+          <GlobalSearch />
           <div className="ml-auto flex items-center gap-2">
             <Link
               to="/start"

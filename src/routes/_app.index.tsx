@@ -1,367 +1,225 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import {
   ArrowRight,
-  MoreHorizontal,
-  TrendingUp,
-  TrendingDown,
   Sparkles,
-  Play,
-  Heart,
-  Music2,
-  MessageCircle,
-  Gauge,
-  FolderKanban,
+  TrendingUp,
+  Plus,
+  Languages,
+  FileBarChart,
+  ListChecks,
+  CheckCircle2,
+  Activity,
+  ChevronRight,
 } from "lucide-react";
-import {
-  Area,
-  AreaChart,
-  Bar,
-  BarChart,
-  Line,
-  LineChart as ReLineChart,
-  ResponsiveContainer,
-} from "recharts";
+import { PageHeader } from "@/components/app-shell";
+import { useI18n } from "@/lib/i18n";
+import { useWorkspace } from "@/lib/workspace-context";
+import { stageLabelKey, stageToPath } from "@/lib/workflow";
 
 export const Route = createFileRoute("/_app/")({
   head: () => ({
     meta: [
       { title: "Dashboard — BridgeCN AI" },
-      {
-        name: "description",
-        content:
-          "BridgeCN AI is the AI workspace for Korean companies expanding into the Chinese market.",
-      },
+      { name: "description", content: "BridgeCN AI workspace for Korean companies expanding into China." },
     ],
   }),
   component: DashboardPage,
 });
 
-const spark = (seed: number, n = 14) =>
-  Array.from({ length: n }, (_, i) => ({
-    i,
-    v: Math.round(
-      40 +
-        Math.sin(i / 1.8 + seed) * 12 +
-        Math.cos(i / 3 + seed * 1.3) * 8 +
-        (i / n) * 18,
-    ),
-  }));
-
-const stats = [
-  {
-    title: "Xiaohongshu Trends",
-    value: "+24.8%",
-    sub: "K-beauty mentions · 30d",
-    delta: "+4.2%",
-    trend: "up" as const,
-    icon: Heart,
-    chart: "area" as const,
-    data: spark(1),
-  },
-  {
-    title: "Douyin Growth",
-    value: "812M",
-    sub: "Daily active users",
-    delta: "+1.9%",
-    trend: "up" as const,
-    icon: Music2,
-    chart: "line" as const,
-    data: spark(2.4),
-  },
-  {
-    title: "WeChat Users",
-    value: "1.34B",
-    sub: "Monthly active accounts",
-    delta: "+0.6%",
-    trend: "up" as const,
-    icon: MessageCircle,
-    chart: "area" as const,
-    data: spark(3.1),
-  },
-  {
-    title: "Consumer Confidence",
-    value: "87.3",
-    sub: "CN Index · Q2 2026",
-    delta: "−1.4%",
-    trend: "down" as const,
-    icon: Gauge,
-    chart: "bar" as const,
-    data: spark(4.7),
-  },
-  {
-    title: "Active Projects",
-    value: "3",
-    sub: "Across your workspace",
-    delta: "+1 wk",
-    trend: "up" as const,
-    icon: FolderKanban,
-    chart: "bar" as const,
-    data: spark(5.5),
-  },
-] as const;
-
-const projects = [
-  {
-    name: "Beauty of Joseon",
-    workspace: "Hanbang skincare · Tier 1 cities",
-    status: "Research",
-    progress: 42,
-    updated: "2h ago",
-    initials: "BJ",
-  },
-  {
-    name: "ANUA",
-    workspace: "Xiaohongshu KOL campaign",
-    status: "Localization",
-    progress: 68,
-    updated: "Yesterday",
-    initials: "AN",
-  },
-  {
-    name: "Medicube",
-    workspace: "Tmall flagship rollout",
-    status: "Launch Ready",
-    progress: 94,
-    updated: "3 days ago",
-    initials: "MC",
-  },
-];
-
-const statusStyles: Record<string, string> = {
-  Research:
-    "bg-[var(--muted)] text-[var(--muted-foreground)] ring-1 ring-inset ring-[var(--border)]",
-  Localization:
-    "bg-[var(--primary-soft)] text-[var(--primary)] ring-1 ring-inset ring-[var(--primary)]/15",
-  "Launch Ready":
-    "bg-[oklch(0.96_0.04_150)] text-[oklch(0.42_0.12_150)] ring-1 ring-inset ring-[oklch(0.42_0.12_150)]/15",
-};
-
-function MiniChart({ type, data }: { type: "area" | "line" | "bar"; data: { i: number; v: number }[] }) {
-  return (
-    <div className="h-14 w-full">
-      <ResponsiveContainer width="100%" height="100%">
-        {type === "area" ? (
-          <AreaChart data={data} margin={{ top: 4, right: 0, bottom: 0, left: 0 }}>
-            <defs>
-              <linearGradient id={`g-${data[0].v}`} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.35} />
-                <stop offset="100%" stopColor="var(--primary)" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <Area
-              type="monotone"
-              dataKey="v"
-              stroke="var(--primary)"
-              strokeWidth={1.75}
-              fill={`url(#g-${data[0].v})`}
-            />
-          </AreaChart>
-        ) : type === "line" ? (
-          <ReLineChart data={data} margin={{ top: 4, right: 0, bottom: 0, left: 0 }}>
-            <Line
-              type="monotone"
-              dataKey="v"
-              stroke="var(--foreground)"
-              strokeWidth={1.5}
-              dot={false}
-            />
-          </ReLineChart>
-        ) : (
-          <BarChart data={data} margin={{ top: 4, right: 0, bottom: 0, left: 0 }}>
-            <Bar dataKey="v" fill="var(--primary)" radius={[2, 2, 0, 0]} />
-          </BarChart>
-        )}
-      </ResponsiveContainer>
-    </div>
-  );
-}
-
 function DashboardPage() {
-  return (
-    <div className="mx-auto max-w-6xl space-y-16 py-2 md:py-6">
-      {/* Hero */}
-      <section className="relative overflow-hidden">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -top-32 left-1/2 h-[420px] w-[820px] -translate-x-1/2 rounded-full opacity-60 blur-3xl"
-          style={{
-            background:
-              "radial-gradient(closest-side, oklch(0.92 0.08 256 / 0.55), transparent 70%)",
-          }}
-        />
-        <div className="relative">
-          <div className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--background)]/70 px-3 py-1 text-xs font-medium text-[var(--muted-foreground)] backdrop-blur">
-            <Sparkles className="h-3.5 w-3.5 text-[var(--primary)]" />
-            AI workspace for China market entry
-          </div>
-          <h1 className="mt-6 max-w-3xl text-4xl font-semibold tracking-[-0.025em] text-[var(--foreground)] md:text-5xl lg:text-6xl">
-            Expand into China <br className="hidden md:block" />
-            <span className="bg-gradient-to-r from-[var(--foreground)] to-[var(--primary)] bg-clip-text text-transparent">
-              with confidence.
-            </span>
-          </h1>
-          <p className="mt-5 max-w-2xl text-base leading-relaxed text-[var(--muted-foreground)] md:text-lg">
-            BridgeCN AI helps Korean companies research the Chinese market,
-            localize marketing content, and plan successful market entry using AI.
-          </p>
+  const { t } = useI18n();
+  const router = useRouter();
+  const { activeProject, projects, reports, setActiveProjectId } = useWorkspace();
 
-          <div className="mt-8 flex flex-wrap items-center gap-3">
-            <Link
-              to="/start"
-              className="group inline-flex h-11 items-center gap-2 rounded-full bg-[var(--foreground)] px-5 text-sm font-medium text-[var(--background)] shadow-[var(--shadow-card)] transition-transform hover:-translate-y-0.5"
-            >
-              New Research
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-            </Link>
-            <button className="inline-flex h-11 items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--background)] px-5 text-sm font-medium text-[var(--foreground)] transition-colors hover:bg-[var(--muted)]">
-              <Play className="h-3.5 w-3.5" />
-              Explore Demo
-            </button>
+  const suggestions = [1, 2, 3];
+  const trends = [1, 2, 3, 4];
+  const activity = [1, 2, 3, 4];
+  const tasks = [1, 2, 3, 4];
+
+  return (
+    <div className="space-y-8">
+      <PageHeader title={t("dash.welcome")} description={t("dash.sub")} />
+
+      {/* Continue working */}
+      <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-gradient-to-br from-[var(--background)] via-[var(--background)] to-[var(--primary-soft)]/40 p-6 shadow-[var(--shadow-soft)]">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="grid h-12 w-12 place-items-center rounded-xl bg-gradient-to-br from-[var(--primary)] to-[oklch(0.45_0.22_280)] text-sm font-semibold text-white shadow">
+              {activeProject.initials}
+            </div>
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">
+                {t("dash.continue")}
+              </p>
+              <p className="mt-0.5 text-lg font-semibold tracking-tight">{activeProject.name}</p>
+              <p className="text-xs text-[var(--muted-foreground)]">
+                {activeProject.industry} · {t(stageLabelKey[activeProject.stage])} · {activeProject.progress}%
+              </p>
+            </div>
           </div>
+          <button
+            onClick={() => router.navigate({ to: stageToPath[activeProject.stage] })}
+            className="inline-flex h-10 items-center gap-2 rounded-md bg-[var(--foreground)] px-4 text-sm font-medium text-[var(--background)] hover:opacity-90"
+          >
+            {t("dash.resume")}
+            <ArrowRight className="h-4 w-4" />
+          </button>
         </div>
       </section>
 
-      {/* China Market Snapshot */}
+      {/* Quick actions */}
       <section>
-        <div className="mb-6 flex items-end justify-between gap-4">
-          <div>
-            <h2 className="text-xl font-semibold tracking-tight md:text-2xl">
-              China Market Snapshot
-            </h2>
-            <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-              Real-time signals across the platforms that matter.
-            </p>
-          </div>
-          <div className="hidden items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--background)] p-0.5 text-xs md:flex">
-            {["7d", "30d", "90d"].map((k, i) => (
-              <button
-                key={k}
-                className={`rounded-full px-3 py-1 font-medium ${
-                  i === 1
-                    ? "bg-[var(--muted)] text-[var(--foreground)]"
-                    : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
-                }`}
-              >
-                {k}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-          {stats.map((s) => {
-            const Icon = s.icon;
-            const Trend = s.trend === "up" ? TrendingUp : TrendingDown;
+        <h2 className="mb-3 text-sm font-semibold">{t("dash.quickActions")}</h2>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {[
+            { to: "/start", icon: Plus, label: t("dash.qa.newProject") },
+            { to: "/localization-studio", icon: Languages, label: t("dash.qa.localize") },
+            { to: "/reports", icon: FileBarChart, label: t("dash.qa.report") },
+            { to: "/launch-checklist", icon: ListChecks, label: t("dash.qa.checklist") },
+          ].map((q) => {
+            const Icon = q.icon;
             return (
-              <div
-                key={s.title}
-                className="group relative flex flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--background)] p-5 transition-shadow hover:shadow-[var(--shadow-card)]"
+              <Link
+                key={q.to}
+                to={q.to}
+                className="group flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--background)] p-4 shadow-[var(--shadow-soft)] transition-shadow hover:shadow-[var(--shadow-card)]"
               >
-                <div className="flex items-center justify-between">
-                  <div className="grid h-8 w-8 place-items-center rounded-lg bg-[var(--muted)] text-[var(--foreground)]">
-                    <Icon className="h-4 w-4" />
-                  </div>
-                  <span
-                    className={`inline-flex items-center gap-1 text-[11px] font-medium ${
-                      s.trend === "up"
-                        ? "text-[oklch(0.55_0.14_150)]"
-                        : "text-[var(--muted-foreground)]"
-                    }`}
-                  >
-                    <Trend className="h-3 w-3" />
-                    {s.delta}
-                  </span>
+                <div className="grid h-9 w-9 place-items-center rounded-lg bg-[var(--muted)]">
+                  <Icon className="h-4 w-4" />
                 </div>
-                <div className="mt-5">
-                  <div className="text-xs text-[var(--muted-foreground)]">
-                    {s.title}
-                  </div>
-                  <div className="mt-1 text-2xl font-semibold tracking-tight">
-                    {s.value}
-                  </div>
-                  <div className="mt-0.5 text-[11px] text-[var(--muted-foreground)]">
-                    {s.sub}
-                  </div>
-                </div>
-                <div className="mt-4 -mx-1">
-                  <MiniChart type={s.chart} data={s.data} />
-                </div>
-              </div>
+                <span className="text-sm font-medium">{q.label}</span>
+                <ChevronRight className="ml-auto h-4 w-4 text-[var(--muted-foreground)] transition-transform group-hover:translate-x-0.5" />
+              </Link>
             );
           })}
         </div>
       </section>
 
-      {/* Recent Projects */}
-      <section>
-        <div className="mb-6 flex items-end justify-between">
-          <div>
-            <h2 className="text-xl font-semibold tracking-tight md:text-2xl">
-              Recent Projects
-            </h2>
-            <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-              Continue where you left off.
-            </p>
+      {/* Two col: recent projects + ai suggestions */}
+      <section className="grid gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-sm font-semibold">{t("dash.recentProjects")}</h2>
+            <Link to="/projects" className="text-xs font-medium text-[var(--muted-foreground)] hover:text-[var(--foreground)]">
+              {t("common.viewAll")} →
+            </Link>
           </div>
-          <Link
-            to="/projects"
-            className="text-sm font-medium text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
-          >
-            View all →
-          </Link>
-        </div>
-
-        <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--background)]">
-          <div className="hidden grid-cols-[2fr_1fr_1.2fr_auto] gap-6 border-b border-[var(--border)] px-6 py-3 text-[11px] font-medium uppercase tracking-wider text-[var(--muted-foreground)] md:grid">
-            <div>Project</div>
-            <div>Status</div>
-            <div>Progress</div>
-            <div className="text-right">Updated</div>
-          </div>
-          <ul className="divide-y divide-[var(--border)]">
-            {projects.map((p) => (
-              <li
-                key={p.name}
-                className="grid grid-cols-[1fr_auto] items-center gap-4 px-6 py-5 transition-colors hover:bg-[var(--muted)]/50 md:grid-cols-[2fr_1fr_1.2fr_auto] md:gap-6"
-              >
-                <div className="flex min-w-0 items-center gap-3">
-                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[var(--muted)] to-[var(--primary-soft)] text-xs font-semibold text-[var(--foreground)]">
+          <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--background)] shadow-[var(--shadow-soft)]">
+            <ul className="divide-y divide-[var(--border)]">
+              {projects.slice(0, 5).map((p) => (
+                <li key={p.id} className="flex items-center gap-3 px-4 py-3 hover:bg-[var(--muted)]/60">
+                  <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-[var(--muted)] to-[var(--primary-soft)] text-xs font-semibold">
                     {p.initials}
                   </div>
-                  <div className="min-w-0">
-                    <div className="truncate text-sm font-medium">{p.name}</div>
-                    <div className="truncate text-xs text-[var(--muted-foreground)]">
-                      {p.workspace}
-                    </div>
+                  <div className="min-w-0 flex-1">
+                    <button
+                      onClick={() => {
+                        setActiveProjectId(p.id);
+                        router.navigate({ to: "/projects/$projectId", params: { projectId: p.id } });
+                      }}
+                      className="block truncate text-left text-sm font-medium hover:underline"
+                    >
+                      {p.name}
+                    </button>
+                    <p className="truncate text-xs text-[var(--muted-foreground)]">{p.industry}</p>
                   </div>
-                </div>
-                <div className="hidden md:block">
-                  <span
-                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium ${statusStyles[p.status]}`}
-                  >
-                    {p.status}
+                  <span className="hidden md:inline-flex items-center rounded-full bg-[var(--primary-soft)] px-2 py-0.5 text-[11px] font-medium text-[var(--primary)]">
+                    {t(stageLabelKey[p.stage])}
                   </span>
-                </div>
-                <div className="hidden items-center gap-3 md:flex">
-                  <div className="h-1 w-full max-w-[160px] overflow-hidden rounded-full bg-[var(--muted)]">
-                    <div
-                      className="h-full rounded-full bg-[var(--foreground)]"
-                      style={{ width: `${p.progress}%` }}
-                    />
-                  </div>
-                  <span className="text-xs tabular-nums text-[var(--muted-foreground)]">
-                    {p.progress}%
-                  </span>
-                </div>
-                <div className="flex items-center justify-end gap-2 text-xs text-[var(--muted-foreground)]">
-                  <span className="hidden sm:inline">{p.updated}</span>
-                  <button className="grid h-8 w-8 place-items-center rounded-lg hover:bg-[var(--muted)]">
-                    <MoreHorizontal className="h-4 w-4" />
-                  </button>
-                </div>
-              </li>
+                  <span className="hidden md:inline text-xs text-[var(--muted-foreground)]">{p.updated}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+        <div>
+          <h2 className="mb-3 flex items-center gap-1.5 text-sm font-semibold">
+            <Sparkles className="h-3.5 w-3.5 text-[var(--primary)]" />
+            {t("dash.suggestions")}
+          </h2>
+          <div className="space-y-3">
+            {suggestions.map((i) => (
+              <div key={i} className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-4 shadow-[var(--shadow-soft)]">
+                <p className="text-sm font-medium">{t(`sugg.${i}.title`)}</p>
+                <p className="mt-1 text-xs text-[var(--muted-foreground)]">{t(`sugg.${i}.body`)}</p>
+              </div>
             ))}
-          </ul>
+          </div>
+        </div>
+      </section>
+
+      {/* Trends + recent reports */}
+      <section className="grid gap-6 lg:grid-cols-2">
+        <div>
+          <h2 className="mb-3 flex items-center gap-1.5 text-sm font-semibold">
+            <TrendingUp className="h-3.5 w-3.5 text-[var(--primary)]" />
+            {t("dash.trends")}
+          </h2>
+          <div className="rounded-2xl border border-[var(--border)] bg-[var(--background)] shadow-[var(--shadow-soft)]">
+            <ul className="divide-y divide-[var(--border)]">
+              {trends.map((i) => (
+                <li key={i} className="flex items-center justify-between gap-3 px-4 py-3">
+                  <span className="text-sm">{t(`trend.${i}`)}</span>
+                  <Link to="/china-market-insight" className="text-xs font-medium text-[var(--muted-foreground)] hover:text-[var(--foreground)]">
+                    {t("common.open")} →
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+        <div>
+          <h2 className="mb-3 text-sm font-semibold">{t("dash.recentReports")}</h2>
+          <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--background)] shadow-[var(--shadow-soft)]">
+            <ul className="divide-y divide-[var(--border)]">
+              {reports.slice(0, 4).map((r) => (
+                <li key={r.id} className="flex items-center justify-between gap-3 px-4 py-3">
+                  <div className="min-w-0">
+                    <Link to="/report" className="block truncate text-sm font-medium hover:underline">
+                      {r.title}
+                    </Link>
+                    <p className="truncate text-xs text-[var(--muted-foreground)]">{r.type} · {r.date}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      {/* Activity + tasks */}
+      <section className="grid gap-6 lg:grid-cols-2">
+        <div>
+          <h2 className="mb-3 flex items-center gap-1.5 text-sm font-semibold">
+            <Activity className="h-3.5 w-3.5 text-[var(--primary)]" />
+            {t("dash.activity")}
+          </h2>
+          <div className="rounded-2xl border border-[var(--border)] bg-[var(--background)] shadow-[var(--shadow-soft)]">
+            <ul className="divide-y divide-[var(--border)]">
+              {activity.map((i) => (
+                <li key={i} className="flex items-start gap-3 px-4 py-3 text-sm">
+                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--primary)]" />
+                  <span>{t(`act.${i}`)}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+        <div>
+          <h2 className="mb-3 flex items-center gap-1.5 text-sm font-semibold">
+            <CheckCircle2 className="h-3.5 w-3.5 text-[var(--primary)]" />
+            {t("dash.tasks")}
+          </h2>
+          <div className="rounded-2xl border border-[var(--border)] bg-[var(--background)] shadow-[var(--shadow-soft)]">
+            <ul className="divide-y divide-[var(--border)]">
+              {tasks.map((i) => (
+                <li key={i} className="flex items-center gap-3 px-4 py-3 text-sm">
+                  <input type="checkbox" className="h-3.5 w-3.5 rounded border-[var(--border)] accent-[var(--primary)]" />
+                  <span className="flex-1">{t(`task.${i}`)}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </section>
     </div>
