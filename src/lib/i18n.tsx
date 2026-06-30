@@ -234,6 +234,7 @@ const ko: Dict = {
   "nav.section.account": "계정",
   "nav.dashboard": "대시보드",
   "nav.projects": "프로젝트",
+  "nav.aiWorkspace": "AI 워크스페이스",
   "nav.market": "중국 시장 인사이트",
   "nav.consumer": "소비자 인사이트",
   "nav.localization": "현지화 스튜디오",
