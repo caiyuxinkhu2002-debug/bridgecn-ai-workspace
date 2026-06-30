@@ -125,6 +125,15 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("bridgecn.settings.theme");
+      const theme = raw ? JSON.parse(raw) : "Light";
+      const wantDark = theme === "Dark" || (theme === "System" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+      document.documentElement.classList.toggle("dark", !!wantDark);
+    } catch { /* ignore */ }
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <I18nProvider>
