@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from "react";
 import { useWorkspace } from "@/lib/workspace-context";
 import { createAndRunJob, type CreateJobInput } from "./service";
 import type { AIJob, AIJobPhase, AIModule } from "./types";
+import { buildProjectContext } from "./project-context";
 
 // AI activity event. Carries an i18n key + params so the UI can re-translate
 // instantly when the user switches language. `fallback` is the raw provider
@@ -69,13 +70,18 @@ export function useAIJob() {
       events: [{ ts: Date.now(), kind: "status", key: "ai.event.queued" }],
     });
 
+    // Build a shared ProjectContext from the active project Knowledge Base
+    // and auto-inject it into every AI job. Providers MUST derive output
+    // from this object — no hardcoded brand/category data.
+    const projectContext = buildProjectContext(activeProject);
+
     const payload: CreateJobInput = {
       workspaceId: activeWorkspace.id,
       projectId: activeProject?.id || null,
       userId: user.id,
       module: req.module,
       prompt: req.prompt,
-      input: req.input,
+      input: { ...(req.input ?? {}), projectContext },
     };
 
     let finalJob: AIJob | null = null;
@@ -144,7 +150,7 @@ export function useAIJob() {
       setState((s) => ({ ...s, status: "failed", error: (e as Error)?.message || "Unknown error", isRunning: false }));
     }
     return finalJob;
-  }, [user, activeWorkspace?.id, activeProject?.id]);
+  }, [user, activeWorkspace?.id, activeProject]);
 
   const reset = useCallback(() => {
     setState({ status: "idle", phase: null, output: "", error: null, job: null, isRunning: false, data: {}, events: [] });

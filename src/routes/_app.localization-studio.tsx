@@ -36,7 +36,7 @@ const AUDIENCES = [
   { id: "Gen Z", key: "loc.audience.genZ" },
   { id: "Office Workers", key: "loc.audience.office" },
   { id: "Mothers", key: "loc.audience.mothers" },
-  { id: "Sensitive Skin", key: "loc.audience.sensitive" },
+  { id: "Niche Segment", key: "loc.audience.sensitive" },
   { id: "High-income Consumers", key: "loc.audience.highIncome" },
 ] as const;
 

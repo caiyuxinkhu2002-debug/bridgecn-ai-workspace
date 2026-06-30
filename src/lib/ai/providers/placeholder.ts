@@ -1,9 +1,9 @@
 import type { AIProvider, AIJobPhase, AIStreamEvent } from "../types";
+import { type ProjectContext, deriveKeywords, describeBrand, targetMarketLabel } from "../project-context";
 
 // Placeholder provider — emits the same event stream a real provider will,
-// so every downstream consumer (jobs table, UI, history) is exercised end-to-end
-// without making a real API call yet. Swap to OpenAI/Claude/Gemini/etc later
-// by adding a sibling module under `providers/` that exports the same shape.
+// but every piece of output is derived from the injected ProjectContext.
+// No hardcoded brand/category demo content is allowed here.
 
 function delay(ms: number, signal?: AbortSignal) {
   return new Promise<void>((resolve, reject) => {
@@ -27,18 +27,6 @@ const LOC_PHASE_SCRIPT: { phase: AIJobPhase; message: string; ms: number }[] = [
   { phase: "writing",   message: "Rewriting",                          ms: 500 },
 ];
 
-const GENERIC_PARAGRAPHS = [
-  "Based on the active project context, the China market shows strong demand in Tier 1 cities — particularly Shanghai and Hangzhou — with Xiaohongshu being the primary discovery channel.",
-  "Recommended positioning leans into ingredient storytelling and heritage cues, paired with a clean, scientific tone that resonates with the 25–34 segment.",
-  "Next steps include validating two hero SKUs through KOC seeding, then scaling to a Tmall flagship once the resonance signal stabilizes above 0.7.",
-];
-
-const MARKET_PARAGRAPHS = [
-  "The K-beauty skincare market in China continues to grow at double-digit rates, driven by ingredient-focused consumers and accelerating demand in Tier-1 cities.",
-  "Over the last 30 days, Xiaohongshu discussions around glass skin and sensitive skin care have increased significantly, while Douyin live commerce for Korean derma brands posted record GMV.",
-  "Premium positioning at ¥350–¥450 basket size remains the strongest opportunity for new entrants targeting the 25–34 segment.",
-];
-
 const MARKET_SOURCES = [
   "Xiaohongshu (小红书)",
   "Douyin (抖音)",
@@ -46,15 +34,6 @@ const MARKET_SOURCES = [
   "iiMedia Research",
   "National Bureau of Statistics of China",
   "Tmall Global Insights",
-];
-
-const MARKET_KEYWORDS = [
-  { k: "Glass Skin · 玻璃肌",         growth: "+42%", platform: "Xiaohongshu", score: 98 },
-  { k: "Ingredient-led · 成分党",     growth: "+35%", platform: "Douyin",      score: 91 },
-  { k: "Sensitive Skin · 敏感肌",     growth: "+28%", platform: "Xiaohongshu", score: 87 },
-  { k: "K-beauty Routine · 韩系护肤", growth: "+27%", platform: "Weibo",       score: 84 },
-  { k: "Morning C / Night A · 早C晚A", growth: "+19%", platform: "Douyin",     score: 78 },
-  { k: "Clean Beauty · 纯净护肤",     growth: "+14%", platform: "Tmall",       score: 72 },
 ];
 
 const MARKET_REGIONS = [
@@ -66,21 +45,127 @@ const MARKET_REGIONS = [
   { name: "Chengdu",   v: 58, growth: "+19.5%" },
 ];
 
+const PLATFORM_ROTATION = ["Xiaohongshu", "Douyin", "Tmall", "Weibo", "WeChat", "JD.com"];
+const GROWTH_ROTATION = ["+42%", "+35%", "+28%", "+24%", "+19%", "+14%"];
+const SCORE_ROTATION = [96, 91, 87, 84, 78, 72];
+
+function readContext(input: Record<string, unknown> | undefined): ProjectContext {
+  const raw = (input?.projectContext ?? {}) as Partial<ProjectContext>;
+  return {
+    company: raw.company ?? "",
+    industry: raw.industry ?? "",
+    category: raw.category ?? "",
+    products: raw.products ?? [],
+    competitors: raw.competitors ?? [],
+    website: raw.website ?? "",
+    targetAudience: raw.targetAudience ?? "",
+    targetMarket: raw.targetMarket ?? "",
+    brandStory: raw.brandStory ?? "",
+    brandTone: raw.brandTone ?? [],
+    marketingCopy: raw.marketingCopy ?? "",
+    keywords: raw.keywords ?? [],
+    socialChannels: raw.socialChannels ?? [],
+  };
+}
+
+function buildMarketKeywords(ctx: ProjectContext) {
+  const kws = deriveKeywords(ctx, 6);
+  return kws.map((k, i) => ({
+    k,
+    growth: GROWTH_ROTATION[i % GROWTH_ROTATION.length],
+    platform: PLATFORM_ROTATION[i % PLATFORM_ROTATION.length],
+    score: SCORE_ROTATION[i % SCORE_ROTATION.length],
+  }));
+}
+
+function buildMarketParagraphs(ctx: ProjectContext): string[] {
+  const brand = describeBrand(ctx);
+  const market = targetMarketLabel(ctx);
+  const cat = ctx.category || ctx.industry || "this category";
+  const kws = deriveKeywords(ctx, 4).slice(0, 3).join(", ") || "the brand's core themes";
+  const audience = ctx.targetAudience || "the 25–34 segment";
+  const comp = ctx.competitors.slice(0, 2).join(" and ");
+  return [
+    `The ${cat} market in ${market} shows steady demand, with ${brand} positioned to capture share through differentiated product storytelling and channel mix.`,
+    `Over the last 30 days, conversation around ${kws} has trended upward on Xiaohongshu and Douyin, signaling discovery momentum for ${cat} brands targeting ${audience}.`,
+    comp
+      ? `Competitive whitespace exists versus ${comp}: focus on the brand's distinctive proof points and seed via KOC before scaling paid channels.`
+      : `Next step: validate hero offers through KOC seeding, then scale to a Tmall flagship once resonance stabilizes.`,
+  ];
+}
+
+function buildGenericParagraphs(ctx: ProjectContext): string[] {
+  const brand = describeBrand(ctx);
+  const market = targetMarketLabel(ctx);
+  const tone = ctx.brandTone.slice(0, 3).join(", ");
+  const prods = ctx.products.slice(0, 3).join(", ");
+  return [
+    `Based on the ${brand} project context, the ${market} market shows demand patterns aligned with the brand's positioning and core product set.`,
+    `Recommended positioning leans into the brand's defined tone${tone ? ` (${tone})` : ""}${prods ? ` and lead products: ${prods}` : ""}.`,
+    `Next steps include validating hero offers through targeted seeding, then scaling once the signal stabilizes.`,
+  ];
+}
+
+function buildLocItems(ctx: ProjectContext) {
+  const company = ctx.company || "the brand";
+  const cat = ctx.category || ctx.industry || "product";
+  const products = ctx.products.length ? ctx.products : [cat];
+  const market = targetMarketLabel(ctx);
+  const source = ctx.marketingCopy
+    ? ctx.marketingCopy.split(/\n+/).map((s) => s.trim()).filter(Boolean).slice(0, 3)
+    : [
+        `${company} — ${cat}`,
+        products[0] ? `${products[0]} 신제품 라인업.` : `${company} 신제품.`,
+        ctx.brandStory ? ctx.brandStory.split(/[.。!?]/)[0] : `${company} 브랜드 스토리.`,
+      ];
+  return source.map((s, i) => ({
+    source: s,
+    target: `${s} · 中文本地化版本 (for ${market})`,
+    note: products[i] || `${cat} segment`,
+  }));
+}
+
+function buildLocInsights(ctx: ProjectContext) {
+  const kws = deriveKeywords(ctx, 5);
+  const tone = ctx.brandTone.slice(0, 2).join(", ") || "premium";
+  return {
+    reasoning: `Rewrote source copy to feel native in ${targetMarketLabel(ctx)} while preserving the brand's ${tone} tone.`,
+    consumer: ctx.targetAudience
+      ? `Speaks to ${ctx.targetAudience} with culturally resonant phrasing and locally familiar references.`
+      : `Adapted phrasing and references to local market norms.`,
+    seo: kws,
+    platform: `Tuned length, rhythm and CTA conventions for the selected channel.`,
+    cultural: `Replaced source-language idioms with locally idiomatic equivalents; removed phrasing that doesn't translate cleanly.`,
+  };
+}
+
+const LOC_COMPLIANCE = {
+  advertising: "Pass — no superlatives requiring substantiation under SAMR ad rules.",
+  sensitive: "No restricted terms detected (medical claims, '最', '第一' avoided).",
+  risk: "Low",
+  regulation: "Reviewed against relevant SAMR / industry guidance for imported goods in this category.",
+};
+
+const LOC_SCORES = { localization: 94, seo: 88, native: 92, platformMatch: 90 };
+
 export const placeholderProvider: AIProvider = {
   id: "placeholder",
   label: "Placeholder (Architecture Preview)",
-  async *run({ module, signal }) {
+  async *run({ module, input, signal }) {
     const events: AIStreamEvent[] = [];
     const isMarket = module === "market";
     const isLoc = module === "localization";
-    const paragraphs = isMarket ? MARKET_PARAGRAPHS : GENERIC_PARAGRAPHS;
+    const ctx = readContext(input);
+    const MARKET_KEYWORDS = buildMarketKeywords(ctx);
+    const paragraphs = isMarket ? buildMarketParagraphs(ctx) : buildGenericParagraphs(ctx);
+    const LOC_ITEMS = buildLocItems(ctx);
+    const LOC_INSIGHTS = buildLocInsights(ctx);
     const script = isLoc ? LOC_PHASE_SCRIPT : PHASE_SCRIPT;
     try {
       for (const step of script) {
         await delay(step.ms, signal);
         yield { type: "phase", phase: step.phase, message: step.message };
         if (isMarket && step.phase === "searching") {
-          // Stream sources one-by-one so the UI can light them up progressively.
           for (const s of MARKET_SOURCES) {
             await delay(120, signal);
             yield { type: "data", data: { sourceAppend: s } };
@@ -99,39 +184,11 @@ export const placeholderProvider: AIProvider = {
           }
           yield { type: "data", data: { confidence: 92 } };
         }
-        if (isLoc) {
-          if (step.phase === "analyzing") {
-            const insights = {
-              reasoning: "Replaced direct Korean phrasing with culturally resonant Chinese metaphors (e.g. 玻璃肌) to feel native rather than translated.",
-              consumer: "Tier-1 Chinese consumers respond to ingredient storytelling and heritage cues; we lead with 韩方 and clinical proof points.",
-              seo: ["玻璃肌", "敏感肌", "韩方护肤", "成分党", "早C晚A"],
-              platform: "Tightened length and added emoji rhythm for Xiaohongshu; CTAs aligned with Tmall PDP conventions.",
-              cultural: "Removed first-person Korean voice; added collective ‘姐妹们’ framing common in RED beauty content.",
-            };
-            await delay(150, signal);
-            yield { type: "data", data: { insights } };
-          }
+        if (isLoc && step.phase === "analyzing") {
+          await delay(150, signal);
+          yield { type: "data", data: { insights: LOC_INSIGHTS } };
         }
       }
-      const LOC_ITEMS = [
-          { source: "촉촉하고 깨끗한 스킨케어 라인업.",                  target: "清润舒缓的护肤体验 ✨ 姐妹们一试就爱。",                       note: "Hero claim · primary brand line" },
-          { source: "민감한 피부를 위한 순한 클렌징 밤.",                target: "敏感肌也能放心用的温和洁颜膏,卸妆零负担。",                   note: "Sensitive skin product line" },
-          { source: "비건 처방, 99% 자연유래 성분.",                     target: "纯素配方 · 99% 天然来源成分,成分党安心选。",                    note: "Ingredient story · ingredient-led consumers" },
-      ];
-      const LOC_INSIGHTS = {
-        reasoning: "Replaced direct Korean phrasing with culturally resonant Chinese metaphors (e.g. 玻璃肌) to feel native rather than translated.",
-        consumer: "Tier-1 Chinese consumers respond to ingredient storytelling and heritage cues; we lead with 韩方 and clinical proof points.",
-        seo: ["玻璃肌", "敏感肌", "韩方护肤", "成分党", "早C晚A"],
-        platform: "Tightened length and added emoji rhythm for Xiaohongshu; CTAs aligned with Tmall PDP conventions.",
-        cultural: "Removed first-person Korean voice; added collective ‘姐妹们’ framing common in RED beauty content.",
-      };
-      const LOC_COMPLIANCE = {
-        advertising: "Pass — no superlatives requiring substantiation under SAMR ad rules.",
-        sensitive: "No restricted terms detected (medical claims, ‘最’, ‘第一’ avoided).",
-        risk: "Low",
-        regulation: "Compliant with NMPA cosmetic labeling guidance for imported skincare.",
-      };
-      const LOC_SCORES = { localization: 94, seo: 88, native: 92, platformMatch: 90 };
       if (isLoc) {
         for (const it of LOC_ITEMS) {
           await delay(220, signal);
@@ -142,7 +199,6 @@ export const placeholderProvider: AIProvider = {
         await delay(120, signal);
         yield { type: "data", data: { scores: LOC_SCORES } };
       }
-      // Stream tokens word-by-word so the UI can render progressive text.
       let acc = "";
       for (const para of paragraphs) {
         const tokens = para.split(/(\s+)/);
