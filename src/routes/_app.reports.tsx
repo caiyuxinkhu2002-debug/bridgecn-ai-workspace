@@ -46,7 +46,7 @@ function ReportsPage() {
     setGenerating(true);
     try {
       const ctx = buildProjectContext(activeProject);
-      const row = await generateReportNow({ data: { workspaceId: activeWorkspace.id, projectId: activeProject.id, projectContext: ctx } });
+      const row = await generateReportNow({ data: { workspaceId: activeWorkspace.id, projectId: activeProject.id, projectContext: ctx, uiLocale: locale } });
       toast.success(t("reports.toast.generated"));
       await refresh();
       router.navigate({ to: "/report", search: { reportId: row.id } as never });
