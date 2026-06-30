@@ -16,13 +16,33 @@ export const Route = createFileRoute("/_app/localization-studio")({
   component: LocalizationStudioPage,
 });
 
-const CHANNELS = ["Xiaohongshu", "Douyin", "Tmall PDP", "JD.com", "WeChat", "RED KOL"] as const;
-const TONES = ["Luxury", "Scientific", "Friendly", "Natural", "Premium", "Young"] as const;
-const AUDIENCES = ["Gen Z", "Office Workers", "Mothers", "Sensitive Skin", "High-income Consumers"] as const;
+const CHANNELS = [
+  { id: "Xiaohongshu", key: "loc.channel.xiaohongshu" },
+  { id: "Douyin", key: "loc.channel.douyin" },
+  { id: "Tmall PDP", key: "loc.channel.tmall" },
+  { id: "JD.com", key: "loc.channel.jd" },
+  { id: "WeChat", key: "loc.channel.wechat" },
+  { id: "RED KOL", key: "loc.channel.redkol" },
+] as const;
+const TONES = [
+  { id: "Luxury", key: "loc.tone.luxury" },
+  { id: "Scientific", key: "loc.tone.scientific" },
+  { id: "Friendly", key: "loc.tone.friendly" },
+  { id: "Natural", key: "loc.tone.natural" },
+  { id: "Premium", key: "loc.tone.premium" },
+  { id: "Young", key: "loc.tone.young" },
+] as const;
+const AUDIENCES = [
+  { id: "Gen Z", key: "loc.audience.genZ" },
+  { id: "Office Workers", key: "loc.audience.office" },
+  { id: "Mothers", key: "loc.audience.mothers" },
+  { id: "Sensitive Skin", key: "loc.audience.sensitive" },
+  { id: "High-income Consumers", key: "loc.audience.highIncome" },
+] as const;
 
-type Channel = typeof CHANNELS[number];
-type Tone = typeof TONES[number];
-type Audience = typeof AUDIENCES[number];
+type Channel = typeof CHANNELS[number]["id"];
+type Tone = typeof TONES[number]["id"];
+type Audience = typeof AUDIENCES[number]["id"];
 
 type LocItem = { source: string; target: string; note: string };
 type LocInsights = { reasoning?: string; consumer?: string; seo?: string[]; platform?: string; cultural?: string };
@@ -30,12 +50,12 @@ type LocCompliance = { advertising?: string; sensitive?: string; risk?: string; 
 type LocScores = { localization?: number; seo?: number; native?: number; platformMatch?: number };
 
 const PHASE_ORDER: AIJobPhase[] = ["thinking", "searching", "analyzing", "writing", "completed"];
-const PHASE_LABEL: Record<AIJobPhase, string> = {
-  thinking: "Thinking",
-  searching: "Analyzing Brand",
-  analyzing: "Understanding Chinese Consumers",
-  writing: "Rewriting",
-  completed: "Completed",
+const PHASE_KEY: Record<AIJobPhase, string> = {
+  thinking: "phase.thinking",
+  searching: "loc.phase.searching",
+  analyzing: "loc.phase.analyzing",
+  writing: "loc.phase.writing",
+  completed: "phase.completed",
 };
 
 function LocalizationStudioPage() {
@@ -116,13 +136,13 @@ function LocalizationStudioPage() {
   // React to AI status changes
   useEffect(() => {
     if (ai.status === "completed") {
-      toast.success("Localization generated");
+      toast.success(t("loc.toast.generated"));
       refreshHistory();
       if (ai.job) setSelectedJob(ai.job);
     } else if (ai.status === "failed") {
-      toast.error(ai.error || "Generation failed");
+      toast.error(ai.error || t("loc.toast.failed"));
     } else if (ai.status === "cancelled") {
-      toast.message("Generation cancelled");
+      toast.message(t("loc.toast.cancelled"));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ai.status]);
@@ -220,7 +240,7 @@ function LocalizationStudioPage() {
   const onCopy = useCallback(async () => {
     const text = displayed.items.map((it) => it.target).join("\n\n") || displayed.output;
     await navigator.clipboard.writeText(text);
-    toast.success("Copied to clipboard");
+    toast.success(t("common.copied"));
   }, [displayed]);
 
   const onExportMd = useCallback(() => {
@@ -239,14 +259,14 @@ function LocalizationStudioPage() {
       </head><body><pre>${toMarkdown().replace(/[<>&]/g, (c) => ({ "<":"&lt;",">":"&gt;","&":"&amp;" }[c] as string))}</pre>
       <script>window.onload=()=>window.print()</script></body></html>`;
     const w = window.open("", "_blank");
-    if (!w) return toast.error("Pop-up blocked");
+    if (!w) return toast.error(t("loc.toast.popupBlocked"));
     w.document.write(html);
     w.document.close();
   }, [toMarkdown, activeProject?.name]);
 
   const onSaveVersion = useCallback(() => {
-    if (!selectedJob) return toast.message("Generate a localization first");
-    toast.success("Version already saved");
+    if (!selectedJob) return toast.message(t("loc.toast.generateFirst"));
+    toast.success(t("loc.toast.versionSaved"));
   }, [selectedJob]);
 
   // History actions
@@ -260,7 +280,7 @@ function LocalizationStudioPage() {
   const onDeleteJob = async (id: string) => {
     try {
       await deleteJob(id);
-      toast.success("Deleted");
+      toast.success(t("loc.toast.deleted"));
       if (selectedJob?.id === id) setSelectedJob(null);
       if (compareJob?.id === id) setCompareJob(null);
       refreshHistory();
@@ -277,7 +297,7 @@ function LocalizationStudioPage() {
     const j = await getJob(id);
     if (j) {
       setSelectedJob(j);
-      toast.success("Restored version");
+      toast.success(t("loc.toast.restored"));
     }
   };
 
@@ -305,11 +325,21 @@ function LocalizationStudioPage() {
           <div className="flex items-center gap-2 text-xs text-[var(--muted-foreground)]">
             <Sparkles className="h-3.5 w-3.5 text-[var(--primary)]" />
             {ai.isRunning ? (
-              <span>Status: <span className="font-medium text-[var(--foreground)]">{ai.status}</span>{ai.phase ? <> · phase: <span className="font-medium text-[var(--foreground)]">{PHASE_LABEL[ai.phase]}</span></> : null}</span>
+              <span>
+                {t("loc.status.statusLabel")}{" "}
+                <span className="font-medium text-[var(--foreground)]">{t(`ai.status.${ai.status}`)}</span>
+                {ai.phase ? (
+                  <>
+                    {" · "}
+                    {t("loc.status.phaseLabel")}{" "}
+                    <span className="font-medium text-[var(--foreground)]">{t(PHASE_KEY[ai.phase])}</span>
+                  </>
+                ) : null}
+              </span>
             ) : selectedJob ? (
-              <span>Showing version from <span className="font-medium text-[var(--foreground)]">{new Date(selectedJob.created_at).toLocaleString()}</span></span>
+              <span>{t("loc.status.showingFrom", { v: new Date(selectedJob.created_at).toLocaleString() })}</span>
             ) : (
-              <span>No localization generated yet for this project.</span>
+              <span>{t("loc.status.noneYet")}</span>
             )}
           </div>
           <div className="ml-auto inline-flex h-8 items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--background)] px-3 text-xs">
@@ -320,12 +350,12 @@ function LocalizationStudioPage() {
           <div className="flex items-center gap-2">
             {ai.isRunning ? (
               <button onClick={ai.cancel} className="inline-flex items-center gap-1.5 rounded-md border border-[var(--border)] px-3 py-1.5 text-xs font-medium hover:bg-[var(--muted)]/60">
-                <Square className="h-3 w-3" /> Cancel
+                <Square className="h-3 w-3" /> {t("common.cancel")}
               </button>
             ) : null}
             {(ai.status === "failed" || ai.status === "cancelled") ? (
               <button onClick={generate} className="inline-flex items-center gap-1.5 rounded-md border border-[var(--border)] px-3 py-1.5 text-xs font-medium hover:bg-[var(--muted)]/60">
-                <RotateCw className="h-3 w-3" /> Retry
+                <RotateCw className="h-3 w-3" /> {t("common.retry")}
               </button>
             ) : null}
             <button
@@ -334,26 +364,26 @@ function LocalizationStudioPage() {
               className="inline-flex items-center gap-1.5 rounded-md bg-[var(--primary)] px-3 py-1.5 text-xs font-medium text-white shadow-[var(--shadow-soft)] hover:opacity-90 disabled:opacity-50"
             >
               {ai.isRunning ? <Loader2 className="h-3 w-3 animate-spin" /> : <Wand2 className="h-3 w-3" />}
-              {ai.isRunning ? "Generating…" : t("common.regenerate")}
+              {ai.isRunning ? t("common.generating") : t("common.regenerate")}
             </button>
           </div>
         </div>
 
         {/* Controls: Channel / Tone / Audience */}
         <div className="space-y-3 rounded-2xl border border-[var(--border)] bg-[var(--background)] p-4 shadow-[var(--shadow-soft)]">
-          <ControlRow label="Target Channel">
+          <ControlRow label={t("loc.control.channel")}>
             {CHANNELS.map((c) => (
-              <Pill key={c} active={channel === c} onClick={() => { setChannel(c); setTouched(true); }}>{c}</Pill>
+              <Pill key={c.id} active={channel === c.id} onClick={() => { setChannel(c.id); setTouched(true); }}>{t(c.key)}</Pill>
             ))}
           </ControlRow>
-          <ControlRow label="Tone">
+          <ControlRow label={t("loc.control.tone")}>
             {TONES.map((c) => (
-              <Pill key={c} active={tone === c} onClick={() => { setTone(c); setTouched(true); }}>{c}</Pill>
+              <Pill key={c.id} active={tone === c.id} onClick={() => { setTone(c.id); setTouched(true); }}>{t(c.key)}</Pill>
             ))}
           </ControlRow>
-          <ControlRow label="Target Audience">
+          <ControlRow label={t("loc.control.audience")}>
             {AUDIENCES.map((c) => (
-              <Pill key={c} active={audience === c} onClick={() => { setAudience(c); setTouched(true); }}>{c}</Pill>
+              <Pill key={c.id} active={audience === c.id} onClick={() => { setAudience(c.id); setTouched(true); }}>{t(c.key)}</Pill>
             ))}
           </ControlRow>
         </div>
@@ -370,7 +400,7 @@ function LocalizationStudioPage() {
                     <span className={`grid h-5 w-5 place-items-center rounded-md ${active ? "bg-[var(--primary)] text-white" : done ? "bg-[oklch(0.55_0.14_150)] text-white" : "bg-[var(--muted)] text-[var(--muted-foreground)]"}`}>
                       {active ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-3 w-3" />}
                     </span>
-                    <span className={`text-xs ${active || done ? "font-medium text-[var(--foreground)]" : "text-[var(--muted-foreground)]"}`}>{PHASE_LABEL[p]}</span>
+                    <span className={`text-xs ${active || done ? "font-medium text-[var(--foreground)]" : "text-[var(--muted-foreground)]"}`}>{t(PHASE_KEY[p])}</span>
                     {idx < PHASE_ORDER.length - 1 ? <ArrowRight className="h-3 w-3 text-[var(--muted-foreground)]" /> : null}
                   </li>
                 );
@@ -407,10 +437,10 @@ function LocalizationStudioPage() {
         {/* Scores */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[
-            { label: "Localization Score",     v: displayed.scores.localization },
-            { label: "SEO Score",              v: displayed.scores.seo },
-            { label: "Native Expression Score",v: displayed.scores.native },
-            { label: "Platform Match Score",   v: displayed.scores.platformMatch },
+            { label: t("loc.score.localization"),  v: displayed.scores.localization },
+            { label: t("loc.score.seo"),           v: displayed.scores.seo },
+            { label: t("loc.score.native"),        v: displayed.scores.native },
+            { label: t("loc.score.platformMatch"), v: displayed.scores.platformMatch },
           ].map((s) => (
             <div key={s.label} className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-5 shadow-[var(--shadow-soft)]">
               <p className="text-xs text-[var(--muted-foreground)]">{s.label}</p>
@@ -424,28 +454,28 @@ function LocalizationStudioPage() {
 
         {/* Insights + Compliance */}
         <div className="grid gap-4 lg:grid-cols-2">
-          <Panel title="Localization Insights" icon={<Sparkles className="h-4 w-4 text-[var(--primary)]" />}>
+          <Panel title={t("loc.insights.title")} icon={<Sparkles className="h-4 w-4 text-[var(--primary)]" />}>
             {Object.keys(displayed.insights).length === 0 ? (
-              <p className="text-xs text-[var(--muted-foreground)]">Run a generation to see why wording changed, SEO keywords, platform tuning and cultural adaptation.</p>
+              <p className="text-xs text-[var(--muted-foreground)]">{t("loc.insights.empty")}</p>
             ) : (
               <ul className="space-y-2 text-xs">
-                {displayed.insights.reasoning ? <Li label="Why wording changed">{displayed.insights.reasoning}</Li> : null}
-                {displayed.insights.consumer  ? <Li label="Chinese consumer preference">{displayed.insights.consumer}</Li> : null}
-                {displayed.insights.seo       ? <Li label="SEO keywords">{displayed.insights.seo.map((k) => <span key={k} className="mr-1 inline-flex items-center rounded-md bg-[var(--muted)]/60 px-1.5 py-0.5">{k}</span>)}</Li> : null}
-                {displayed.insights.platform  ? <Li label="Platform optimization">{displayed.insights.platform}</Li> : null}
-                {displayed.insights.cultural  ? <Li label="Cultural adaptation">{displayed.insights.cultural}</Li> : null}
+                {displayed.insights.reasoning ? <Li label={t("loc.insights.reasoning")}>{displayed.insights.reasoning}</Li> : null}
+                {displayed.insights.consumer  ? <Li label={t("loc.insights.consumer")}>{displayed.insights.consumer}</Li> : null}
+                {displayed.insights.seo       ? <Li label={t("loc.insights.seo")}>{displayed.insights.seo.map((k) => <span key={k} className="mr-1 inline-flex items-center rounded-md bg-[var(--muted)]/60 px-1.5 py-0.5">{k}</span>)}</Li> : null}
+                {displayed.insights.platform  ? <Li label={t("loc.insights.platform")}>{displayed.insights.platform}</Li> : null}
+                {displayed.insights.cultural  ? <Li label={t("loc.insights.cultural")}>{displayed.insights.cultural}</Li> : null}
               </ul>
             )}
           </Panel>
-          <Panel title="Compliance" icon={<ShieldCheck className="h-4 w-4 text-[var(--primary)]" />}>
+          <Panel title={t("loc.compliance.title")} icon={<ShieldCheck className="h-4 w-4 text-[var(--primary)]" />}>
             {Object.keys(displayed.compliance).length === 0 ? (
-              <p className="text-xs text-[var(--muted-foreground)]">Compliance, sensitive-word and regulation checks will appear here.</p>
+              <p className="text-xs text-[var(--muted-foreground)]">{t("loc.compliance.empty")}</p>
             ) : (
               <ul className="space-y-2 text-xs">
-                {displayed.compliance.advertising ? <Li label="Advertising Compliance">{displayed.compliance.advertising}</Li> : null}
-                {displayed.compliance.sensitive   ? <Li label="Sensitive Word Check">{displayed.compliance.sensitive}</Li> : null}
-                {displayed.compliance.risk        ? <Li label="Risk Level"><span className="rounded-full bg-[oklch(0.95_0.05_150)] px-2 py-0.5 font-medium text-[oklch(0.45_0.14_150)]">{displayed.compliance.risk}</span></Li> : null}
-                {displayed.compliance.regulation  ? <Li label="China Regulation Status">{displayed.compliance.regulation}</Li> : null}
+                {displayed.compliance.advertising ? <Li label={t("loc.compliance.advertising")}>{displayed.compliance.advertising}</Li> : null}
+                {displayed.compliance.sensitive   ? <Li label={t("loc.compliance.sensitive")}>{displayed.compliance.sensitive}</Li> : null}
+                {displayed.compliance.risk        ? <Li label={t("loc.compliance.risk")}><span className="rounded-full bg-[oklch(0.95_0.05_150)] px-2 py-0.5 font-medium text-[oklch(0.45_0.14_150)]">{displayed.compliance.risk}</span></Li> : null}
+                {displayed.compliance.regulation  ? <Li label={t("loc.compliance.regulation")}>{displayed.compliance.regulation}</Li> : null}
               </ul>
             )}
           </Panel>
@@ -455,14 +485,15 @@ function LocalizationStudioPage() {
         {compareJob ? (
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-5 shadow-[var(--shadow-soft)]">
             <div className="mb-3 flex items-center justify-between">
-              <div className="flex items-center gap-2"><GitCompare className="h-4 w-4 text-[var(--primary)]" /><h3 className="text-sm font-semibold">Comparing versions</h3></div>
-              <button onClick={() => setCompareJob(null)} className="text-xs text-[var(--muted-foreground)] hover:text-[var(--foreground)]">Close</button>
+              <div className="flex items-center gap-2"><GitCompare className="h-4 w-4 text-[var(--primary)]" /><h3 className="text-sm font-semibold">{t("loc.compare.title")}</h3></div>
+              <button onClick={() => setCompareJob(null)} className="text-xs text-[var(--muted-foreground)] hover:text-[var(--foreground)]">{t("common.close")}</button>
             </div>
             <div className="grid gap-4 md:grid-cols-2">
-              <CompareCol title={`Current · ${selectedJob ? new Date(selectedJob.created_at).toLocaleString() : "live"}`} items={displayed.items} />
+              <CompareCol title={t("loc.compare.current", { v: selectedJob ? new Date(selectedJob.created_at).toLocaleString() : t("loc.compare.live") })} items={displayed.items} emptyLabel={t("loc.compare.empty")} />
               <CompareCol
-                title={`Previous · ${new Date(compareJob.created_at).toLocaleString()}`}
+                title={t("loc.compare.previous", { v: new Date(compareJob.created_at).toLocaleString() })}
                 items={((compareJob.output_data ?? {}) as { items?: LocItem[] }).items ?? []}
+                emptyLabel={t("loc.compare.empty")}
               />
             </div>
           </div>
@@ -472,11 +503,11 @@ function LocalizationStudioPage() {
         <div className="grid gap-4 lg:grid-cols-3">
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-5 shadow-[var(--shadow-soft)] lg:col-span-2">
             <div className="mb-3 flex items-center justify-between">
-              <div className="flex items-center gap-2"><HistoryIcon className="h-4 w-4 text-[var(--primary)]" /><h3 className="text-sm font-semibold">Version History</h3></div>
+              <div className="flex items-center gap-2"><HistoryIcon className="h-4 w-4 text-[var(--primary)]" /><h3 className="text-sm font-semibold">{t("loc.history.title")}</h3></div>
               <span className="text-[11px] text-[var(--muted-foreground)] tabular-nums">{history.length}</span>
             </div>
             {history.length === 0 ? (
-              <p className="text-xs text-[var(--muted-foreground)]">No previous versions for this project yet.</p>
+              <p className="text-xs text-[var(--muted-foreground)]">{t("loc.history.empty")}</p>
             ) : (
               <ul className="max-h-80 divide-y divide-[var(--border)] overflow-y-auto">
                 {history.map((j) => (
@@ -484,16 +515,16 @@ function LocalizationStudioPage() {
                     <button onClick={() => onOpenJob(j.id)} className={`min-w-0 flex-1 text-left ${selectedJob?.id === j.id ? "text-[var(--primary)]" : ""}`}>
                       <p className="truncate text-xs font-medium">{new Date(j.created_at).toLocaleString()}</p>
                       <p className="truncate text-[11px] text-[var(--muted-foreground)]">
-                        {String((j.input as { channel?: string })?.channel ?? "—")} · {String((j.input as { tone?: string })?.tone ?? "—")} · {String((j.input as { audience?: string })?.audience ?? "—")} · {j.status}
+                        {String((j.input as { channel?: string })?.channel ?? "—")} · {String((j.input as { tone?: string })?.tone ?? "—")} · {String((j.input as { audience?: string })?.audience ?? "—")} · {t(`ai.status.${j.status}`)}
                       </p>
                     </button>
-                    <button onClick={() => onCompare(j.id)} title="Compare" className="rounded-md border border-[var(--border)] p-1.5 hover:bg-[var(--muted)]/60">
+                    <button onClick={() => onCompare(j.id)} title={t("common.compare")} className="rounded-md border border-[var(--border)] p-1.5 hover:bg-[var(--muted)]/60">
                       <GitCompare className="h-3 w-3" />
                     </button>
-                    <button onClick={() => onRestore(j.id)} title="Restore" className="rounded-md border border-[var(--border)] p-1.5 hover:bg-[var(--muted)]/60">
+                    <button onClick={() => onRestore(j.id)} title={t("common.restore")} className="rounded-md border border-[var(--border)] p-1.5 hover:bg-[var(--muted)]/60">
                       <RotateCw className="h-3 w-3" />
                     </button>
-                    <button onClick={() => onDeleteJob(j.id)} title="Delete" className="rounded-md border border-[var(--border)] p-1.5 text-[oklch(0.55_0.18_25)] hover:bg-[var(--muted)]/60">
+                    <button onClick={() => onDeleteJob(j.id)} title={t("common.delete")} className="rounded-md border border-[var(--border)] p-1.5 text-[oklch(0.55_0.18_25)] hover:bg-[var(--muted)]/60">
                       <Trash2 className="h-3 w-3" />
                     </button>
                   </li>
@@ -502,12 +533,12 @@ function LocalizationStudioPage() {
             )}
           </div>
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-5 shadow-[var(--shadow-soft)]">
-            <div className="mb-3 flex items-center gap-2"><FileDown className="h-4 w-4 text-[var(--primary)]" /><h3 className="text-sm font-semibold">Export</h3></div>
+            <div className="mb-3 flex items-center gap-2"><FileDown className="h-4 w-4 text-[var(--primary)]" /><h3 className="text-sm font-semibold">{t("loc.export.title")}</h3></div>
             <div className="grid grid-cols-2 gap-2">
-              <ExportBtn icon={<Copy className="h-3 w-3" />} onClick={onCopy}>Copy</ExportBtn>
-              <ExportBtn icon={<FileDown className="h-3 w-3" />} onClick={onExportMd}>Markdown</ExportBtn>
-              <ExportBtn icon={<FileDown className="h-3 w-3" />} onClick={onExportPdf}>PDF</ExportBtn>
-              <ExportBtn icon={<Save className="h-3 w-3" />} onClick={onSaveVersion}>Save Version</ExportBtn>
+              <ExportBtn icon={<Copy className="h-3 w-3" />} onClick={onCopy}>{t("loc.export.copy")}</ExportBtn>
+              <ExportBtn icon={<FileDown className="h-3 w-3" />} onClick={onExportMd}>{t("loc.export.markdown")}</ExportBtn>
+              <ExportBtn icon={<FileDown className="h-3 w-3" />} onClick={onExportPdf}>{t("loc.export.pdf")}</ExportBtn>
+              <ExportBtn icon={<Save className="h-3 w-3" />} onClick={onSaveVersion}>{t("loc.export.saveVersion")}</ExportBtn>
             </div>
           </div>
         </div>
@@ -552,12 +583,12 @@ function ExportBtn({ icon, onClick, children }: { icon: React.ReactNode; onClick
   );
 }
 
-function CompareCol({ title, items }: { title: string; items: LocItem[] }) {
+function CompareCol({ title, items, emptyLabel }: { title: string; items: LocItem[]; emptyLabel: string }) {
   return (
     <div className="rounded-xl border border-[var(--border)] p-4">
       <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">{title}</p>
       {items.length === 0 ? (
-        <p className="text-xs text-[var(--muted-foreground)]">No content.</p>
+        <p className="text-xs text-[var(--muted-foreground)]">{emptyLabel}</p>
       ) : (
         <ul className="space-y-2 text-xs">
           {items.map((it, i) => (
@@ -573,16 +604,17 @@ function CompareCol({ title, items }: { title: string; items: LocItem[] }) {
 }
 
 function EmptySource({ source }: { source: { brand: string; description: string; productCopy: string } }) {
+  const { t } = useI18n();
   return (
     <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--background)] p-6 shadow-[var(--shadow-soft)]">
-      <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">Source content (from active project)</p>
+      <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">{t("loc.empty.heading")}</p>
       <div className="space-y-2 text-sm">
-        {source.brand ? <p><span className="font-medium">Brand:</span> {source.brand}</p> : null}
-        {source.description ? <p><span className="font-medium">Description:</span> {source.description}</p> : null}
-        {source.productCopy && source.productCopy !== source.description ? <p><span className="font-medium">Marketing copy:</span> {source.productCopy}</p> : null}
-        {!source.brand && !source.description ? <p className="text-[var(--muted-foreground)]">No project content yet — open a project from the Projects page first.</p> : null}
+        {source.brand ? <p><span className="font-medium">{t("loc.empty.brand")}</span> {source.brand}</p> : null}
+        {source.description ? <p><span className="font-medium">{t("loc.empty.description")}</span> {source.description}</p> : null}
+        {source.productCopy && source.productCopy !== source.description ? <p><span className="font-medium">{t("loc.empty.marketingCopy")}</span> {source.productCopy}</p> : null}
+        {!source.brand && !source.description ? <p className="text-[var(--muted-foreground)]">{t("loc.empty.none")}</p> : null}
       </div>
-      <p className="mt-3 text-xs text-[var(--muted-foreground)]">Click <span className="font-medium text-[var(--foreground)]">Regenerate</span> to localize this content for {`{Channel · Tone · Audience}`}.</p>
+      <p className="mt-3 text-xs text-[var(--muted-foreground)]">{t("loc.empty.hint")}</p>
     </div>
   );
 }

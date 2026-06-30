@@ -86,13 +86,13 @@ function MarketInsightPage() {
 
   useEffect(() => {
     if (ai.status === "completed") {
-      toast.success("Market Insight generated");
+      toast.success(t("market.toast.generated"));
       refreshHistory();
       if (ai.job) setSelectedJob(ai.job);
     } else if (ai.status === "failed") {
-      toast.error(ai.error || "Generation failed");
+      toast.error(ai.error || t("market.toast.failed"));
     } else if (ai.status === "cancelled") {
-      toast.message("Generation cancelled");
+      toast.message(t("market.toast.cancelled"));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ai.status]);
@@ -150,7 +150,7 @@ function MarketInsightPage() {
   const confidence = displayed.confidence ?? 96;
   const lastUpdated = displayed.updatedAt
     ? new Date(displayed.updatedAt).toLocaleString()
-    : ai.isRunning ? "Generating…" : "—";
+    : ai.isRunning ? t("market.summary.generating") : t("common.dash");
 
   const onOpenJob = async (id: string) => {
     const j = await getJob(id);
@@ -159,7 +159,7 @@ function MarketInsightPage() {
   const onDeleteJob = async (id: string) => {
     try {
       await deleteJob(id);
-      toast.success("Deleted");
+      toast.success(t("market.toast.deleted"));
       if (selectedJob?.id === id) setSelectedJob(null);
       refreshHistory();
     } catch (e) {
@@ -177,10 +177,14 @@ function MarketInsightPage() {
           <Sparkles className="h-3.5 w-3.5 text-[var(--primary)]" />
           <span>
             {ai.isRunning
-              ? <>Status: <span className="font-medium text-[var(--foreground)]">{ai.status}</span>{ai.phase ? <> · phase: <span className="font-medium text-[var(--foreground)]">{ai.phase}</span></> : null}</>
+              ? <>
+                  {t("market.status.statusLabel")}{" "}
+                  <span className="font-medium text-[var(--foreground)]">{t(`ai.status.${ai.status}`)}</span>
+                  {ai.phase ? <> {" · "}{t("market.status.phaseLabel")}{" "}<span className="font-medium text-[var(--foreground)]">{t(`phase.${ai.phase}`)}</span></> : null}
+                </>
               : selectedJob
-                ? <>Showing generation from <span className="font-medium text-[var(--foreground)]">{lastUpdated}</span></>
-                : <>No generation yet for this project — showing baseline market data.</>}
+                ? <>{t("market.status.showingFrom", { v: lastUpdated })}</>
+                : <>{t("market.status.noneYet")}</>}
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -189,7 +193,7 @@ function MarketInsightPage() {
               onClick={ai.cancel}
               className="inline-flex items-center gap-1.5 rounded-md border border-[var(--border)] bg-[var(--background)] px-3 py-1.5 text-xs font-medium hover:bg-[var(--muted)]/60"
             >
-              <Square className="h-3 w-3" /> Cancel
+              <Square className="h-3 w-3" /> {t("common.cancel")}
             </button>
           ) : null}
           {ai.status === "failed" || ai.status === "cancelled" ? (
@@ -197,7 +201,7 @@ function MarketInsightPage() {
               onClick={generate}
               className="inline-flex items-center gap-1.5 rounded-md border border-[var(--border)] bg-[var(--background)] px-3 py-1.5 text-xs font-medium hover:bg-[var(--muted)]/60"
             >
-              <RotateCw className="h-3 w-3" /> Retry
+              <RotateCw className="h-3 w-3" /> {t("common.retry")}
             </button>
           ) : null}
           <button
@@ -206,7 +210,7 @@ function MarketInsightPage() {
             className="inline-flex items-center gap-1.5 rounded-md bg-[var(--primary)] px-3 py-1.5 text-xs font-medium text-white shadow-[var(--shadow-soft)] hover:opacity-90 disabled:opacity-50"
           >
             {ai.isRunning ? <Loader2 className="h-3 w-3 animate-spin" /> : <Play className="h-3 w-3" />}
-            {ai.isRunning ? "Generating…" : "Generate Market Insight"}
+            {ai.isRunning ? t("common.generating") : t("market.action.generate")}
           </button>
         </div>
       </div>
@@ -219,20 +223,20 @@ function MarketInsightPage() {
               <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--primary)]/10 text-[var(--primary)]">
                 <Sparkles className="h-3.5 w-3.5" />
               </span>
-              <h3 className="text-sm font-semibold">AI Market Summary</h3>
+              <h3 className="text-sm font-semibold">{t("market.summary.title")}</h3>
               <span className="rounded-full border border-[var(--border)] px-2 py-0.5 text-[10px] font-medium text-[var(--muted-foreground)]">
-                Generated · {lastUpdated}
+                {t("market.summary.generated", { v: lastUpdated })}
               </span>
               {ai.isRunning ? (
                 <span className="inline-flex items-center gap-1 rounded-full bg-[var(--primary-soft,var(--muted))] px-2 py-0.5 text-[10px] font-medium text-[var(--primary)]">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[var(--primary)] animate-pulse" /> Live
+                  <span className="h-1.5 w-1.5 rounded-full bg-[var(--primary)] animate-pulse" /> {t("common.live")}
                 </span>
               ) : null}
             </div>
             <div className="flex items-center gap-2 text-xs">
               <span className="inline-flex items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--muted)]/40 px-2 py-1 font-medium">
                 <ShieldCheck className="h-3 w-3 text-[oklch(0.55_0.14_150)]" />
-                AI Confidence <span className="tabular-nums text-[var(--foreground)]">{confidence}%</span>
+                {t("market.summary.confidence")} <span className="tabular-nums text-[var(--foreground)]">{confidence}%</span>
               </span>
             </div>
           </div>
@@ -241,25 +245,25 @@ function MarketInsightPage() {
             {ai.isRunning ? <span className="ml-0.5 inline-block h-3 w-1.5 translate-y-0.5 animate-pulse bg-[var(--primary)]" /> : null}
           </p>
           <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-[var(--border)] pt-3 text-[11px] text-[var(--muted-foreground)]">
-            <span className="inline-flex items-center gap-1"><Database className="h-3 w-3" /> Sources:</span>
+            <span className="inline-flex items-center gap-1"><Database className="h-3 w-3" /> {t("market.summary.sources")}</span>
             {sources.map((s) => (
               <span key={s} className="rounded-md bg-[var(--muted)]/60 px-1.5 py-0.5">{s}</span>
             ))}
-            <span className="ml-auto inline-flex items-center gap-1"><Clock className="h-3 w-3" /> Last updated {lastUpdated}</span>
+            <span className="ml-auto inline-flex items-center gap-1"><Clock className="h-3 w-3" /> {t("market.summary.lastUpdated", { v: lastUpdated })}</span>
           </div>
         </div>
 
         {/* KPI cards */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[
-            { label: "Market Size",        value: "¥48.2B", sub: "K-beauty skincare · 2026E",     src: "iiMedia Research",      conf: 97 },
-            { label: "Annual Growth",      value: "+18.4%", sub: "YoY · Tmall + Xiaohongshu GMV", src: "QuestMobile",           conf: 94 },
-            { label: "Average Basket",     value: "¥384",   sub: "Premium tier transactions",     src: "Tmall Global",          conf: 92 },
-            { label: "Tier-1 City Demand", value: "62%",    sub: "Share of category GMV",         src: "Nat. Bureau of Stats",  conf: 95 },
-            { label: "Top Channel",        value: "Tmall",  sub: "44% category GMV share",         src: "QuestMobile",           conf: 93 },
-            { label: "Monthly Active Users", value: "312M", sub: "Xiaohongshu · skincare topic",  src: "Xiaohongshu",           conf: 96 },
-            { label: "Search Volume",      value: "8.4M",   sub: "K-beauty queries · 30d",        src: "Douyin Search",         conf: 90 },
-            { label: "Category Growth",    value: "+24.1%", sub: "Hanbang / herbal skincare YoY", src: "iiMedia Research",      conf: 91 },
+            { label: t("market.kpi.marketSize"),     value: "¥48.2B", sub: t("market.kpi.marketSize.sub"),     src: "iiMedia Research",     conf: 97 },
+            { label: t("market.kpi.annualGrowth"),   value: "+18.4%", sub: t("market.kpi.annualGrowth.sub"),   src: "QuestMobile",          conf: 94 },
+            { label: t("market.kpi.basketTitle"),    value: "¥384",   sub: t("market.kpi.basket.sub"),         src: "Tmall Global",         conf: 92 },
+            { label: t("market.kpi.tier1Title"),     value: "62%",    sub: t("market.kpi.tier1.sub"),          src: "Nat. Bureau of Stats", conf: 95 },
+            { label: t("market.kpi.topChannel"),     value: "Tmall",  sub: t("market.kpi.topChannel.sub"),     src: "QuestMobile",          conf: 93 },
+            { label: t("market.kpi.mau"),            value: "312M",   sub: t("market.kpi.mau.sub"),            src: "Xiaohongshu",          conf: 96 },
+            { label: t("market.kpi.searchVolume"),   value: "8.4M",   sub: t("market.kpi.searchVolume.sub"),   src: "Douyin Search",        conf: 90 },
+            { label: t("market.kpi.categoryGrowth"), value: "+24.1%", sub: t("market.kpi.categoryGrowth.sub"), src: "iiMedia Research",     conf: 91 },
           ].map((s) => (
             <div key={s.label} className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-5 shadow-[var(--shadow-soft)]">
               <div className="flex items-center justify-between">
@@ -270,7 +274,7 @@ function MarketInsightPage() {
               </div>
               <p className="mt-2 text-2xl font-semibold tracking-tight">{s.value}</p>
               <p className="mt-0.5 text-[11px] leading-snug text-[var(--muted-foreground)]">{s.sub}</p>
-              <p className="mt-2 text-[10px] text-[var(--muted-foreground)]/80">Source: {s.src}</p>
+              <p className="mt-2 text-[10px] text-[var(--muted-foreground)]/80">{t("market.kpi.source", { v: s.src })}</p>
             </div>
           ))}
         </div>
@@ -280,11 +284,11 @@ function MarketInsightPage() {
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h3 className="text-sm font-semibold">{t("market.growth")}</h3>
-                <p className="text-xs text-[var(--muted-foreground)]">{t("market.growth.sub")} · Indexed (Jul 2025 = 100)</p>
+                <p className="text-xs text-[var(--muted-foreground)]">{t("market.growth.sub")} · {t("market.chart.indexed")}</p>
               </div>
               <div className="flex items-center gap-2">
                 <span className="rounded-full bg-[var(--muted)]/60 px-2 py-0.5 text-[10px] font-medium text-[var(--muted-foreground)]">
-                  AI Confidence {confidence}%
+                  {t("market.summary.confidence")} {confidence}%
                 </span>
                 <span className="inline-flex items-center gap-1 text-xs font-medium text-[oklch(0.55_0.14_150)]"><TrendingUp className="h-3 w-3" />+18.4%</span>
               </div>
@@ -306,7 +310,7 @@ function MarketInsightPage() {
               </ResponsiveContainer>
             </div>
             <p className="mt-3 text-[10px] text-[var(--muted-foreground)]">
-              Source: QuestMobile, Tmall Global Insights · Last updated {lastUpdated}
+              {t("market.chart.source", { v: lastUpdated })}
             </p>
           </div>
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-6 shadow-[var(--shadow-soft)]">
@@ -316,19 +320,19 @@ function MarketInsightPage() {
                 <h3 className="text-sm font-semibold">{t("market.keywords")}</h3>
               </div>
               <span className="rounded-full bg-[var(--muted)]/60 px-2 py-0.5 text-[10px] font-medium text-[var(--muted-foreground)]">
-                AI Confidence {confidence}%
+                {t("market.summary.confidence")} {confidence}%
               </span>
             </div>
             <div className="grid grid-cols-[1.6rem_1fr_auto] gap-x-3 gap-y-3 text-xs">
               <span className="text-[10px] uppercase tracking-wide text-[var(--muted-foreground)]">#</span>
-              <span className="text-[10px] uppercase tracking-wide text-[var(--muted-foreground)]">Keyword · Platform</span>
-              <span className="text-right text-[10px] uppercase tracking-wide text-[var(--muted-foreground)]">Growth · Score</span>
+              <span className="text-[10px] uppercase tracking-wide text-[var(--muted-foreground)]">{t("market.kw.header")}</span>
+              <span className="text-right text-[10px] uppercase tracking-wide text-[var(--muted-foreground)]">{t("market.kw.growthScore")}</span>
               {keywords.map((k, i) => (
-                <FragmentRow key={k.k} index={i} k={k} />
+                <FragmentRow key={k.k} index={i} k={k} scoreLabel={t("market.kw.score", { v: k.score })} />
               ))}
             </div>
             <p className="mt-4 text-[10px] text-[var(--muted-foreground)]">
-              Source: Xiaohongshu, Douyin, Weibo, Tmall · {lastUpdated}
+              {t("market.kw.source", { v: lastUpdated })}
             </p>
           </div>
         </div>
@@ -340,7 +344,7 @@ function MarketInsightPage() {
               <h3 className="text-sm font-semibold">{t("market.regions")}</h3>
             </div>
             <span className="rounded-full bg-[var(--muted)]/60 px-2 py-0.5 text-[10px] font-medium text-[var(--muted-foreground)]">
-              AI Confidence {confidence}%
+              {t("market.summary.confidence")} {confidence}%
             </span>
           </div>
           <div className="grid gap-6 lg:grid-cols-5">
@@ -356,9 +360,9 @@ function MarketInsightPage() {
             </div>
             <div className="lg:col-span-2">
               <div className="grid grid-cols-[1fr_auto_auto] gap-x-4 gap-y-2 text-xs">
-                <span className="text-[10px] uppercase tracking-wide text-[var(--muted-foreground)]">City</span>
-                <span className="text-right text-[10px] uppercase tracking-wide text-[var(--muted-foreground)]">Demand</span>
-                <span className="text-right text-[10px] uppercase tracking-wide text-[var(--muted-foreground)]">Growth</span>
+                <span className="text-[10px] uppercase tracking-wide text-[var(--muted-foreground)]">{t("market.regions.city")}</span>
+                <span className="text-right text-[10px] uppercase tracking-wide text-[var(--muted-foreground)]">{t("market.regions.demand")}</span>
+                <span className="text-right text-[10px] uppercase tracking-wide text-[var(--muted-foreground)]">{t("market.regions.growth")}</span>
                 {regions.map((r) => (
                   <RegionRow key={r.name} r={r} />
                 ))}
@@ -366,7 +370,7 @@ function MarketInsightPage() {
             </div>
           </div>
           <p className="mt-4 text-[10px] text-[var(--muted-foreground)]">
-            Source: National Bureau of Statistics of China, QuestMobile · {lastUpdated}
+            {t("market.regions.source", { v: lastUpdated })}
           </p>
         </div>
 
@@ -376,20 +380,25 @@ function MarketInsightPage() {
             <div className="mb-3 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Activity className="h-4 w-4 text-[var(--primary)]" />
-                <h3 className="text-sm font-semibold">AI Activity</h3>
+                <h3 className="text-sm font-semibold">{t("market.activity.title")}</h3>
               </div>
               {ai.isRunning ? (
                 <span className="inline-flex items-center gap-1 rounded-full bg-[var(--primary-soft,var(--muted))] px-2 py-0.5 text-[10px] font-medium text-[var(--primary)]">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[var(--primary)] animate-pulse" /> Live
+                  <span className="h-1.5 w-1.5 rounded-full bg-[var(--primary)] animate-pulse" /> {t("common.live")}
                 </span>
               ) : null}
             </div>
             {ai.events.length === 0 ? (
-              <p className="text-xs text-[var(--muted-foreground)]">Run a generation to see live AI activity.</p>
+              <p className="text-xs text-[var(--muted-foreground)]">{t("market.activity.empty")}</p>
             ) : (
               <ul className="max-h-80 divide-y divide-[var(--border)] overflow-y-auto">
                 {ai.events.map((e, i) => {
                   const isLast = i === ai.events.length - 1 && ai.isRunning;
+                  const label = e.phase
+                    ? t(`phase.${e.phase}`)
+                    : e.key
+                      ? t(e.key, e.params)
+                      : e.fallback ?? "";
                   return (
                     <li key={i} className="flex items-start gap-3 py-2 text-[13px]">
                       <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-md bg-[var(--muted)] text-[var(--muted-foreground)]">
@@ -398,7 +407,7 @@ function MarketInsightPage() {
                       <span className="w-16 shrink-0 font-mono text-[10px] text-[var(--muted-foreground)]">
                         {new Date(e.ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
                       </span>
-                      <span className="min-w-0 flex-1">{e.label}</span>
+                      <span className="min-w-0 flex-1">{label}</span>
                     </li>
                   );
                 })}
@@ -410,12 +419,12 @@ function MarketInsightPage() {
             <div className="mb-3 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <HistoryIcon className="h-4 w-4 text-[var(--primary)]" />
-                <h3 className="text-sm font-semibold">Generation History</h3>
+                <h3 className="text-sm font-semibold">{t("market.history.title")}</h3>
               </div>
               <span className="text-[11px] text-[var(--muted-foreground)] tabular-nums">{history.length}</span>
             </div>
             {history.length === 0 ? (
-              <p className="text-xs text-[var(--muted-foreground)]">No previous generations for this project yet.</p>
+              <p className="text-xs text-[var(--muted-foreground)]">{t("market.history.empty")}</p>
             ) : (
               <ul className="max-h-80 divide-y divide-[var(--border)] overflow-y-auto">
                 {history.map((j) => (
@@ -428,19 +437,19 @@ function MarketInsightPage() {
                         {new Date(j.created_at).toLocaleString()}
                       </p>
                       <p className="truncate text-[11px] text-[var(--muted-foreground)]">
-                        {j.status} · {j.provider}
+                        {t(`ai.status.${j.status}`)} · {j.provider}
                       </p>
                     </button>
                     <button
                       onClick={generate}
-                      title="Generate again"
+                      title={t("common.regenerate")}
                       className="rounded-md border border-[var(--border)] p-1.5 hover:bg-[var(--muted)]/60"
                     >
                       <RotateCw className="h-3 w-3" />
                     </button>
                     <button
                       onClick={() => onDeleteJob(j.id)}
-                      title="Delete"
+                      title={t("common.delete")}
                       className="rounded-md border border-[var(--border)] p-1.5 text-[oklch(0.55_0.18_25)] hover:bg-[var(--muted)]/60"
                     >
                       <Trash2 className="h-3 w-3" />
@@ -457,7 +466,7 @@ function MarketInsightPage() {
   );
 }
 
-function FragmentRow({ index, k }: { index: number; k: { k: string; growth: string; platform: string; score: number } }) {
+function FragmentRow({ index, k, scoreLabel }: { index: number; k: { k: string; growth: string; platform: string; score: number }; scoreLabel: string }) {
   return (
     <>
       <span className="self-center text-[11px] tabular-nums text-[var(--muted-foreground)]">{String(index + 1).padStart(2, "0")}</span>
@@ -467,7 +476,7 @@ function FragmentRow({ index, k }: { index: number; k: { k: string; growth: stri
       </div>
       <div className="text-right">
         <p className="text-xs font-medium text-[oklch(0.55_0.14_150)]">{k.growth}</p>
-        <p className="text-[11px] tabular-nums text-[var(--muted-foreground)]">Score {k.score}</p>
+        <p className="text-[11px] tabular-nums text-[var(--muted-foreground)]">{scoreLabel}</p>
       </div>
     </>
   );

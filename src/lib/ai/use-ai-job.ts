@@ -3,6 +3,18 @@ import { useWorkspace } from "@/lib/workspace-context";
 import { createAndRunJob, type CreateJobInput } from "./service";
 import type { AIJob, AIJobPhase, AIModule } from "./types";
 
+// AI activity event. Carries an i18n key + params so the UI can re-translate
+// instantly when the user switches language. `fallback` is the raw provider
+// label used when no key is present.
+export type AIJobEventItem = {
+  ts: number;
+  kind: "phase" | "data" | "delta" | "status";
+  phase?: AIJobPhase;
+  key?: string;
+  params?: Record<string, string | number>;
+  fallback?: string;
+};
+
 // React hook wrapping the AI service. Components call `run({ module, prompt })`
 // and read live state: phase, streaming output, status, error, and the final
 // persisted job record. Designed so every existing module page can opt-in
@@ -16,7 +28,7 @@ export type UseAIJobState = {
   job: AIJob | null;
   isRunning: boolean;
   data: Record<string, unknown>;
-  events: { ts: number; kind: "phase" | "data" | "delta" | "status"; label: string }[];
+  events: AIJobEventItem[];
 };
 
 export function useAIJob() {
@@ -46,7 +58,16 @@ export function useAIJob() {
     const ctrl = new AbortController();
     abortRef.current = ctrl;
 
-    setState({ status: "queued", phase: null, output: "", error: null, job: null, isRunning: true, data: {}, events: [{ ts: Date.now(), kind: "status", label: "Queued" }] });
+    setState({
+      status: "queued",
+      phase: null,
+      output: "",
+      error: null,
+      job: null,
+      isRunning: true,
+      data: {},
+      events: [{ ts: Date.now(), kind: "status", key: "ai.event.queued" }],
+    });
 
     const payload: CreateJobInput = {
       workspaceId: activeWorkspace.id,
@@ -61,14 +82,19 @@ export function useAIJob() {
     try {
       for await (const ev of createAndRunJob(payload, ctrl.signal)) {
         if (ev.type === "created") {
-          setState((s) => ({ ...s, job: ev.job, status: ev.job.status, events: [...s.events, { ts: Date.now(), kind: "status", label: `Job created` }] }));
+          setState((s) => ({
+            ...s,
+            job: ev.job,
+            status: ev.job.status,
+            events: [...s.events, { ts: Date.now(), kind: "status", key: "ai.event.jobCreated" }],
+          }));
         } else if (ev.type === "status") {
           setState((s) => ({
             ...s,
             status: ev.status,
             phase: ev.phase ?? s.phase,
             events: ev.phase
-              ? [...s.events, { ts: Date.now(), kind: "phase", label: ev.label || phaseLabel(ev.phase) }]
+              ? [...s.events, { ts: Date.now(), kind: "phase", phase: ev.phase, fallback: ev.label }]
               : s.events,
           }));
         } else if (ev.type === "delta") {
@@ -76,11 +102,11 @@ export function useAIJob() {
         } else if (ev.type === "data") {
           setState((s) => {
             const data = mergeData(s.data, ev.data);
-            const label = describeData(ev.data);
+            const ev2 = describeData(ev.data);
             return {
               ...s,
               data,
-              events: label ? [...s.events, { ts: Date.now(), kind: "data", label }] : s.events,
+              events: ev2 ? [...s.events, { ts: Date.now(), kind: "data", ...ev2 }] : s.events,
             };
           });
         } else if (ev.type === "completed") {
@@ -93,12 +119,25 @@ export function useAIJob() {
             output: ev.job.output,
             isRunning: false,
             data: mergeData(s.data, (ev.job.output_data ?? {}) as Record<string, unknown>),
-            events: [...s.events, { ts: Date.now(), kind: "status", label: "Completed" }],
+            events: [...s.events, { ts: Date.now(), kind: "status", key: "ai.event.completed" }],
           }));
         } else if (ev.type === "failed") {
-          setState((s) => ({ ...s, status: "failed", error: ev.error, job: ev.job ?? s.job, isRunning: false, events: [...s.events, { ts: Date.now(), kind: "status", label: `Failed: ${ev.error}` }] }));
+          setState((s) => ({
+            ...s,
+            status: "failed",
+            error: ev.error,
+            job: ev.job ?? s.job,
+            isRunning: false,
+            events: [...s.events, { ts: Date.now(), kind: "status", key: "ai.event.failed", params: { v: ev.error }, fallback: ev.error }],
+          }));
         } else if (ev.type === "cancelled") {
-          setState((s) => ({ ...s, status: "cancelled", job: ev.job ?? s.job, isRunning: false, events: [...s.events, { ts: Date.now(), kind: "status", label: "Cancelled" }] }));
+          setState((s) => ({
+            ...s,
+            status: "cancelled",
+            job: ev.job ?? s.job,
+            isRunning: false,
+            events: [...s.events, { ts: Date.now(), kind: "status", key: "ai.event.cancelled" }],
+          }));
         }
       }
     } catch (e) {
@@ -112,16 +151,6 @@ export function useAIJob() {
   }, []);
 
   return { ...state, run, cancel, reset };
-}
-
-function phaseLabel(p: AIJobPhase): string {
-  switch (p) {
-    case "thinking": return "Thinking…";
-    case "searching": return "Searching the China market knowledge base…";
-    case "analyzing": return "Analyzing relevant signals…";
-    case "writing": return "Writing the response…";
-    case "completed": return "Completed";
-  }
 }
 
 function mergeData(prev: Record<string, unknown>, next: Record<string, unknown>): Record<string, unknown> {
@@ -146,23 +175,23 @@ function mergeData(prev: Record<string, unknown>, next: Record<string, unknown>)
   return out;
 }
 
-function describeData(d: Record<string, unknown>): string | null {
-  if ("sourceAppend" in d) return `Source indexed: ${String(d.sourceAppend)}`;
+function describeData(d: Record<string, unknown>): Pick<AIJobEventItem, "key" | "params" | "fallback"> | null {
+  if ("sourceAppend" in d) return { key: "ai.event.sourceIndexed", params: { v: String(d.sourceAppend) } };
   if ("regionAppend" in d) {
     const r = d.regionAppend as { name?: string };
-    return `Regional demand · ${r?.name ?? "region"}`;
+    return { key: "ai.event.regionalDemand", params: { v: r?.name ?? "" } };
   }
   if ("keywordAppend" in d) {
     const k = d.keywordAppend as { k?: string };
-    return `Trending keyword · ${k?.k ?? "keyword"}`;
+    return { key: "ai.event.trendingKeyword", params: { v: k?.k ?? "" } };
   }
-  if ("confidence" in d) return `AI Confidence updated · ${String(d.confidence)}%`;
+  if ("confidence" in d) return { key: "ai.event.confidenceUpdated", params: { v: String(d.confidence) } };
   if ("itemAppend" in d) {
     const it = d.itemAppend as { note?: string };
-    return `Localized segment · ${it?.note ?? "ready"}`;
+    return { key: "ai.event.localizedSegment", params: { v: it?.note ?? "" } };
   }
-  if ("insights" in d) return "Localization insights updated";
-  if ("compliance" in d) return "Compliance check updated";
-  if ("scores" in d) return "Localization scores updated";
+  if ("insights" in d) return { key: "ai.event.insightsUpdated" };
+  if ("compliance" in d) return { key: "ai.event.complianceUpdated" };
+  if ("scores" in d) return { key: "ai.event.scoresUpdated" };
   return null;
 }
