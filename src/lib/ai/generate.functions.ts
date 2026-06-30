@@ -29,6 +29,54 @@ export type GenerateResult = {
 
 const MODEL = "google/gemini-3-flash-preview";
 
+// Institutions / data vendors the AI tends to hallucinate as "sources".
+// BridgeCN never queries any of these directly — if SEMrush isn't connected,
+// the only honest label is "AI inference". This regex is used to scrub the
+// `sources` array (and any per-KPI `src` field) before the result reaches UI.
+const FAKE_SOURCE_RE = /(euromonitor|questmobile|iimedia|nielsen|tmall(\s+global)?\s+insights?|xiaohongshu.*(trend|report)|red\s+(trend|report)|sasa|sephora|hkrma|hong\s*kong\s+retail\s+management|kantar|mintel|statista|frost\s*&?\s*sullivan|china\s+national\s+bureau|national\s+bureau\s+of\s+statistics|baidu\s+index|douyin\s+(trend|report)|weibo\s+(trend|report)|l'?or[ée]al.*(review|annual))/i;
+
+function isFakeSource(s: string): boolean {
+  if (!s) return true;
+  if (/^verified\s*·?\s*semrush/i.test(s)) return false;
+  if (/^ai\s+(inference|estimate|strategic)/i.test(s)) return false;
+  return FAKE_SOURCE_RE.test(s);
+}
+
+function sanitizeSources(value: unknown, hasSemrush: boolean, market: string): string[] {
+  const arr = Array.isArray(value) ? value.filter((v) => typeof v === "string") as string[] : [];
+  const cleaned = arr.filter((s) => !isFakeSource(s));
+  if (cleaned.length === 0) {
+    return hasSemrush
+      ? [`Verified · SEMrush · ${market.toUpperCase()}`, "AI inference · category benchmark"]
+      : ["AI inference · category benchmark"];
+  }
+  return cleaned;
+}
+
+function sanitizeKpiSrc(src: unknown, hasSemrush: boolean, market: string): string {
+  const s = typeof src === "string" ? src : "";
+  if (!s) return hasSemrush ? `AI inference (SEMrush ${market.toUpperCase()} unavailable for this metric)` : "AI inference · category benchmark";
+  if (isFakeSource(s)) return "AI inference · category benchmark";
+  return s;
+}
+
+function scrubOutput(parsed: { [k: string]: JsonValue }, hasSemrush: boolean, market: string): { [k: string]: JsonValue } {
+  const out = { ...parsed };
+  if ("sources" in out) {
+    out.sources = sanitizeSources(out.sources, hasSemrush, market) as JsonValue;
+  }
+  if (Array.isArray(out.kpis)) {
+    out.kpis = (out.kpis as JsonValue[]).map((k) => {
+      if (k && typeof k === "object" && !Array.isArray(k)) {
+        const obj = k as { [key: string]: JsonValue };
+        return { ...obj, src: sanitizeKpiSrc(obj.src, hasSemrush, market) };
+      }
+      return k;
+    }) as JsonValue;
+  }
+  return out;
+}
+
 function contextBrief(ctx: ProjectContext): string {
   const lines: string[] = [];
   if (ctx.company) lines.push(`Company: ${ctx.company}`);
