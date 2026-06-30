@@ -18,13 +18,13 @@ import { Route as AppStartRouteImport } from './routes/_app.start'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
 import { Route as AppReportsRouteImport } from './routes/_app.reports'
 import { Route as AppReportRouteImport } from './routes/_app.report'
-import { Route as AppProjectsRouteImport } from './routes/_app.projects'
 import { Route as AppNotificationsRouteImport } from './routes/_app.notifications'
 import { Route as AppLocalizationStudioRouteImport } from './routes/_app.localization-studio'
 import { Route as AppLaunchChecklistRouteImport } from './routes/_app.launch-checklist'
 import { Route as AppConsumerInsightRouteImport } from './routes/_app.consumer-insight'
 import { Route as AppChinaMarketInsightRouteImport } from './routes/_app.china-market-insight'
 import { Route as AppAiWorkspaceRouteImport } from './routes/_app.ai-workspace'
+import { Route as AppProjectsIndexRouteImport } from './routes/_app.projects.index'
 import { Route as AppProjectsProjectIdRouteImport } from './routes/_app.projects.$projectId'
 
 const RegisterRoute = RegisterRouteImport.update({
@@ -71,11 +71,6 @@ const AppReportRoute = AppReportRouteImport.update({
   path: '/report',
   getParentRoute: () => AppRoute,
 } as any)
-const AppProjectsRoute = AppProjectsRouteImport.update({
-  id: '/projects',
-  path: '/projects',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppNotificationsRoute = AppNotificationsRouteImport.update({
   id: '/notifications',
   path: '/notifications',
@@ -106,10 +101,15 @@ const AppAiWorkspaceRoute = AppAiWorkspaceRouteImport.update({
   path: '/ai-workspace',
   getParentRoute: () => AppRoute,
 } as any)
+const AppProjectsIndexRoute = AppProjectsIndexRouteImport.update({
+  id: '/projects/',
+  path: '/projects/',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppProjectsProjectIdRoute = AppProjectsProjectIdRouteImport.update({
-  id: '/$projectId',
-  path: '/$projectId',
-  getParentRoute: () => AppProjectsRoute,
+  id: '/projects/$projectId',
+  path: '/projects/$projectId',
+  getParentRoute: () => AppRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -123,12 +123,12 @@ export interface FileRoutesByFullPath {
   '/launch-checklist': typeof AppLaunchChecklistRoute
   '/localization-studio': typeof AppLocalizationStudioRoute
   '/notifications': typeof AppNotificationsRoute
-  '/projects': typeof AppProjectsRouteWithChildren
   '/report': typeof AppReportRoute
   '/reports': typeof AppReportsRoute
   '/settings': typeof AppSettingsRoute
   '/start': typeof AppStartRoute
   '/projects/$projectId': typeof AppProjectsProjectIdRoute
+  '/projects/': typeof AppProjectsIndexRoute
 }
 export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
@@ -140,13 +140,13 @@ export interface FileRoutesByTo {
   '/launch-checklist': typeof AppLaunchChecklistRoute
   '/localization-studio': typeof AppLocalizationStudioRoute
   '/notifications': typeof AppNotificationsRoute
-  '/projects': typeof AppProjectsRouteWithChildren
   '/report': typeof AppReportRoute
   '/reports': typeof AppReportsRoute
   '/settings': typeof AppSettingsRoute
   '/start': typeof AppStartRoute
   '/': typeof AppIndexRoute
   '/projects/$projectId': typeof AppProjectsProjectIdRoute
+  '/projects': typeof AppProjectsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -160,13 +160,13 @@ export interface FileRoutesById {
   '/_app/launch-checklist': typeof AppLaunchChecklistRoute
   '/_app/localization-studio': typeof AppLocalizationStudioRoute
   '/_app/notifications': typeof AppNotificationsRoute
-  '/_app/projects': typeof AppProjectsRouteWithChildren
   '/_app/report': typeof AppReportRoute
   '/_app/reports': typeof AppReportsRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/start': typeof AppStartRoute
   '/_app/': typeof AppIndexRoute
   '/_app/projects/$projectId': typeof AppProjectsProjectIdRoute
+  '/_app/projects/': typeof AppProjectsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -181,12 +181,12 @@ export interface FileRouteTypes {
     | '/launch-checklist'
     | '/localization-studio'
     | '/notifications'
-    | '/projects'
     | '/report'
     | '/reports'
     | '/settings'
     | '/start'
     | '/projects/$projectId'
+    | '/projects/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/forgot-password'
@@ -198,13 +198,13 @@ export interface FileRouteTypes {
     | '/launch-checklist'
     | '/localization-studio'
     | '/notifications'
-    | '/projects'
     | '/report'
     | '/reports'
     | '/settings'
     | '/start'
     | '/'
     | '/projects/$projectId'
+    | '/projects'
   id:
     | '__root__'
     | '/_app'
@@ -217,13 +217,13 @@ export interface FileRouteTypes {
     | '/_app/launch-checklist'
     | '/_app/localization-studio'
     | '/_app/notifications'
-    | '/_app/projects'
     | '/_app/report'
     | '/_app/reports'
     | '/_app/settings'
     | '/_app/start'
     | '/_app/'
     | '/_app/projects/$projectId'
+    | '/_app/projects/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -298,13 +298,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppReportRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/projects': {
-      id: '/_app/projects'
-      path: '/projects'
-      fullPath: '/projects'
-      preLoaderRoute: typeof AppProjectsRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/notifications': {
       id: '/_app/notifications'
       path: '/notifications'
@@ -347,27 +340,22 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAiWorkspaceRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/projects/': {
+      id: '/_app/projects/'
+      path: '/projects'
+      fullPath: '/projects/'
+      preLoaderRoute: typeof AppProjectsIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/projects/$projectId': {
       id: '/_app/projects/$projectId'
-      path: '/$projectId'
+      path: '/projects/$projectId'
       fullPath: '/projects/$projectId'
       preLoaderRoute: typeof AppProjectsProjectIdRouteImport
-      parentRoute: typeof AppProjectsRoute
+      parentRoute: typeof AppRoute
     }
   }
 }
-
-interface AppProjectsRouteChildren {
-  AppProjectsProjectIdRoute: typeof AppProjectsProjectIdRoute
-}
-
-const AppProjectsRouteChildren: AppProjectsRouteChildren = {
-  AppProjectsProjectIdRoute: AppProjectsProjectIdRoute,
-}
-
-const AppProjectsRouteWithChildren = AppProjectsRoute._addFileChildren(
-  AppProjectsRouteChildren,
-)
 
 interface AppRouteChildren {
   AppAiWorkspaceRoute: typeof AppAiWorkspaceRoute
@@ -376,12 +364,13 @@ interface AppRouteChildren {
   AppLaunchChecklistRoute: typeof AppLaunchChecklistRoute
   AppLocalizationStudioRoute: typeof AppLocalizationStudioRoute
   AppNotificationsRoute: typeof AppNotificationsRoute
-  AppProjectsRoute: typeof AppProjectsRouteWithChildren
   AppReportRoute: typeof AppReportRoute
   AppReportsRoute: typeof AppReportsRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppStartRoute: typeof AppStartRoute
   AppIndexRoute: typeof AppIndexRoute
+  AppProjectsProjectIdRoute: typeof AppProjectsProjectIdRoute
+  AppProjectsIndexRoute: typeof AppProjectsIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -391,12 +380,13 @@ const AppRouteChildren: AppRouteChildren = {
   AppLaunchChecklistRoute: AppLaunchChecklistRoute,
   AppLocalizationStudioRoute: AppLocalizationStudioRoute,
   AppNotificationsRoute: AppNotificationsRoute,
-  AppProjectsRoute: AppProjectsRouteWithChildren,
   AppReportRoute: AppReportRoute,
   AppReportsRoute: AppReportsRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppStartRoute: AppStartRoute,
   AppIndexRoute: AppIndexRoute,
+  AppProjectsProjectIdRoute: AppProjectsProjectIdRoute,
+  AppProjectsIndexRoute: AppProjectsIndexRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
