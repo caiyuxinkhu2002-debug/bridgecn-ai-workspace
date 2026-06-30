@@ -1,0 +1,2 @@
+ALTER TABLE public.projects ADD COLUMN IF NOT EXISTS archived_at timestamptz;
+CREATE INDEX IF NOT EXISTS projects_archived_idx ON public.projects (workspace_id) WHERE archived_at IS NULL AND deleted_at IS NULL;
