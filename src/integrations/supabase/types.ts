@@ -141,6 +141,7 @@ export type Database = {
           id: string
           industry: string | null
           initials: string | null
+          knowledge_base: Json
           name: string
           owner_name: string | null
           progress: number
@@ -149,6 +150,7 @@ export type Database = {
           summary: string | null
           target_market: string | null
           updated_at: string
+          website: string | null
           workspace_id: string
         }
         Insert: {
@@ -160,6 +162,7 @@ export type Database = {
           id?: string
           industry?: string | null
           initials?: string | null
+          knowledge_base?: Json
           name: string
           owner_name?: string | null
           progress?: number
@@ -168,6 +171,7 @@ export type Database = {
           summary?: string | null
           target_market?: string | null
           updated_at?: string
+          website?: string | null
           workspace_id: string
         }
         Update: {
@@ -179,6 +183,7 @@ export type Database = {
           id?: string
           industry?: string | null
           initials?: string | null
+          knowledge_base?: Json
           name?: string
           owner_name?: string | null
           progress?: number
@@ -187,6 +192,7 @@ export type Database = {
           summary?: string | null
           target_market?: string | null
           updated_at?: string
+          website?: string | null
           workspace_id?: string
         }
         Relationships: [
