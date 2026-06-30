@@ -208,6 +208,8 @@ function ProjectDetailPage() {
               <span className="rounded-full bg-[var(--muted)] px-2 py-0.5">{project.owner}</span>
             </div>
           </div>
+
+          <KnowledgeBasePanel project={project} />
         </div>
 
         <div className="space-y-6">
