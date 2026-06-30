@@ -14,6 +14,7 @@ import type { AIJob } from "@/lib/ai/types";
 import { toast } from "sonner";
 import { fetchSemrushSnapshot, type SemrushSnapshot } from "@/lib/data/semrush.functions";
 import { Database as DatabaseIcon } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_app/china-market-insight")({
   head: () => ({ meta: [{ title: "China Market Insight — BridgeCN AI" }] }),
