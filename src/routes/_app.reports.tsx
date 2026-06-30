@@ -17,7 +17,9 @@ function ReportsPage() {
   const router = useRouter();
   const { reports, setActiveProjectId, activeProject } = useWorkspace();
   const [q, setQ] = useState("");
-  const scoped = activeProject?.id ? reports.filter((r) => r.projectId === activeProject.id) : reports;
+  const scopedRaw = activeProject?.id ? reports.filter((r) => r.projectId === activeProject.id) : [];
+  // Fall back to all reports when the active project has no demo reports linked.
+  const scoped = scopedRaw.length > 0 ? scopedRaw : reports;
   const filtered = scoped.filter((r) => r.title.toLowerCase().includes(q.toLowerCase()));
   return (
     <div>
