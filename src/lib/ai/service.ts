@@ -22,7 +22,7 @@ export type CreateJobInput = {
 
 export type AIJobEvent =
   | { type: "created"; job: AIJob }
-  | { type: "status"; status: AIJob["status"]; phase?: AIJobPhase | null }
+  | { type: "status"; status: AIJob["status"]; phase?: AIJobPhase | null; label?: string }
   | { type: "delta"; text: string; output: string }
   | { type: "data"; data: Record<string, unknown> }
   | { type: "completed"; job: AIJob }
@@ -130,7 +130,7 @@ export async function* createAndRunJob(
       if (signal?.aborted) break;
       if (ev.type === "phase") {
         await sb.from("ai_jobs").update({ phase: ev.phase }).eq("id", job.id);
-        yield { type: "status", status: ev.phase === "completed" ? "running" : "running", phase: ev.phase };
+        yield { type: "status", status: "running", phase: ev.phase, label: ev.message };
       } else if (ev.type === "delta") {
         output += ev.text;
         yield { type: "delta", text: ev.text, output };
