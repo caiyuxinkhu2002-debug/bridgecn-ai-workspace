@@ -655,6 +655,16 @@ const enExtras2: Dict = {
   "launch.toast.generated": "Checklist generated",
   // Common
   "common.confirm": "Confirm",
+  "projects.tab.active": "Active",
+  "projects.tab.archived": "Archived",
+  "projects.empty.active": "No projects yet.",
+  "projects.empty.archived": "No archived projects.",
+  "projects.badge.active": "Active",
+  "projects.action.duplicate": "Duplicate",
+  "projects.action.archive": "Archive",
+  "projects.action.restore": "Restore",
+  "projects.action.delete": "Delete",
+  "projects.delete.confirm": "Delete \"{v}\"?",
 };
 
 const koExtras2: Dict = {
@@ -710,6 +720,16 @@ const koExtras2: Dict = {
   "launch.action.generate": "AI로 생성",
   "launch.toast.generated": "체크리스트가 생성되었습니다",
   "common.confirm": "확인",
+  "projects.tab.active": "활성",
+  "projects.tab.archived": "보관됨",
+  "projects.empty.active": "아직 프로젝트가 없습니다.",
+  "projects.empty.archived": "보관된 프로젝트가 없습니다.",
+  "projects.badge.active": "활성",
+  "projects.action.duplicate": "복제",
+  "projects.action.archive": "보관",
+  "projects.action.restore": "복원",
+  "projects.action.delete": "삭제",
+  "projects.delete.confirm": "\"{v}\" 프로젝트를 삭제할까요?",
 };
 
 const zhExtras2: Dict = {
@@ -765,6 +785,16 @@ const zhExtras2: Dict = {
   "launch.action.generate": "用 AI 生成",
   "launch.toast.generated": "清单已生成",
   "common.confirm": "确认",
+  "projects.tab.active": "进行中",
+  "projects.tab.archived": "已归档",
+  "projects.empty.active": "暂无项目。",
+  "projects.empty.archived": "暂无已归档项目。",
+  "projects.badge.active": "当前",
+  "projects.action.duplicate": "复制",
+  "projects.action.archive": "归档",
+  "projects.action.restore": "恢复",
+  "projects.action.delete": "删除",
+  "projects.delete.confirm": "删除 \"{v}\"?",
 };
 
 const koExtras: Dict = {
