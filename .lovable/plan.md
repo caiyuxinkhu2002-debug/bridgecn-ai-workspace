@@ -1,73 +1,75 @@
-# BridgeCN AI v2 — Global SaaS Upgrade Plan
+# BridgeCN AI v3 — Connected SaaS Workspace
 
-A focused, high-impact pass that brings the whole app to a production SaaS quality bar (Linear / Notion AI / Vercel). UI-only — no real auth backend, no AI calls.
+Goal: keep the existing visual system. Add product logic so every page is part of one workflow driven by a shared project + workspace context, with full i18n and working top-bar utilities.
 
-## 1. Foundation: i18n + Theme Polish
+## 1. Shared state (new)
 
-- Add lightweight i18n context (`src/lib/i18n.tsx`) with three locales: `en`, `ko`, `zh`. Persist to `localStorage`. Provides `t(key)` and `useLocale()`.
-- Translate every visible string across shell, dashboard, start, report, projects, settings, auth, profile.
-- Refine `src/styles.css` tokens: softer shadows, refined radii, premium gradients (Korea→China subtle line/aurora), neutral palette tuned for Linear-grade feel. Keep blue accent.
+Create `src/lib/workspace-context.tsx` — a single provider holding:
 
-## 2. App Shell Redesign
+- `workspaces[]` (Seoul HQ, Shanghai Office, Beijing Team, Global Marketing) with current `workspaceId`
+- `projects[]` scoped per workspace (Beauty of Joseon, Round Lab, ANUA, Medicube, Torriden) with realistic metadata: industry, stage (`research | consumer | localization | launch | reports`), owner, updatedAt, progress, region, KPIs
+- `activeProjectId` persisted to `localStorage`
+- `notifications[]` with `read` flag + `markAllRead`, grouped by Today/Yesterday/Earlier
+- Helpers: `setActiveProject`, `setWorkspace`, `getProject`, `advanceStage(nextStage)`
 
-- Sidebar: tighter type scale, refined icons, animated active indicator (left bar), section labels ("Workspace", "Intelligence", "Account"), collapsible feel, premium upgrade card.
-- Topbar: command-palette-style search (⌘K hint), workspace switcher dropdown, language switcher (EN/KO/ZH), notification popover, user menu dropdown, primary "New Project" button.
-- Notification popover: 5 sample notifications with icons, timestamps, unread dots, "Mark all read".
-- User menu: avatar + name/email header, links to Profile, Workspace, Language, Notifications, Appearance, Billing, API Keys, Logout.
+Mount inside `__root.tsx` alongside `I18nProvider`.
 
-## 3. Authentication Surface (UI only)
+## 2. Workflow wiring
 
-New public routes outside `_app`:
-- `/login` — email + password, social buttons (Google, Apple, Kakao), "Forgot password" link.
-- `/register` — name, company, email, password, social options.
-- `/forgot-password` — email input + confirmation state.
+Each module page reads `activeProject` from context and renders that project's data in its header (`ProjectContextBar` — project name, stage badge, progress). Add a sticky `WorkflowFooter` with `Back` + `Continue to <next step>` button that calls `advanceStage` and navigates:
 
-Split-screen layout: left form, right gradient panel with Korea→China map motif and product testimonial. No backend wiring — buttons route to `/`.
+```
+dashboard → projects → project detail → market → consumer → localization → launch → reports
+```
 
-## 4. Profile + Workspace Settings
+New route `src/routes/_app.projects.$projectId.tsx` for project detail with stage timeline + jump-to-step cards.
 
-Replace placeholder `_app.settings.tsx` with a tabbed settings experience:
-- Tabs: Profile, Workspace, Members, Billing, Security, Integrations, API Keys, Notifications, Appearance, Language.
-- Profile tab: avatar, name, company, role, email, preferred language, current workspace, plan, usage stats (credits, reports, members).
-- Workspace tab: name, logo upload placeholder, default language, region.
-- Members tab: table with 4 sample members + invite row, role badges.
-- Billing tab: current plan card, usage meters, invoice list.
-- Security tab: 2FA toggle, sessions, password.
-- Integrations tab: Notion, Slack, WeChat Work, Xiaohongshu, Tmall, Douyin cards with connect buttons.
-- API Keys tab: list with reveal/copy/regenerate.
-- Notifications, Appearance (theme), Language tabs.
+## 3. Dashboard rewrite
 
-## 5. Page-Level Polish
+Replace `_app.index.tsx` hero/landing with workspace home:
 
-Replace every `PlaceholderPanel` with real-looking content:
-- **China Market Insight**: category heatmap, top trending keywords, regional bar chart, channel mix.
-- **Consumer Insight**: persona cards, sentiment radar, trend signals list.
-- **Localization Studio**: KR↔CN side-by-side editor mock with tone presets.
-- **Launch Checklist**: phased Kanban-style checklist with progress.
-- **Reports**: searchable list of past reports with status, owner, export buttons.
-- **Projects**: keep table, add filters + status pills polish.
-- **Dashboard**: tighten spacing, add subtle Korea→China map line motif behind hero.
+- `Continue Working` card (active project + resume CTA pointing at current stage)
+- `Recent Projects` (5, with stage badges, click → set active + open detail)
+- `Recent Reports` (table, 4 rows)
+- `AI Suggestions` (3 cards tied to active project)
+- `Latest China Market Trends` (4 trend items)
+- `Quick Actions` (4 buttons → key flows)
+- `Recent Activity` feed
+- `Upcoming Tasks` from active project's launch checklist
 
-## 6. Shared UI Improvements
+Keep current card / typography styles.
 
-- New components: `StatusBadge`, `EmptyState`, `Skeleton` patterns, `Section` wrappers used consistently.
-- Hover/transition polish on cards & buttons.
-- Loading skeleton for tables/cards.
+## 4. Full i18n
 
-## Technical Notes
+Expand `src/lib/i18n.tsx` dictionaries to cover every page (dashboard, projects, market, consumer, localization, launch, reports, settings, start, report, auth, workflow footer, project bar, search, notifications, quick actions, trends, tasks, statuses, stage names, table headers, buttons, empty states, placeholders, tooltips). Replace hardcoded strings on all `_app.*` routes, `app-shell`, `auth-layout`, `start`, `report` with `t("…")`. Add a tiny `tList` helper for arrays where useful.
 
-- Pure frontend. No Lovable Cloud, no DB, no real auth — pure UI scaffolding so the product reads as production-ready.
-- i18n via a tiny custom context (no `react-i18next` dependency) to keep bundle small. Dictionary at `src/lib/i18n/dict.ts`.
-- All new routes are TanStack file routes; route tree regenerates automatically.
-- Auth pages live at top level (`/login`, `/register`, `/forgot-password`) — no `_app` shell.
-- "Logout" in user menu navigates to `/login` (no real session).
-- Korea→China visual motif: subtle SVG dotted arc + soft gradient, reused in hero + auth side panel. No red/decorative motifs.
+## 5. Top bar features
 
-## Out of Scope (this pass)
+In `app-shell.tsx`:
 
-- Real authentication / Lovable Cloud backend.
-- Real AI generation.
-- Dark mode (tokens prepared, toggle stub only).
-- Real file uploads, real Stripe billing, real OAuth.
+- **Search**: controlled input, opens a popover with filtered results across `projects`, `reports`, `localizationJobs`, `marketResearch`, `consumerResearch` arrays exposed by context. Each result navigates to its page and sets active project where relevant. ⌘K focuses input.
+- **Workspace switcher**: dropdown lists 4 workspaces; selecting updates context → project list re-renders everywhere.
+- **Notifications**: popover with Today / Yesterday / Earlier groupings, unread dot, "Mark all as read", "View all" → `/notifications` page (new minimal route reusing existing styles).
+- **User menu**: every item is a real `<Link>` — Profile/Workspace/Notifications/Appearance/Language/Billing/API Keys → `/settings?tab=…` (settings page reads `tab` search param); Logout → `/login`.
 
-Ship as one coordinated upgrade.
+## 6. Realistic data
+
+Seed context with Korea→China demo data using the existing brands. Reports, localization jobs, trends, activities, tasks all reference these brands with believable metrics (GMV, Xiaohongshu posts, Tmall conversion, NMPA status, etc.).
+
+## Technical notes
+
+- Pure client state — no backend, no Lovable Cloud.
+- No visual redesign: reuse existing tokens (`var(--primary)`, rounded-2xl cards, shadow-soft).
+- Persist `activeProjectId`, `workspaceId`, `locale`, `notificationsRead` in `localStorage`.
+- New files: `src/lib/workspace-context.tsx`, `src/lib/workflow.ts` (stage order + next-step helper), `src/components/project-context-bar.tsx`, `src/components/workflow-footer.tsx`, `src/routes/_app.projects.$projectId.tsx`, `src/routes/_app.notifications.tsx`.
+- Edited: `src/lib/i18n.tsx` (large dict expansion), `src/components/app-shell.tsx`, `src/routes/__root.tsx`, every `_app.*.tsx` route, `auth-layout.tsx`, `_app.start.tsx`, `_app.report.tsx`.
+- Out of scope: real auth, real AI, dark mode, new visual styles, new feature pages beyond project detail + notifications.
+
+```text
+WorkspaceProvider
+ ├─ workspaces / activeWorkspace
+ ├─ projects (scoped)            ── used by Dashboard, Projects, Detail
+ ├─ activeProject                ── used by every module page
+ ├─ notifications                ── used by topbar + /notifications
+ └─ search index                 ── used by topbar search popover
+```
