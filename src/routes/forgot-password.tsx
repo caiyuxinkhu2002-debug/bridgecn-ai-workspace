@@ -1,8 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
+import { toast } from "sonner";
 import { useT } from "@/lib/i18n";
 import { AuthLayout, Field } from "@/components/auth-layout";
 import { CheckCircle2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/forgot-password")({
   head: () => ({ meta: [{ title: "Forgot password — BridgeCN AI" }] }),
@@ -12,6 +14,20 @@ export const Route = createFileRoute("/forgot-password")({
 function ForgotPage() {
   const t = useT();
   const [sent, setSent] = useState(false);
+  const [email, setEmail] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/login`,
+    });
+    setBusy(false);
+    if (error) { toast.error(error.message); return; }
+    setSent(true);
+  }
+
   return (
     <AuthLayout
       title={t("auth.forgot.title")}
@@ -28,15 +44,16 @@ function ForgotPage() {
           <p className="text-sm">{t("auth.forgot.sent")}</p>
         </div>
       ) : (
-        <>
-          <Field label={t("auth.email")} type="email" placeholder="you@company.com" />
+        <form onSubmit={submit} className="space-y-4">
+          <Field label={t("auth.email")} type="email" required value={email} onChange={setEmail} placeholder="you@company.com" autoComplete="email" />
           <button
-            onClick={() => setSent(true)}
-            className="flex h-10 w-full items-center justify-center rounded-md bg-[var(--foreground)] text-sm font-medium text-[var(--background)] hover:opacity-90"
+            type="submit"
+            disabled={busy}
+            className="flex h-10 w-full items-center justify-center rounded-md bg-[var(--foreground)] text-sm font-medium text-[var(--background)] hover:opacity-90 disabled:opacity-50"
           >
-            {t("auth.sendReset")}
+            {busy ? "…" : t("auth.sendReset")}
           </button>
-        </>
+        </form>
       )}
     </AuthLayout>
   );

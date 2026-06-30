@@ -1,4 +1,6 @@
 import { Link, Outlet, useRouter, useRouterState } from "@tanstack/react-router";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import {
   LayoutDashboard,
   FolderKanban,
@@ -205,26 +207,23 @@ function NotificationBell() {
 }
 
 function WorkspaceSwitcher() {
-  const { t } = useI18n();
   const { workspaces, workspaceId, setWorkspaceId, activeWorkspace } = useWorkspace();
   const [open, setOpen] = useState(false);
   const ref = useOutside<HTMLDivElement>(() => setOpen(false));
-  const labelKey: Record<string, string> = {
-    seoul: "ws.seoul",
-    shanghai: "ws.shanghai",
-    beijing: "ws.beijing",
-    global: "ws.global",
-  };
   return (
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen((v) => !v)}
         className="hidden sm:inline-flex h-9 items-center gap-2 rounded-md border border-[var(--border)] bg-[var(--background)] px-2.5 text-xs font-medium hover:bg-[var(--muted)]"
       >
-        <div className="grid h-5 w-5 place-items-center rounded bg-gradient-to-br from-[var(--primary)] to-[oklch(0.62_0.22_300)] text-[10px] font-bold text-white">
-          {activeWorkspace.region[0]}
-        </div>
-        <span className="max-w-[140px] truncate">{t(labelKey[activeWorkspace.id])}</span>
+        {activeWorkspace.logo_url ? (
+          <img src={activeWorkspace.logo_url} alt="" className="h-5 w-5 rounded object-cover" />
+        ) : (
+          <div className="grid h-5 w-5 place-items-center rounded bg-gradient-to-br from-[var(--primary)] to-[oklch(0.62_0.22_300)] text-[10px] font-bold text-white">
+            {(activeWorkspace.name?.[0] || activeWorkspace.region?.[0] || "·").toUpperCase()}
+          </div>
+        )}
+        <span className="max-w-[140px] truncate">{activeWorkspace.name}</span>
         <ChevronsUpDown className="h-3 w-3 text-[var(--muted-foreground)]" />
       </button>
       {open && (
@@ -238,8 +237,12 @@ function WorkspaceSwitcher() {
               }}
               className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-sm hover:bg-[var(--muted)]"
             >
-              <Building2 className="h-3.5 w-3.5 text-[var(--muted-foreground)]" />
-              <span className="flex-1 truncate text-left">{t(labelKey[w.id])}</span>
+              {w.logo_url ? (
+                <img src={w.logo_url} alt="" className="h-4 w-4 rounded object-cover" />
+              ) : (
+                <Building2 className="h-3.5 w-3.5 text-[var(--muted-foreground)]" />
+              )}
+              <span className="flex-1 truncate text-left">{w.name}</span>
               <span className="text-[10px] uppercase text-[var(--muted-foreground)]">{w.plan}</span>
               {w.id === workspaceId && <Check className="h-3.5 w-3.5 text-[var(--primary)]" />}
             </button>
@@ -253,8 +256,12 @@ function WorkspaceSwitcher() {
 function UserMenu() {
   const { t } = useI18n();
   const router = useRouter();
+  const { profile, user } = useWorkspace();
   const [open, setOpen] = useState(false);
   const ref = useOutside<HTMLDivElement>(() => setOpen(false));
+  const displayName = profile?.name || user?.email?.split("@")[0] || "—";
+  const email = profile?.email || user?.email || "";
+  const initials = (displayName || "·").split(/\s+/).map((s) => s[0]).slice(0, 2).join("").toUpperCase();
   const items: { label: string; icon: typeof CircleUser; to: string; search?: Record<string, string> }[] = [
     { label: t("menu.profile"), icon: CircleUser, to: "/settings", search: { tab: "profile" } },
     { label: t("menu.workspace"), icon: Building2, to: "/settings", search: { tab: "workspace" } },
@@ -270,14 +277,16 @@ function UserMenu() {
         onClick={() => setOpen((v) => !v)}
         className="grid h-9 w-9 place-items-center rounded-full bg-gradient-to-br from-[var(--primary)] to-[oklch(0.45_0.22_280)] text-xs font-semibold text-white ring-2 ring-[var(--background)] hover:opacity-90"
       >
-        SK
+        {profile?.avatar_url ? (
+          <img src={profile.avatar_url} alt="" className="h-full w-full rounded-full object-cover" />
+        ) : initials}
       </button>
       {open && (
         <div className="absolute right-0 z-50 mt-2 w-64 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--popover)] shadow-[var(--shadow-card)]">
           <div className="border-b border-[var(--border)] px-4 py-3">
             <p className="text-xs text-[var(--muted-foreground)]">{t("menu.signedInAs")}</p>
-            <p className="mt-0.5 text-sm font-semibold">Sora Kim</p>
-            <p className="text-xs text-[var(--muted-foreground)]">sora@beautyofjoseon.com</p>
+            <p className="mt-0.5 text-sm font-semibold">{displayName}</p>
+            <p className="truncate text-xs text-[var(--muted-foreground)]">{email}</p>
           </div>
           <div className="p-1">
             {items.map((item) => {
@@ -299,8 +308,10 @@ function UserMenu() {
           </div>
           <div className="border-t border-[var(--border)] p-1">
             <button
-              onClick={() => {
+              onClick={async () => {
                 setOpen(false);
+                await supabase.auth.signOut();
+                toast.success(t("toast.signedOut"));
                 router.navigate({ to: "/login" });
               }}
               className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-sm text-[var(--destructive)] hover:bg-[var(--muted)]"

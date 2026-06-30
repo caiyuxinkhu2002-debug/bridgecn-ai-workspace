@@ -1,7 +1,9 @@
 import { Link } from "@tanstack/react-router";
 import { Sparkles } from "lucide-react";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
+import { toast } from "sonner";
 import { useT } from "@/lib/i18n";
+import { lovable } from "@/integrations/lovable";
 
 export function AuthLayout({
   title,
@@ -97,21 +99,36 @@ export function AuthLayout({
 
 export function SocialButtons() {
   const t = useT();
+  const [loading, setLoading] = useState<string | null>(null);
   const btn =
-    "flex h-10 w-full items-center justify-center gap-2 rounded-md border border-[var(--border)] bg-[var(--background)] text-sm font-medium hover:bg-[var(--muted)] transition-colors";
+    "flex h-10 w-full items-center justify-center gap-2 rounded-md border border-[var(--border)] bg-[var(--background)] text-sm font-medium hover:bg-[var(--muted)] transition-colors disabled:opacity-50";
+
+  async function signInGoogle() {
+    try {
+      setLoading("google");
+      const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
+      if (result.error) { toast.error(t("toast.googleFailed")); setLoading(null); return; }
+      if (result.redirected) return;
+      window.location.href = "/";
+    } catch {
+      toast.error(t("toast.googleFailed"));
+      setLoading(null);
+    }
+  }
+
   return (
     <div className="space-y-2">
-      <button className={btn}>
+      <button onClick={signInGoogle} disabled={loading === "google"} className={btn}>
         <GoogleIcon />
-        {t("auth.google")}
+        {loading === "google" ? t("auth.signingIn") : t("auth.google")}
       </button>
-      <button className={btn}>
+      <button disabled className={`${btn} cursor-not-allowed`} title={t("common.comingSoon")}>
         <AppleIcon />
-        {t("auth.apple")}
+        {t("auth.apple")} · {t("common.comingSoon")}
       </button>
-      <button className={`${btn} bg-[#FEE500] border-transparent text-[#191919] hover:bg-[#FDD835]`}>
+      <button disabled className={`${btn} bg-[#FEE500] border-transparent text-[#191919] cursor-not-allowed`} title={t("common.comingSoon")}>
         <KakaoIcon />
-        {t("auth.kakao")}
+        {t("auth.kakao")} · {t("common.comingSoon")}
       </button>
     </div>
   );
@@ -131,10 +148,18 @@ export function Field({
   label,
   type = "text",
   placeholder,
+  value,
+  onChange,
+  autoComplete,
+  required,
 }: {
   label: string;
   type?: string;
   placeholder?: string;
+  value?: string;
+  onChange?: (v: string) => void;
+  autoComplete?: string;
+  required?: boolean;
 }) {
   return (
     <label className="block">
@@ -142,6 +167,10 @@ export function Field({
       <input
         type={type}
         placeholder={placeholder}
+        value={value}
+        onChange={onChange ? (e) => onChange(e.target.value) : undefined}
+        autoComplete={autoComplete}
+        required={required}
         className="h-10 w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-3 text-sm placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/30"
       />
     </label>
