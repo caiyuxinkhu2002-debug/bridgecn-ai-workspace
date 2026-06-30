@@ -68,7 +68,7 @@ export function useAIJob() {
             status: ev.status,
             phase: ev.phase ?? s.phase,
             events: ev.phase
-              ? [...s.events, { ts: Date.now(), kind: "phase", label: phaseLabel(ev.phase) }]
+              ? [...s.events, { ts: Date.now(), kind: "phase", label: ev.label || phaseLabel(ev.phase) }]
               : s.events,
           }));
         } else if (ev.type === "delta") {
