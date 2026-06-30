@@ -15,9 +15,10 @@ export const Route = createFileRoute("/_app/reports")({
 function ReportsPage() {
   const { t } = useI18n();
   const router = useRouter();
-  const { reports, setActiveProjectId } = useWorkspace();
+  const { reports, setActiveProjectId, activeProject } = useWorkspace();
   const [q, setQ] = useState("");
-  const filtered = reports.filter((r) => r.title.toLowerCase().includes(q.toLowerCase()));
+  const scoped = activeProject?.id ? reports.filter((r) => r.projectId === activeProject.id) : reports;
+  const filtered = scoped.filter((r) => r.title.toLowerCase().includes(q.toLowerCase()));
   return (
     <div>
       <ProjectContextBar />
