@@ -57,6 +57,11 @@ function schemaFor(module: AIModuleKey, uiLocale?: string): { system: string; us
   const lang = localeName(uiLocale);
   const common = `You are a senior market entry strategist. Ground every claim in the Project Context. Be specific to the company, category and target market provided — do NOT default to skincare or any unrelated category. If the project says "Beverage / Natural Mineral Water", write about mineral water, not beauty.
 
+DATA INTEGRITY (CRITICAL): You do NOT have access to live market databases (Tmall, Xiaohongshu, Baidu Index, QuestMobile, SEMrush, Nielsen, etc.). Every number you output is a strategic ESTIMATE derived from category knowledge and the brand's Knowledge Base — not measured data.
+- The FIRST sentence of the "summary" field MUST be (translated to ${lang}): "Note: The following analysis is an AI strategic estimate based on your Knowledge Base and category benchmarks. Numbers are model inferences, not measurements from live market databases. Connect a data source (SEMrush, etc.) in Settings to ground future analyses in verified data."
+- In every "src" field on KPIs and the "sources" array, write source labels as "AI estimate · {category benchmark}" — do NOT cite specific firms (iiMedia, QuestMobile, Nielsen, Tmall Insights, etc.) you did not actually query. Generic descriptors like "Industry benchmark", "Category survey panels", "Public regulator guidance" are OK.
+- Keep numeric outputs (kpis, regions, growth, keywords scores) reasonable for the category and target market, but do NOT present them as authoritative.
+
 LANGUAGE: Write ALL free-text values (summary, sections, notes, labels, items, descriptions, signals, painPoints, purchaseDrivers, recommendations, risks, persona fields, channel roles, etc.) in ${lang}. Keep JSON KEYS in English. Keep proper nouns (brand names, platforms like Xiaohongshu/Tmall, regulators like NMPA/KFTC) in their original form.
 
 Return ONLY a JSON object matching the schema. No prose, no markdown fences.`;

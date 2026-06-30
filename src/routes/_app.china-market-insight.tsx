@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PageHeader } from "@/components/app-shell";
+import { DataIntegrityBanner } from "@/components/data-integrity-banner";
 import { ProjectContextBar } from "@/components/project-context-bar";
 import { WorkflowFooter } from "@/components/workflow-footer";
 import { useI18n } from "@/lib/i18n";
@@ -145,6 +146,7 @@ function MarketInsightPage() {
     <div>
       <ProjectContextBar />
       <PageHeader title={t("market.title")} description={t("market.sub")} />
+      <DataIntegrityBanner />
       {/* AI Action Bar */}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[var(--border)] bg-[var(--background)] p-3 shadow-[var(--shadow-soft)]">
         <div className="flex items-center gap-2 text-xs text-[var(--muted-foreground)]">

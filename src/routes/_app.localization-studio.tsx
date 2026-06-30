@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PageHeader } from "@/components/app-shell";
+import { DataIntegrityBanner } from "@/components/data-integrity-banner";
 import { ProjectContextBar } from "@/components/project-context-bar";
 import { WorkflowFooter } from "@/components/workflow-footer";
 import { useI18n } from "@/lib/i18n";
@@ -324,6 +325,7 @@ function LocalizationStudioPage() {
     <div>
       <ProjectContextBar />
       <PageHeader title={t("loc.title")} description={t("loc.sub")} />
+      <DataIntegrityBanner />
 
       <div className="space-y-6">
         {/* Action bar */}
