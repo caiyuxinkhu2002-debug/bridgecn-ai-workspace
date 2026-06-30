@@ -34,6 +34,7 @@ import {
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { localeLabels, useI18n, type Locale } from "@/lib/i18n";
 import { useWorkspace } from "@/lib/workspace-context";
+import { stageLabelKey } from "@/lib/workflow";
 
 const navSections: {
   labelKey: string;
@@ -430,6 +431,15 @@ function GlobalSearch() {
 export function AppShell({ children }: { children?: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { t } = useI18n();
+  const { activeWorkspace, activeProject } = useWorkspace();
+
+  // Resolve current module label from nav sections
+  const currentItem = navSections
+    .flatMap((s) => s.items)
+    .filter((i) => (i.exact ? pathname === i.to : pathname.startsWith(i.to)))
+    .sort((a, b) => b.to.length - a.to.length)[0];
+  const moduleLabel = currentItem ? t(currentItem.labelKey) : "";
+  const showProjectCrumb = activeProject?.id && pathname !== "/projects" && !pathname.startsWith("/settings") && !pathname.startsWith("/notifications");
 
   return (
     <div className="flex min-h-screen w-full bg-[var(--muted)]">
@@ -497,6 +507,24 @@ export function AppShell({ children }: { children?: ReactNode }) {
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-20 flex h-14 items-center gap-2 border-b border-[var(--border)] bg-[var(--background)]/80 px-4 backdrop-blur md:px-6">
           <WorkspaceSwitcher />
+          {showProjectCrumb && (
+            <div className="hidden lg:flex items-center gap-2 text-xs">
+              <span className="text-[var(--muted-foreground)]">/</span>
+              <Link
+                to="/projects/$projectId"
+                params={{ projectId: activeProject.id }}
+                className="inline-flex items-center gap-1.5 rounded-md border border-[var(--border)] bg-[var(--background)] px-2 py-1 font-medium hover:bg-[var(--muted)]"
+              >
+                <span className="grid h-4 w-4 place-items-center rounded bg-[var(--primary-soft)] text-[9px] font-semibold text-[var(--primary)]">
+                  {activeProject.initials}
+                </span>
+                <span className="max-w-[160px] truncate">{activeProject.name}</span>
+                <span className="rounded-full bg-[var(--primary-soft)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--primary)]">
+                  {t(stageLabelKey[activeProject.stage])}
+                </span>
+              </Link>
+            </div>
+          )}
           <GlobalSearch />
           <div className="ml-auto flex items-center gap-2">
             <Link
@@ -513,7 +541,30 @@ export function AppShell({ children }: { children?: ReactNode }) {
         </header>
 
         <main className="flex-1 bg-[var(--muted)] px-4 py-6 md:px-8 md:py-8">
-          <div className="mx-auto w-full max-w-7xl">{children ?? <Outlet />}</div>
+          <div className="mx-auto w-full max-w-7xl">
+            <nav className="mb-4 flex items-center gap-1.5 text-[11px] text-[var(--muted-foreground)]">
+              <span className="font-medium text-[var(--foreground)]/80">{activeWorkspace?.name || "—"}</span>
+              {showProjectCrumb && (
+                <>
+                  <span>/</span>
+                  <Link
+                    to="/projects/$projectId"
+                    params={{ projectId: activeProject.id }}
+                    className="font-medium text-[var(--foreground)]/80 hover:text-[var(--foreground)]"
+                  >
+                    {activeProject.name}
+                  </Link>
+                </>
+              )}
+              {moduleLabel && (
+                <>
+                  <span>/</span>
+                  <span className="text-[var(--foreground)]">{moduleLabel}</span>
+                </>
+              )}
+            </nav>
+            {children ?? <Outlet />}
+          </div>
         </main>
       </div>
     </div>
