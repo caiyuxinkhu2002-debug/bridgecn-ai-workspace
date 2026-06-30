@@ -17,39 +17,11 @@ export const Route = createFileRoute("/_app/china-market-insight")({
   component: MarketInsightPage,
 });
 
-const growth = [
-  { m: "Jul 25", v: 132 }, { m: "Aug", v: 138 }, { m: "Sep", v: 145 },
-  { m: "Oct", v: 151 }, { m: "Nov", v: 162 }, { m: "Dec", v: 171 },
-  { m: "Jan 26", v: 176 }, { m: "Feb", v: 182 }, { m: "Mar", v: 191 },
-  { m: "Apr", v: 198 }, { m: "May", v: 207 }, { m: "Jun", v: 218 },
-];
-const FALLBACK_REGIONS = [
-  { name: "Shanghai", v: 94, growth: "+21.4%" },
-  { name: "Beijing",  v: 88, growth: "+18.7%" },
-  { name: "Hangzhou", v: 76, growth: "+24.1%" },
-  { name: "Shenzhen", v: 71, growth: "+16.2%" },
-  { name: "Guangzhou", v: 63, growth: "+12.8%" },
-  { name: "Chengdu",  v: 58, growth: "+19.5%" },
-];
-const FALLBACK_KEYWORDS = [
-  { k: "Glass Skin · 玻璃肌",        growth: "+42%", platform: "Xiaohongshu", score: 98 },
-  { k: "Ingredient-led · 成分党",    growth: "+35%", platform: "Douyin",      score: 91 },
-  { k: "Sensitive Skin · 敏感肌",    growth: "+28%", platform: "Xiaohongshu", score: 87 },
-  { k: "K-beauty Routine · 韩系护肤", growth: "+27%", platform: "Weibo",       score: 84 },
-  { k: "Morning C / Night A · 早C晚A", growth: "+19%", platform: "Douyin",      score: 78 },
-  { k: "Clean Beauty · 纯净护肤",    growth: "+14%", platform: "Tmall",       score: 72 },
-];
-
-const FALLBACK_SOURCES = [
-  "Xiaohongshu (小红书)",
-  "Douyin (抖音)",
-  "QuestMobile",
-  "iiMedia Research",
-  "National Bureau of Statistics of China",
-  "Tmall Global Insights",
-];
-const FALLBACK_SUMMARY =
-  "The K-beauty skincare market in China continues to grow at double-digit rates, driven by ingredient-focused consumers and accelerating demand in Tier-1 cities. Over the last 30 days, Xiaohongshu discussions around glass skin and sensitive skin care have increased significantly, while Douyin live commerce for Korean derma brands posted record GMV. Premium positioning at ¥350–¥450 basket size remains the strongest opportunity for new entrants.";
+// Sprint 9: no hardcoded demo data. All market data is derived from the
+// active project's AI jobs; charts/lists render empty state when missing.
+type KeywordRow = { k: string; growth: string; platform: string; score: number };
+type RegionRow = { name: string; v: number; growth: string };
+type GrowthRow = { m: string; v: number };
 
 function MarketInsightPage() {
   const { t } = useI18n();
