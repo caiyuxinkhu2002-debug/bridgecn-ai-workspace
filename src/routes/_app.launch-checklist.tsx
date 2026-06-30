@@ -4,7 +4,7 @@ import { ProjectContextBar } from "@/components/project-context-bar";
 import { WorkflowFooter } from "@/components/workflow-footer";
 import { useI18n } from "@/lib/i18n";
 import { useWorkspace } from "@/lib/workspace-context";
-import { Check, Circle } from "lucide-react";
+import { Circle } from "lucide-react";
 
 export const Route = createFileRoute("/_app/launch-checklist")({
   head: () => ({ meta: [{ title: "Launch Checklist — BridgeCN AI" }] }),
@@ -88,4 +88,3 @@ function LaunchChecklistPage() {
 }
 
 // Reference Check to silence unused-import lint when items become done.
-void Check;
