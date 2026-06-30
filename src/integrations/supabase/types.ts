@@ -14,6 +14,84 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_jobs: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          error: string | null
+          id: string
+          input: Json
+          model: string | null
+          module: string
+          output: string
+          output_data: Json | null
+          phase: string | null
+          project_id: string | null
+          prompt: string
+          provider: string
+          started_at: string | null
+          status: Database["public"]["Enums"]["ai_job_status"]
+          updated_at: string
+          user_id: string
+          workspace_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          input?: Json
+          model?: string | null
+          module: string
+          output?: string
+          output_data?: Json | null
+          phase?: string | null
+          project_id?: string | null
+          prompt: string
+          provider?: string
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["ai_job_status"]
+          updated_at?: string
+          user_id: string
+          workspace_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          input?: Json
+          model?: string | null
+          module?: string
+          output?: string
+          output_data?: Json | null
+          phase?: string | null
+          project_id?: string | null
+          prompt?: string
+          provider?: string
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["ai_job_status"]
+          updated_at?: string
+          user_id?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_jobs_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_jobs_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -214,6 +292,7 @@ export type Database = {
       }
     }
     Enums: {
+      ai_job_status: "queued" | "running" | "completed" | "failed" | "cancelled"
       project_stage:
         | "research"
         | "consumer"
@@ -349,6 +428,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      ai_job_status: ["queued", "running", "completed", "failed", "cancelled"],
       project_stage: [
         "research",
         "consumer",
