@@ -18,6 +18,8 @@ export type Project = {
   updated: string;
   kpi: { label: string; value: string }[];
   summary: string;
+  description: string;
+  targetMarket: string;
 };
 
 export type Profile = {
@@ -161,7 +163,21 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   const mapProject = useCallback(
-    (r: { id: string; workspace_id: string; name: string; initials: string | null; industry: string | null; region: string | null; stage: Stage; owner_name: string | null; progress: number; summary: string | null; updated_at: string }): Project => ({
+    (r: {
+      id: string;
+      workspace_id: string;
+      name: string;
+      initials: string | null;
+      industry: string | null;
+      region: string | null;
+      stage: Stage;
+      owner_name: string | null;
+      progress: number;
+      summary: string | null;
+      description?: string | null;
+      target_market?: string | null;
+      updated_at: string;
+    }): Project => ({
       id: r.id,
       workspaceId: r.workspace_id,
       name: r.name,
@@ -174,6 +190,8 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       updated: relativeTime(r.updated_at),
       kpi: [],
       summary: r.summary || "",
+      description: r.description || "",
+      targetMarket: r.target_market || "",
     }),
     [],
   );
@@ -213,7 +231,12 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
 
   const refreshProjects = useCallback(async () => {
     if (!workspaceId) return;
-    const { data } = await supabase.from("projects").select("*").eq("workspace_id", workspaceId).order("created_at", { ascending: true });
+    const { data } = await supabase
+      .from("projects")
+      .select("*")
+      .eq("workspace_id", workspaceId)
+      .is("deleted_at", null)
+      .order("created_at", { ascending: true });
     const mapped = (data || []).map(mapProject);
     setProjectsState(mapped);
     if (mapped.length && !mapped.find((p) => p.id === activeProjectId)) {
