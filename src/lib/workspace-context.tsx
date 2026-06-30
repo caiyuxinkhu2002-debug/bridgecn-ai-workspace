@@ -343,7 +343,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   }, [activeProjectId]);
 
   const createProject = useCallback(
-    async (input: { name: string; industry?: string; targetMarket?: string; description?: string }): Promise<Project | null> => {
+    async (input: { name: string; industry?: string; targetMarket?: string; description?: string; website?: string; knowledgeBase?: KnowledgeBase }): Promise<Project | null> => {
       if (!workspaceId) return null;
       const name = input.name.trim();
       if (!name) return null;
@@ -362,6 +362,8 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
           created_by: user?.id || null,
           stage: "research",
           progress: 0,
+          website: input.website?.trim() || null,
+          knowledge_base: (input.knowledgeBase ?? {}) as never,
         })
         .select("*")
         .maybeSingle();
@@ -376,7 +378,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   );
 
   const updateProject = useCallback(
-    async (id: string, patch: Partial<{ name: string; industry: string; region: string; targetMarket: string; description: string; summary: string; stage: Stage }>) => {
+    async (id: string, patch: Partial<{ name: string; industry: string; region: string; targetMarket: string; description: string; summary: string; stage: Stage; website: string; knowledgeBase: KnowledgeBase }>) => {
       type ProjectUpdate = {
         name?: string;
         initials?: string;
@@ -386,6 +388,8 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         description?: string | null;
         summary?: string | null;
         stage?: Stage;
+        website?: string | null;
+        knowledge_base?: KnowledgeBase;
       };
       const dbPatch: ProjectUpdate = {};
       if (patch.name !== undefined) { dbPatch.name = patch.name.trim(); dbPatch.initials = initialsOf(patch.name); }
@@ -401,6 +405,8 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       }
       if (patch.summary !== undefined) dbPatch.summary = patch.summary.trim() || null;
       if (patch.stage !== undefined) dbPatch.stage = patch.stage;
+      if (patch.website !== undefined) dbPatch.website = patch.website.trim() || null;
+      if (patch.knowledgeBase !== undefined) dbPatch.knowledge_base = patch.knowledgeBase;
       const { error } = await supabase.from("projects").update(dbPatch as never).eq("id", id);
       if (error) throw error;
       await refreshProjects();
