@@ -15,6 +15,8 @@ export type UseAIJobState = {
   error: string | null;
   job: AIJob | null;
   isRunning: boolean;
+  data: Record<string, unknown>;
+  events: { ts: number; kind: "phase" | "data" | "delta" | "status"; label: string }[];
 };
 
 export function useAIJob() {
@@ -26,6 +28,8 @@ export function useAIJob() {
     error: null,
     job: null,
     isRunning: false,
+    data: {},
+    events: [],
   });
   const abortRef = useRef<AbortController | null>(null);
 
@@ -42,7 +46,7 @@ export function useAIJob() {
     const ctrl = new AbortController();
     abortRef.current = ctrl;
 
-    setState({ status: "queued", phase: null, output: "", error: null, job: null, isRunning: true });
+    setState({ status: "queued", phase: null, output: "", error: null, job: null, isRunning: true, data: {}, events: [{ ts: Date.now(), kind: "status", label: "Queued" }] });
 
     const payload: CreateJobInput = {
       workspaceId: activeWorkspace.id,
@@ -57,18 +61,44 @@ export function useAIJob() {
     try {
       for await (const ev of createAndRunJob(payload, ctrl.signal)) {
         if (ev.type === "created") {
-          setState((s) => ({ ...s, job: ev.job, status: ev.job.status }));
+          setState((s) => ({ ...s, job: ev.job, status: ev.job.status, events: [...s.events, { ts: Date.now(), kind: "status", label: `Job created` }] }));
         } else if (ev.type === "status") {
-          setState((s) => ({ ...s, status: ev.status, phase: ev.phase ?? s.phase }));
+          setState((s) => ({
+            ...s,
+            status: ev.status,
+            phase: ev.phase ?? s.phase,
+            events: ev.phase
+              ? [...s.events, { ts: Date.now(), kind: "phase", label: phaseLabel(ev.phase) }]
+              : s.events,
+          }));
         } else if (ev.type === "delta") {
           setState((s) => ({ ...s, output: ev.output }));
+        } else if (ev.type === "data") {
+          setState((s) => {
+            const data = mergeData(s.data, ev.data);
+            const label = describeData(ev.data);
+            return {
+              ...s,
+              data,
+              events: label ? [...s.events, { ts: Date.now(), kind: "data", label }] : s.events,
+            };
+          });
         } else if (ev.type === "completed") {
           finalJob = ev.job;
-          setState((s) => ({ ...s, status: "completed", phase: "completed", job: ev.job, output: ev.job.output, isRunning: false }));
+          setState((s) => ({
+            ...s,
+            status: "completed",
+            phase: "completed",
+            job: ev.job,
+            output: ev.job.output,
+            isRunning: false,
+            data: mergeData(s.data, (ev.job.output_data ?? {}) as Record<string, unknown>),
+            events: [...s.events, { ts: Date.now(), kind: "status", label: "Completed" }],
+          }));
         } else if (ev.type === "failed") {
-          setState((s) => ({ ...s, status: "failed", error: ev.error, job: ev.job ?? s.job, isRunning: false }));
+          setState((s) => ({ ...s, status: "failed", error: ev.error, job: ev.job ?? s.job, isRunning: false, events: [...s.events, { ts: Date.now(), kind: "status", label: `Failed: ${ev.error}` }] }));
         } else if (ev.type === "cancelled") {
-          setState((s) => ({ ...s, status: "cancelled", job: ev.job ?? s.job, isRunning: false }));
+          setState((s) => ({ ...s, status: "cancelled", job: ev.job ?? s.job, isRunning: false, events: [...s.events, { ts: Date.now(), kind: "status", label: "Cancelled" }] }));
         }
       }
     } catch (e) {
@@ -78,8 +108,51 @@ export function useAIJob() {
   }, [user, activeWorkspace?.id, activeProject?.id]);
 
   const reset = useCallback(() => {
-    setState({ status: "idle", phase: null, output: "", error: null, job: null, isRunning: false });
+    setState({ status: "idle", phase: null, output: "", error: null, job: null, isRunning: false, data: {}, events: [] });
   }, []);
 
   return { ...state, run, cancel, reset };
+}
+
+function phaseLabel(p: AIJobPhase): string {
+  switch (p) {
+    case "thinking": return "Thinking…";
+    case "searching": return "Searching the China market knowledge base…";
+    case "analyzing": return "Analyzing relevant signals…";
+    case "writing": return "Writing the response…";
+    case "completed": return "Completed";
+  }
+}
+
+function mergeData(prev: Record<string, unknown>, next: Record<string, unknown>): Record<string, unknown> {
+  const out = { ...prev };
+  for (const [k, v] of Object.entries(next)) {
+    if (k === "sourceAppend" && typeof v === "string") {
+      const arr = (out.sources as string[] | undefined) ?? [];
+      out.sources = arr.includes(v) ? arr : [...arr, v];
+    } else if (k === "keywordAppend") {
+      const arr = (out.keywords as unknown[] | undefined) ?? [];
+      out.keywords = [...arr, v];
+    } else if (k === "regionAppend") {
+      const arr = (out.regions as unknown[] | undefined) ?? [];
+      out.regions = [...arr, v];
+    } else {
+      out[k] = v;
+    }
+  }
+  return out;
+}
+
+function describeData(d: Record<string, unknown>): string | null {
+  if ("sourceAppend" in d) return `Source indexed: ${String(d.sourceAppend)}`;
+  if ("regionAppend" in d) {
+    const r = d.regionAppend as { name?: string };
+    return `Regional demand · ${r?.name ?? "region"}`;
+  }
+  if ("keywordAppend" in d) {
+    const k = d.keywordAppend as { k?: string };
+    return `Trending keyword · ${k?.k ?? "keyword"}`;
+  }
+  if ("confidence" in d) return `AI Confidence updated · ${String(d.confidence)}%`;
+  return null;
 }
