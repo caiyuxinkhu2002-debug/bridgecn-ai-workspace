@@ -5,6 +5,21 @@ import type { User } from "@supabase/supabase-js";
 
 export type Workspace = { id: string; name: string; plan: string; region: string; logo_url: string | null };
 
+export type KnowledgeBase = {
+  company?: string;
+  industry?: string;
+  category?: string;
+  products?: string[];
+  brandStory?: string;
+  brandTone?: string[];
+  keywords?: string[];
+  competitors?: string[];
+  targetAudience?: string;
+  koreanCopy?: string;
+  website?: string;
+  socialChannels?: { label: string; url: string }[];
+};
+
 export type Project = {
   id: string;
   workspaceId: string;
@@ -21,6 +36,8 @@ export type Project = {
   description: string;
   targetMarket: string;
   archived: boolean;
+  website: string;
+  knowledgeBase: KnowledgeBase;
 };
 
 export type Profile = {
@@ -145,8 +162,8 @@ type Ctx = {
   refreshWorkspaces: () => Promise<void>;
   refreshMembers: () => Promise<void>;
   refreshProjects: () => Promise<void>;
-  createProject: (input: { name: string; industry?: string; targetMarket?: string; description?: string }) => Promise<Project | null>;
-  updateProject: (id: string, patch: Partial<{ name: string; industry: string; region: string; targetMarket: string; description: string; summary: string; stage: Stage }>) => Promise<void>;
+  createProject: (input: { name: string; industry?: string; targetMarket?: string; description?: string; website?: string; knowledgeBase?: KnowledgeBase }) => Promise<Project | null>;
+  updateProject: (id: string, patch: Partial<{ name: string; industry: string; region: string; targetMarket: string; description: string; summary: string; stage: Stage; website: string; knowledgeBase: KnowledgeBase }>) => Promise<void>;
   deleteProject: (id: string) => Promise<void>;
   archiveProject: (id: string) => Promise<void>;
   unarchiveProject: (id: string) => Promise<void>;
@@ -185,6 +202,8 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       description?: string | null;
       target_market?: string | null;
       updated_at: string;
+      website?: string | null;
+      knowledge_base?: unknown;
     }): Project => ({
       id: r.id,
       workspaceId: r.workspace_id,
@@ -201,6 +220,8 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       description: r.description || "",
       targetMarket: r.target_market || "",
       archived: Boolean((r as { archived_at?: string | null }).archived_at),
+      website: r.website || "",
+      knowledgeBase: (r.knowledge_base && typeof r.knowledge_base === "object" ? r.knowledge_base : {}) as KnowledgeBase,
     }),
     [],
   );
@@ -322,7 +343,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   }, [activeProjectId]);
 
   const createProject = useCallback(
-    async (input: { name: string; industry?: string; targetMarket?: string; description?: string }): Promise<Project | null> => {
+    async (input: { name: string; industry?: string; targetMarket?: string; description?: string; website?: string; knowledgeBase?: KnowledgeBase }): Promise<Project | null> => {
       if (!workspaceId) return null;
       const name = input.name.trim();
       if (!name) return null;
@@ -341,6 +362,8 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
           created_by: user?.id || null,
           stage: "research",
           progress: 0,
+          website: input.website?.trim() || null,
+          knowledge_base: (input.knowledgeBase ?? {}) as never,
         })
         .select("*")
         .maybeSingle();
@@ -355,7 +378,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   );
 
   const updateProject = useCallback(
-    async (id: string, patch: Partial<{ name: string; industry: string; region: string; targetMarket: string; description: string; summary: string; stage: Stage }>) => {
+    async (id: string, patch: Partial<{ name: string; industry: string; region: string; targetMarket: string; description: string; summary: string; stage: Stage; website: string; knowledgeBase: KnowledgeBase }>) => {
       type ProjectUpdate = {
         name?: string;
         initials?: string;
@@ -365,6 +388,8 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         description?: string | null;
         summary?: string | null;
         stage?: Stage;
+        website?: string | null;
+        knowledge_base?: KnowledgeBase;
       };
       const dbPatch: ProjectUpdate = {};
       if (patch.name !== undefined) { dbPatch.name = patch.name.trim(); dbPatch.initials = initialsOf(patch.name); }
@@ -380,6 +405,8 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       }
       if (patch.summary !== undefined) dbPatch.summary = patch.summary.trim() || null;
       if (patch.stage !== undefined) dbPatch.stage = patch.stage;
+      if (patch.website !== undefined) dbPatch.website = patch.website.trim() || null;
+      if (patch.knowledgeBase !== undefined) dbPatch.knowledge_base = patch.knowledgeBase;
       const { error } = await supabase.from("projects").update(dbPatch as never).eq("id", id);
       if (error) throw error;
       await refreshProjects();
@@ -456,7 +483,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const FALLBACK_WS: Workspace = { id: "", name: "—", plan: "Free", region: "KR", logo_url: null };
-  const FALLBACK_PROJECT: Project = { id: "", workspaceId: "", name: "—", initials: "—", industry: "—", region: "—", stage: "research" as Stage, owner: "—", progress: 0, updated: "", kpi: [], summary: "", description: "", targetMarket: "", archived: false };
+  const FALLBACK_PROJECT: Project = { id: "", workspaceId: "", name: "—", initials: "—", industry: "—", region: "—", stage: "research" as Stage, owner: "—", progress: 0, updated: "", kpi: [], summary: "", description: "", targetMarket: "", archived: false, website: "", knowledgeBase: {} };
   const activeWorkspace = useMemo<Workspace>(() => workspaces.find((w) => w.id === workspaceId) ?? workspaces[0] ?? FALLBACK_WS, [workspaces, workspaceId]);
   const projects = useMemo(() => projectsState.filter((p) => p.workspaceId === workspaceId && !p.archived), [projectsState, workspaceId]);
   const archivedProjects = useMemo(() => projectsState.filter((p) => p.workspaceId === workspaceId && p.archived), [projectsState, workspaceId]);

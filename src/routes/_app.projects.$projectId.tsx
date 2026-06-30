@@ -4,7 +4,7 @@ import { ArrowRight, CheckCircle2, Circle, Pencil, Trash2, Loader2, Copy, Archiv
 import { toast } from "sonner";
 import { PageHeader } from "@/components/app-shell";
 import { useI18n } from "@/lib/i18n";
-import { useWorkspace } from "@/lib/workspace-context";
+import { useWorkspace, type Project, type KnowledgeBase } from "@/lib/workspace-context";
 import { stageLabelKey, stageOrder, stageToPath, type Stage } from "@/lib/workflow";
 
 export const Route = createFileRoute("/_app/projects/$projectId")({
@@ -18,6 +18,108 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       <span className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-[var(--muted-foreground)]">{label}</span>
       {children}
     </label>
+  );
+}
+
+function KnowledgeBasePanel({ project }: { project: Project }) {
+  const { updateProject } = useWorkspace();
+  const [editing, setEditing] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [kb, setKb] = useState<KnowledgeBase>(project.knowledgeBase || {});
+  useEffect(() => { setKb(project.knowledgeBase || {}); }, [project.id, project.knowledgeBase]);
+
+  const kbAny = (k: keyof KnowledgeBase) => (kb[k] ?? "") as string;
+
+  async function save() {
+    setBusy(true);
+    try {
+      await updateProject(project.id, { knowledgeBase: kb, website: kb.website });
+      toast.success("Knowledge base updated");
+      setEditing(false);
+    } catch { toast.error("Could not save"); } finally { setBusy(false); }
+  }
+
+  const set = <K extends keyof KnowledgeBase>(k: K, v: KnowledgeBase[K]) => setKb({ ...kb, [k]: v });
+
+  return (
+    <div className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-6 shadow-[var(--shadow-soft)]">
+      <div className="mb-4 flex items-center justify-between">
+        <h3 className="text-sm font-semibold">Knowledge Base</h3>
+        {editing ? (
+          <div className="flex gap-2">
+            <button onClick={() => { setEditing(false); setKb(project.knowledgeBase || {}); }} className="rounded-md border border-[var(--border)] px-2.5 py-1 text-xs font-medium hover:bg-[var(--muted)]">Cancel</button>
+            <button onClick={save} disabled={busy} className="inline-flex items-center gap-1 rounded-md bg-[var(--foreground)] px-2.5 py-1 text-xs font-medium text-[var(--background)] hover:opacity-90 disabled:opacity-50">
+              {busy && <Loader2 className="h-3 w-3 animate-spin" />} Save
+            </button>
+          </div>
+        ) : (
+          <button onClick={() => setEditing(true)} className="rounded-md border border-[var(--border)] px-2.5 py-1 text-xs font-medium hover:bg-[var(--muted)]">Edit</button>
+        )}
+      </div>
+
+      {!editing ? (
+        <dl className="space-y-3 text-sm">
+          <KV label="Company" value={kb.company} />
+          <KV label="Industry" value={kb.industry} />
+          <KV label="Category" value={kb.category} />
+          <KVList label="Products" items={kb.products} />
+          <KV label="Brand Story" value={kb.brandStory} multiline />
+          <KVList label="Brand Tone" items={kb.brandTone} />
+          <KVList label="Keywords" items={kb.keywords} />
+          <KVList label="Competitors" items={kb.competitors} />
+          <KV label="Target Audience" value={kb.targetAudience} multiline />
+          <KV label="Korean Marketing Copy" value={kb.koreanCopy} multiline />
+          <KV label="Website" value={kb.website} />
+          {kb.socialChannels && kb.socialChannels.length > 0 && (
+            <div>
+              <dt className="text-[11px] font-medium uppercase tracking-wider text-[var(--muted-foreground)]">Social Channels</dt>
+              <dd className="mt-1 flex flex-wrap gap-2">
+                {kb.socialChannels.map((c, i) => (
+                  <a key={i} href={c.url} target="_blank" rel="noreferrer" className="rounded-full bg-[var(--muted)] px-2 py-0.5 text-xs hover:opacity-80">{c.label}</a>
+                ))}
+              </dd>
+            </div>
+          )}
+        </dl>
+      ) : (
+        <div className="space-y-3 text-sm">
+          <Field label="Company"><input value={kbAny("company")} onChange={(e) => set("company", e.target.value)} className="h-9 w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-2 text-sm" /></Field>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Field label="Industry"><input value={kbAny("industry")} onChange={(e) => set("industry", e.target.value)} className="h-9 w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-2 text-sm" /></Field>
+            <Field label="Category"><input value={kbAny("category")} onChange={(e) => set("category", e.target.value)} className="h-9 w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-2 text-sm" /></Field>
+          </div>
+          <Field label="Products (comma-separated)"><input value={(kb.products || []).join(", ")} onChange={(e) => set("products", e.target.value.split(",").map((s) => s.trim()).filter(Boolean))} className="h-9 w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-2 text-sm" /></Field>
+          <Field label="Brand Story"><textarea rows={4} value={kbAny("brandStory")} onChange={(e) => set("brandStory", e.target.value)} className="w-full rounded-md border border-[var(--border)] bg-[var(--background)] p-2 text-sm" /></Field>
+          <Field label="Brand Tone (comma-separated)"><input value={(kb.brandTone || []).join(", ")} onChange={(e) => set("brandTone", e.target.value.split(",").map((s) => s.trim()).filter(Boolean))} className="h-9 w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-2 text-sm" /></Field>
+          <Field label="Keywords (comma-separated)"><input value={(kb.keywords || []).join(", ")} onChange={(e) => set("keywords", e.target.value.split(",").map((s) => s.trim()).filter(Boolean))} className="h-9 w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-2 text-sm" /></Field>
+          <Field label="Competitors (comma-separated)"><input value={(kb.competitors || []).join(", ")} onChange={(e) => set("competitors", e.target.value.split(",").map((s) => s.trim()).filter(Boolean))} className="h-9 w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-2 text-sm" /></Field>
+          <Field label="Target Audience"><textarea rows={3} value={kbAny("targetAudience")} onChange={(e) => set("targetAudience", e.target.value)} className="w-full rounded-md border border-[var(--border)] bg-[var(--background)] p-2 text-sm" /></Field>
+          <Field label="Korean Marketing Copy"><textarea rows={3} value={kbAny("koreanCopy")} onChange={(e) => set("koreanCopy", e.target.value)} className="w-full rounded-md border border-[var(--border)] bg-[var(--background)] p-2 text-sm" /></Field>
+          <Field label="Website"><input value={kbAny("website")} onChange={(e) => set("website", e.target.value)} className="h-9 w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-2 text-sm" /></Field>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function KV({ label, value, multiline }: { label: string; value?: string; multiline?: boolean }) {
+  if (!value) return null;
+  return (
+    <div>
+      <dt className="text-[11px] font-medium uppercase tracking-wider text-[var(--muted-foreground)]">{label}</dt>
+      <dd className={multiline ? "mt-1 whitespace-pre-line text-sm leading-relaxed" : "mt-1 text-sm"}>{value}</dd>
+    </div>
+  );
+}
+function KVList({ label, items }: { label: string; items?: string[] }) {
+  if (!items || items.length === 0) return null;
+  return (
+    <div>
+      <dt className="text-[11px] font-medium uppercase tracking-wider text-[var(--muted-foreground)]">{label}</dt>
+      <dd className="mt-1 flex flex-wrap gap-1.5">
+        {items.map((it, i) => <span key={`${it}-${i}`} className="rounded-full bg-[var(--muted)] px-2 py-0.5 text-xs">{it}</span>)}
+      </dd>
+    </div>
   );
 }
 
@@ -208,6 +310,8 @@ function ProjectDetailPage() {
               <span className="rounded-full bg-[var(--muted)] px-2 py-0.5">{project.owner}</span>
             </div>
           </div>
+
+          <KnowledgeBasePanel project={project} />
         </div>
 
         <div className="space-y-6">
