@@ -4,7 +4,13 @@ import { ProjectContextBar } from "@/components/project-context-bar";
 import { WorkflowFooter } from "@/components/workflow-footer";
 import { useI18n } from "@/lib/i18n";
 import { Bar, BarChart, ResponsiveContainer, Area, AreaChart, XAxis, Tooltip, CartesianGrid } from "recharts";
-import { TrendingUp, MapPin, Flame, Sparkles, ShieldCheck, Database, Clock } from "lucide-react";
+import { TrendingUp, MapPin, Flame, Sparkles, ShieldCheck, Database, Clock, Loader2, CheckCircle2, History as HistoryIcon, Trash2, RotateCw, Play, Square, Activity } from "lucide-react";
+import { useEffect, useMemo, useState, useCallback } from "react";
+import { useWorkspace } from "@/lib/workspace-context";
+import { useAIJob } from "@/lib/ai/use-ai-job";
+import { listJobs, deleteJob, getJob } from "@/lib/ai/service";
+import type { AIJob } from "@/lib/ai/types";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/china-market-insight")({
   head: () => ({ meta: [{ title: "China Market Insight — BridgeCN AI" }] }),
@@ -17,7 +23,7 @@ const growth = [
   { m: "Jan 26", v: 176 }, { m: "Feb", v: 182 }, { m: "Mar", v: 191 },
   { m: "Apr", v: 198 }, { m: "May", v: 207 }, { m: "Jun", v: 218 },
 ];
-const regions = [
+const FALLBACK_REGIONS = [
   { name: "Shanghai", v: 94, growth: "+21.4%" },
   { name: "Beijing",  v: 88, growth: "+18.7%" },
   { name: "Hangzhou", v: 76, growth: "+24.1%" },
@@ -25,7 +31,7 @@ const regions = [
   { name: "Guangzhou", v: 63, growth: "+12.8%" },
   { name: "Chengdu",  v: 58, growth: "+19.5%" },
 ];
-const keywords = [
+const FALLBACK_KEYWORDS = [
   { k: "Glass Skin · 玻璃肌",        growth: "+42%", platform: "Xiaohongshu", score: 98 },
   { k: "Ingredient-led · 成分党",    growth: "+35%", platform: "Douyin",      score: 91 },
   { k: "Sensitive Skin · 敏感肌",    growth: "+28%", platform: "Xiaohongshu", score: 87 },
@@ -34,7 +40,7 @@ const keywords = [
   { k: "Clean Beauty · 纯净护肤",    growth: "+14%", platform: "Tmall",       score: 72 },
 ];
 
-const SOURCES = [
+const FALLBACK_SOURCES = [
   "Xiaohongshu (小红书)",
   "Douyin (抖音)",
   "QuestMobile",
@@ -42,14 +48,169 @@ const SOURCES = [
   "National Bureau of Statistics of China",
   "Tmall Global Insights",
 ];
-const LAST_UPDATED = "2026.07.01";
+const FALLBACK_SUMMARY =
+  "The K-beauty skincare market in China continues to grow at double-digit rates, driven by ingredient-focused consumers and accelerating demand in Tier-1 cities. Over the last 30 days, Xiaohongshu discussions around glass skin and sensitive skin care have increased significantly, while Douyin live commerce for Korean derma brands posted record GMV. Premium positioning at ¥350–¥450 basket size remains the strongest opportunity for new entrants.";
 
 function MarketInsightPage() {
   const { t } = useI18n();
+  const { activeWorkspace, activeProject } = useWorkspace();
+  const ai = useAIJob();
+  const [history, setHistory] = useState<AIJob[]>([]);
+  const [selectedJob, setSelectedJob] = useState<AIJob | null>(null);
+
+  const refreshHistory = useCallback(async () => {
+    if (!activeWorkspace?.id) return;
+    try {
+      const list = await listJobs({
+        workspaceId: activeWorkspace.id,
+        projectId: activeProject?.id || null,
+        module: "market",
+        limit: 25,
+      });
+      setHistory(list);
+      if (!selectedJob && !ai.isRunning) {
+        const completed = list.find((j) => j.status === "completed");
+        if (completed) setSelectedJob(completed);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }, [activeWorkspace?.id, activeProject?.id, selectedJob, ai.isRunning]);
+
+  useEffect(() => {
+    refreshHistory();
+    // Re-select on project switch
+    setSelectedJob(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeWorkspace?.id, activeProject?.id]);
+
+  useEffect(() => {
+    if (ai.status === "completed") {
+      toast.success("Market Insight generated");
+      refreshHistory();
+      if (ai.job) setSelectedJob(ai.job);
+    } else if (ai.status === "failed") {
+      toast.error(ai.error || "Generation failed");
+    } else if (ai.status === "cancelled") {
+      toast.message("Generation cancelled");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ai.status]);
+
+  const buildPrompt = useCallback(() => {
+    const p = activeProject;
+    return `Generate a China market insight for the brand "${p?.name ?? "(unknown)"}" (industry: ${p?.industry ?? "n/a"}, region: ${p?.region ?? "n/a"}). Cover market summary, AI confidence, sources, trending keywords, and regional demand.`;
+  }, [activeProject]);
+
+  const generate = useCallback(() => {
+    ai.run({ module: "market", prompt: buildPrompt() });
+  }, [ai, buildPrompt]);
+
+  // Merge live AI data with the selected/persisted job's data for display.
+  const displayed = useMemo(() => {
+    // While running, prefer live state
+    if (ai.isRunning || ai.status === "completed" && !selectedJob) {
+      const d = ai.data || {};
+      return {
+        summary: ai.output || (d.summary as string | undefined) || "",
+        confidence: (d.confidence as number | undefined) ?? null,
+        sources: (d.sources as string[] | undefined) ?? [],
+        keywords: (d.keywords as typeof FALLBACK_KEYWORDS | undefined) ?? [],
+        regions: (d.regions as typeof FALLBACK_REGIONS | undefined) ?? [],
+        updatedAt: null as string | null,
+        live: true as const,
+      };
+    }
+    if (selectedJob) {
+      const d = (selectedJob.output_data ?? {}) as Record<string, unknown>;
+      return {
+        summary: selectedJob.output || (d.summary as string | undefined) || "",
+        confidence: (d.confidence as number | undefined) ?? null,
+        sources: (d.sources as string[] | undefined) ?? [],
+        keywords: (d.keywords as typeof FALLBACK_KEYWORDS | undefined) ?? [],
+        regions: (d.regions as typeof FALLBACK_REGIONS | undefined) ?? [],
+        updatedAt: selectedJob.completed_at || selectedJob.created_at,
+        live: false as const,
+      };
+    }
+    return {
+      summary: FALLBACK_SUMMARY,
+      confidence: 96 as number | null,
+      sources: FALLBACK_SOURCES,
+      keywords: FALLBACK_KEYWORDS,
+      regions: FALLBACK_REGIONS,
+      updatedAt: null,
+      live: false as const,
+    };
+  }, [ai.isRunning, ai.status, ai.output, ai.data, selectedJob]);
+
+  const sources = displayed.sources.length ? displayed.sources : FALLBACK_SOURCES;
+  const keywords = displayed.keywords.length ? displayed.keywords : FALLBACK_KEYWORDS;
+  const regions = displayed.regions.length ? displayed.regions : FALLBACK_REGIONS;
+  const confidence = displayed.confidence ?? 96;
+  const lastUpdated = displayed.updatedAt
+    ? new Date(displayed.updatedAt).toLocaleString()
+    : ai.isRunning ? "Generating…" : "—";
+
+  const onOpenJob = async (id: string) => {
+    const j = await getJob(id);
+    if (j) setSelectedJob(j);
+  };
+  const onDeleteJob = async (id: string) => {
+    try {
+      await deleteJob(id);
+      toast.success("Deleted");
+      if (selectedJob?.id === id) setSelectedJob(null);
+      refreshHistory();
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  };
+
   return (
     <div>
       <ProjectContextBar />
       <PageHeader title={t("market.title")} description={t("market.sub")} />
+      {/* AI Action Bar */}
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[var(--border)] bg-[var(--background)] p-3 shadow-[var(--shadow-soft)]">
+        <div className="flex items-center gap-2 text-xs text-[var(--muted-foreground)]">
+          <Sparkles className="h-3.5 w-3.5 text-[var(--primary)]" />
+          <span>
+            {ai.isRunning
+              ? <>Status: <span className="font-medium text-[var(--foreground)]">{ai.status}</span>{ai.phase ? <> · phase: <span className="font-medium text-[var(--foreground)]">{ai.phase}</span></> : null}</>
+              : selectedJob
+                ? <>Showing generation from <span className="font-medium text-[var(--foreground)]">{lastUpdated}</span></>
+                : <>No generation yet for this project — showing baseline market data.</>}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          {ai.isRunning ? (
+            <button
+              onClick={ai.cancel}
+              className="inline-flex items-center gap-1.5 rounded-md border border-[var(--border)] bg-[var(--background)] px-3 py-1.5 text-xs font-medium hover:bg-[var(--muted)]/60"
+            >
+              <Square className="h-3 w-3" /> Cancel
+            </button>
+          ) : null}
+          {ai.status === "failed" || ai.status === "cancelled" ? (
+            <button
+              onClick={generate}
+              className="inline-flex items-center gap-1.5 rounded-md border border-[var(--border)] bg-[var(--background)] px-3 py-1.5 text-xs font-medium hover:bg-[var(--muted)]/60"
+            >
+              <RotateCw className="h-3 w-3" /> Retry
+            </button>
+          ) : null}
+          <button
+            onClick={generate}
+            disabled={ai.isRunning || !activeWorkspace?.id}
+            className="inline-flex items-center gap-1.5 rounded-md bg-[var(--primary)] px-3 py-1.5 text-xs font-medium text-white shadow-[var(--shadow-soft)] hover:opacity-90 disabled:opacity-50"
+          >
+            {ai.isRunning ? <Loader2 className="h-3 w-3 animate-spin" /> : <Play className="h-3 w-3" />}
+            {ai.isRunning ? "Generating…" : "Generate Market Insight"}
+          </button>
+        </div>
+      </div>
+
       <div className="space-y-8">
         {/* AI Market Summary */}
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-6 shadow-[var(--shadow-soft)]">
@@ -60,30 +221,31 @@ function MarketInsightPage() {
               </span>
               <h3 className="text-sm font-semibold">AI Market Summary</h3>
               <span className="rounded-full border border-[var(--border)] px-2 py-0.5 text-[10px] font-medium text-[var(--muted-foreground)]">
-                Generated · {LAST_UPDATED}
+                Generated · {lastUpdated}
               </span>
+              {ai.isRunning ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-[var(--primary-soft,var(--muted))] px-2 py-0.5 text-[10px] font-medium text-[var(--primary)]">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[var(--primary)] animate-pulse" /> Live
+                </span>
+              ) : null}
             </div>
             <div className="flex items-center gap-2 text-xs">
               <span className="inline-flex items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--muted)]/40 px-2 py-1 font-medium">
                 <ShieldCheck className="h-3 w-3 text-[oklch(0.55_0.14_150)]" />
-                AI Confidence <span className="tabular-nums text-[var(--foreground)]">96%</span>
+                AI Confidence <span className="tabular-nums text-[var(--foreground)]">{confidence}%</span>
               </span>
             </div>
           </div>
-          <p className="mt-4 text-sm leading-relaxed text-[var(--foreground)]/85">
-            The K-beauty skincare market in China continues to grow at double-digit rates, driven by
-            ingredient-focused consumers and accelerating demand in Tier-1 cities. Over the last 30 days,
-            Xiaohongshu discussions around <span className="font-medium">glass skin</span> and
-            <span className="font-medium"> sensitive skin</span> care have increased significantly, while
-            Douyin live commerce for Korean derma brands posted record GMV. Premium positioning at
-            ¥350–¥450 basket size remains the strongest opportunity for new entrants.
+          <p className="mt-4 whitespace-pre-wrap text-sm leading-relaxed text-[var(--foreground)]/85">
+            {displayed.summary || (ai.isRunning ? "" : FALLBACK_SUMMARY)}
+            {ai.isRunning ? <span className="ml-0.5 inline-block h-3 w-1.5 translate-y-0.5 animate-pulse bg-[var(--primary)]" /> : null}
           </p>
           <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-[var(--border)] pt-3 text-[11px] text-[var(--muted-foreground)]">
             <span className="inline-flex items-center gap-1"><Database className="h-3 w-3" /> Sources:</span>
-            {SOURCES.map((s) => (
+            {sources.map((s) => (
               <span key={s} className="rounded-md bg-[var(--muted)]/60 px-1.5 py-0.5">{s}</span>
             ))}
-            <span className="ml-auto inline-flex items-center gap-1"><Clock className="h-3 w-3" /> Last updated {LAST_UPDATED}</span>
+            <span className="ml-auto inline-flex items-center gap-1"><Clock className="h-3 w-3" /> Last updated {lastUpdated}</span>
           </div>
         </div>
 
@@ -122,7 +284,7 @@ function MarketInsightPage() {
               </div>
               <div className="flex items-center gap-2">
                 <span className="rounded-full bg-[var(--muted)]/60 px-2 py-0.5 text-[10px] font-medium text-[var(--muted-foreground)]">
-                  AI Confidence 94%
+                  AI Confidence {confidence}%
                 </span>
                 <span className="inline-flex items-center gap-1 text-xs font-medium text-[oklch(0.55_0.14_150)]"><TrendingUp className="h-3 w-3" />+18.4%</span>
               </div>
@@ -144,7 +306,7 @@ function MarketInsightPage() {
               </ResponsiveContainer>
             </div>
             <p className="mt-3 text-[10px] text-[var(--muted-foreground)]">
-              Source: QuestMobile, Tmall Global Insights · Last updated {LAST_UPDATED}
+              Source: QuestMobile, Tmall Global Insights · Last updated {lastUpdated}
             </p>
           </div>
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-6 shadow-[var(--shadow-soft)]">
@@ -154,7 +316,7 @@ function MarketInsightPage() {
                 <h3 className="text-sm font-semibold">{t("market.keywords")}</h3>
               </div>
               <span className="rounded-full bg-[var(--muted)]/60 px-2 py-0.5 text-[10px] font-medium text-[var(--muted-foreground)]">
-                AI Confidence 93%
+                AI Confidence {confidence}%
               </span>
             </div>
             <div className="grid grid-cols-[1.6rem_1fr_auto] gap-x-3 gap-y-3 text-xs">
@@ -166,7 +328,7 @@ function MarketInsightPage() {
               ))}
             </div>
             <p className="mt-4 text-[10px] text-[var(--muted-foreground)]">
-              Source: Xiaohongshu, Douyin, Weibo, Tmall · {LAST_UPDATED}
+              Source: Xiaohongshu, Douyin, Weibo, Tmall · {lastUpdated}
             </p>
           </div>
         </div>
@@ -178,7 +340,7 @@ function MarketInsightPage() {
               <h3 className="text-sm font-semibold">{t("market.regions")}</h3>
             </div>
             <span className="rounded-full bg-[var(--muted)]/60 px-2 py-0.5 text-[10px] font-medium text-[var(--muted-foreground)]">
-              AI Confidence 95%
+              AI Confidence {confidence}%
             </span>
           </div>
           <div className="grid gap-6 lg:grid-cols-5">
@@ -204,8 +366,90 @@ function MarketInsightPage() {
             </div>
           </div>
           <p className="mt-4 text-[10px] text-[var(--muted-foreground)]">
-            Source: National Bureau of Statistics of China, QuestMobile · {LAST_UPDATED}
+            Source: National Bureau of Statistics of China, QuestMobile · {lastUpdated}
           </p>
+        </div>
+
+        {/* Activity feed + History */}
+        <div className="grid gap-4 lg:grid-cols-2">
+          <div className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-6 shadow-[var(--shadow-soft)]">
+            <div className="mb-3 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Activity className="h-4 w-4 text-[var(--primary)]" />
+                <h3 className="text-sm font-semibold">AI Activity</h3>
+              </div>
+              {ai.isRunning ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-[var(--primary-soft,var(--muted))] px-2 py-0.5 text-[10px] font-medium text-[var(--primary)]">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[var(--primary)] animate-pulse" /> Live
+                </span>
+              ) : null}
+            </div>
+            {ai.events.length === 0 ? (
+              <p className="text-xs text-[var(--muted-foreground)]">Run a generation to see live AI activity.</p>
+            ) : (
+              <ul className="max-h-80 divide-y divide-[var(--border)] overflow-y-auto">
+                {ai.events.map((e, i) => {
+                  const isLast = i === ai.events.length - 1 && ai.isRunning;
+                  return (
+                    <li key={i} className="flex items-start gap-3 py-2 text-[13px]">
+                      <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-md bg-[var(--muted)] text-[var(--muted-foreground)]">
+                        {isLast ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-3 w-3" />}
+                      </span>
+                      <span className="w-16 shrink-0 font-mono text-[10px] text-[var(--muted-foreground)]">
+                        {new Date(e.ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+                      </span>
+                      <span className="min-w-0 flex-1">{e.label}</span>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+
+          <div className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-6 shadow-[var(--shadow-soft)]">
+            <div className="mb-3 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <HistoryIcon className="h-4 w-4 text-[var(--primary)]" />
+                <h3 className="text-sm font-semibold">Generation History</h3>
+              </div>
+              <span className="text-[11px] text-[var(--muted-foreground)] tabular-nums">{history.length}</span>
+            </div>
+            {history.length === 0 ? (
+              <p className="text-xs text-[var(--muted-foreground)]">No previous generations for this project yet.</p>
+            ) : (
+              <ul className="max-h-80 divide-y divide-[var(--border)] overflow-y-auto">
+                {history.map((j) => (
+                  <li key={j.id} className="flex items-center gap-3 py-2">
+                    <button
+                      onClick={() => onOpenJob(j.id)}
+                      className={`min-w-0 flex-1 text-left ${selectedJob?.id === j.id ? "text-[var(--primary)]" : ""}`}
+                    >
+                      <p className="truncate text-xs font-medium">
+                        {new Date(j.created_at).toLocaleString()}
+                      </p>
+                      <p className="truncate text-[11px] text-[var(--muted-foreground)]">
+                        {j.status} · {j.provider}
+                      </p>
+                    </button>
+                    <button
+                      onClick={generate}
+                      title="Generate again"
+                      className="rounded-md border border-[var(--border)] p-1.5 hover:bg-[var(--muted)]/60"
+                    >
+                      <RotateCw className="h-3 w-3" />
+                    </button>
+                    <button
+                      onClick={() => onDeleteJob(j.id)}
+                      title="Delete"
+                      className="rounded-md border border-[var(--border)] p-1.5 text-[oklch(0.55_0.18_25)] hover:bg-[var(--muted)]/60"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
       </div>
       <WorkflowFooter current="research" />
