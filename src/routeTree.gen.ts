@@ -18,6 +18,7 @@ import { Route as AppStartRouteImport } from './routes/_app.start'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
 import { Route as AppReportRouteImport } from './routes/_app.report'
 import { Route as AppProjectsRouteImport } from './routes/_app.projects'
+import { Route as AppLocalizationStudioRouteImport } from './routes/_app.localization-studio'
 import { Route as AppConsumerInsightRouteImport } from './routes/_app.consumer-insight'
 import { Route as AppChinaMarketInsightRouteImport } from './routes/_app.china-market-insight'
 import { Route as AppProjectsProjectIdRouteImport } from './routes/_app.projects.$projectId'
@@ -66,6 +67,11 @@ const AppProjectsRoute = AppProjectsRouteImport.update({
   path: '/projects',
   getParentRoute: () => AppRoute,
 } as any)
+const AppLocalizationStudioRoute = AppLocalizationStudioRouteImport.update({
+  id: '/localization-studio',
+  path: '/localization-studio',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppConsumerInsightRoute = AppConsumerInsightRouteImport.update({
   id: '/consumer-insight',
   path: '/consumer-insight',
@@ -89,6 +95,7 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/china-market-insight': typeof AppChinaMarketInsightRoute
   '/consumer-insight': typeof AppConsumerInsightRoute
+  '/localization-studio': typeof AppLocalizationStudioRoute
   '/projects': typeof AppProjectsRouteWithChildren
   '/report': typeof AppReportRoute
   '/settings': typeof AppSettingsRoute
@@ -101,6 +108,7 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/china-market-insight': typeof AppChinaMarketInsightRoute
   '/consumer-insight': typeof AppConsumerInsightRoute
+  '/localization-studio': typeof AppLocalizationStudioRoute
   '/projects': typeof AppProjectsRouteWithChildren
   '/report': typeof AppReportRoute
   '/settings': typeof AppSettingsRoute
@@ -116,6 +124,7 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/_app/china-market-insight': typeof AppChinaMarketInsightRoute
   '/_app/consumer-insight': typeof AppConsumerInsightRoute
+  '/_app/localization-studio': typeof AppLocalizationStudioRoute
   '/_app/projects': typeof AppProjectsRouteWithChildren
   '/_app/report': typeof AppReportRoute
   '/_app/settings': typeof AppSettingsRoute
@@ -132,6 +141,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/china-market-insight'
     | '/consumer-insight'
+    | '/localization-studio'
     | '/projects'
     | '/report'
     | '/settings'
@@ -144,6 +154,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/china-market-insight'
     | '/consumer-insight'
+    | '/localization-studio'
     | '/projects'
     | '/report'
     | '/settings'
@@ -158,6 +169,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/_app/china-market-insight'
     | '/_app/consumer-insight'
+    | '/_app/localization-studio'
     | '/_app/projects'
     | '/_app/report'
     | '/_app/settings'
@@ -238,6 +250,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProjectsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/localization-studio': {
+      id: '/_app/localization-studio'
+      path: '/localization-studio'
+      fullPath: '/localization-studio'
+      preLoaderRoute: typeof AppLocalizationStudioRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/consumer-insight': {
       id: '/_app/consumer-insight'
       path: '/consumer-insight'
@@ -277,6 +296,7 @@ const AppProjectsRouteWithChildren = AppProjectsRoute._addFileChildren(
 interface AppRouteChildren {
   AppChinaMarketInsightRoute: typeof AppChinaMarketInsightRoute
   AppConsumerInsightRoute: typeof AppConsumerInsightRoute
+  AppLocalizationStudioRoute: typeof AppLocalizationStudioRoute
   AppProjectsRoute: typeof AppProjectsRouteWithChildren
   AppReportRoute: typeof AppReportRoute
   AppSettingsRoute: typeof AppSettingsRoute
@@ -287,6 +307,7 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppChinaMarketInsightRoute: AppChinaMarketInsightRoute,
   AppConsumerInsightRoute: AppConsumerInsightRoute,
+  AppLocalizationStudioRoute: AppLocalizationStudioRoute,
   AppProjectsRoute: AppProjectsRouteWithChildren,
   AppReportRoute: AppReportRoute,
   AppSettingsRoute: AppSettingsRoute,
