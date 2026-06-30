@@ -454,6 +454,9 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     refreshWorkspaces,
     refreshMembers,
     refreshProjects,
+    createProject,
+    updateProject,
+    deleteProject,
   };
 
   return <WorkspaceCtx.Provider value={value}>{children}</WorkspaceCtx.Provider>;
