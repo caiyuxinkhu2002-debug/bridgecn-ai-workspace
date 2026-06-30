@@ -150,7 +150,7 @@ export function useAIJob() {
       setState((s) => ({ ...s, status: "failed", error: (e as Error)?.message || "Unknown error", isRunning: false }));
     }
     return finalJob;
-  }, [user, activeWorkspace?.id, activeProject?.id]);
+  }, [user, activeWorkspace?.id, activeProject]);
 
   const reset = useCallback(() => {
     setState({ status: "idle", phase: null, output: "", error: null, job: null, isRunning: false, data: {}, events: [] });
