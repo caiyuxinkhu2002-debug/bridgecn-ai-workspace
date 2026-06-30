@@ -215,7 +215,11 @@ function MarketInsightPage() {
             </div>
           </div>
           <p className="mt-4 whitespace-pre-wrap text-sm leading-relaxed text-[var(--foreground)]/85">
-            {displayed.summary || (ai.isRunning ? "" : FALLBACK_SUMMARY)}
+            {displayed.summary || (
+              <span className="text-[var(--muted-foreground)]">
+                {ai.isRunning ? "" : t("market.history.empty")}
+              </span>
+            )}
             {ai.isRunning ? <span className="ml-0.5 inline-block h-3 w-1.5 translate-y-0.5 animate-pulse bg-[var(--primary)]" /> : null}
           </p>
           <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-[var(--border)] pt-3 text-[11px] text-[var(--muted-foreground)]">
