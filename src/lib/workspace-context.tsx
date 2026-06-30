@@ -5,6 +5,21 @@ import type { User } from "@supabase/supabase-js";
 
 export type Workspace = { id: string; name: string; plan: string; region: string; logo_url: string | null };
 
+export type KnowledgeBase = {
+  company?: string;
+  industry?: string;
+  category?: string;
+  products?: string[];
+  brandStory?: string;
+  brandTone?: string[];
+  keywords?: string[];
+  competitors?: string[];
+  targetAudience?: string;
+  koreanCopy?: string;
+  website?: string;
+  socialChannels?: { label: string; url: string }[];
+};
+
 export type Project = {
   id: string;
   workspaceId: string;
@@ -21,6 +36,8 @@ export type Project = {
   description: string;
   targetMarket: string;
   archived: boolean;
+  website: string;
+  knowledgeBase: KnowledgeBase;
 };
 
 export type Profile = {
@@ -185,6 +202,8 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       description?: string | null;
       target_market?: string | null;
       updated_at: string;
+      website?: string | null;
+      knowledge_base?: unknown;
     }): Project => ({
       id: r.id,
       workspaceId: r.workspace_id,
@@ -201,6 +220,8 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       description: r.description || "",
       targetMarket: r.target_market || "",
       archived: Boolean((r as { archived_at?: string | null }).archived_at),
+      website: r.website || "",
+      knowledgeBase: (r.knowledge_base && typeof r.knowledge_base === "object" ? r.knowledge_base : {}) as KnowledgeBase,
     }),
     [],
   );
