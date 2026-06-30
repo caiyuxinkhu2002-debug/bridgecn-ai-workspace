@@ -7,7 +7,6 @@ import { CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/forgot-password")({
-  ssr: false,
   head: () => ({ meta: [{ title: "Forgot password — BridgeCN AI" }] }),
   component: ForgotPage,
 });

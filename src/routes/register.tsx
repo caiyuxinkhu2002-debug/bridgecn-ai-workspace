@@ -6,7 +6,6 @@ import { AuthLayout, Divider, Field, SocialButtons } from "@/components/auth-lay
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/register")({
-  ssr: false,
   head: () => ({ meta: [{ title: "Create account — BridgeCN AI" }] }),
   component: RegisterPage,
 });
