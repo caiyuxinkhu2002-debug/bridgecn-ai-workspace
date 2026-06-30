@@ -314,6 +314,78 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     await supabase.from("projects").update({ stage: s }).eq("id", activeProjectId);
   }, [activeProjectId]);
 
+  const createProject = useCallback(
+    async (input: { name: string; industry?: string; targetMarket?: string; description?: string }): Promise<Project | null> => {
+      if (!workspaceId) return null;
+      const name = input.name.trim();
+      if (!name) return null;
+      const { data, error } = await supabase
+        .from("projects")
+        .insert({
+          workspace_id: workspaceId,
+          name,
+          initials: initialsOf(name),
+          industry: input.industry?.trim() || null,
+          region: input.targetMarket?.trim() || null,
+          target_market: input.targetMarket?.trim() || null,
+          description: input.description?.trim() || null,
+          summary: input.description?.trim() || null,
+          owner_name: profile?.name || null,
+          created_by: user?.id || null,
+          stage: "research",
+          progress: 0,
+        })
+        .select("*")
+        .maybeSingle();
+      if (error || !data) return null;
+      const mapped = mapProject(data);
+      setProjectsState((list) => [...list, mapped]);
+      setActiveProjectIdState(mapped.id);
+      try { localStorage.setItem(AP_KEY, mapped.id); } catch { /* ignore */ }
+      return mapped;
+    },
+    [workspaceId, profile?.name, user?.id, mapProject],
+  );
+
+  const updateProject = useCallback(
+    async (id: string, patch: Partial<{ name: string; industry: string; region: string; targetMarket: string; description: string; summary: string; stage: Stage }>) => {
+      const dbPatch: Record<string, unknown> = {};
+      if (patch.name !== undefined) { dbPatch.name = patch.name.trim(); dbPatch.initials = initialsOf(patch.name); }
+      if (patch.industry !== undefined) dbPatch.industry = patch.industry.trim() || null;
+      if (patch.region !== undefined) dbPatch.region = patch.region.trim() || null;
+      if (patch.targetMarket !== undefined) {
+        dbPatch.target_market = patch.targetMarket.trim() || null;
+        dbPatch.region = patch.targetMarket.trim() || null;
+      }
+      if (patch.description !== undefined) {
+        dbPatch.description = patch.description.trim() || null;
+        dbPatch.summary = patch.description.trim() || null;
+      }
+      if (patch.summary !== undefined) dbPatch.summary = patch.summary.trim() || null;
+      if (patch.stage !== undefined) dbPatch.stage = patch.stage;
+      const { error } = await supabase.from("projects").update(dbPatch).eq("id", id);
+      if (error) throw error;
+      await refreshProjects();
+    },
+    [refreshProjects],
+  );
+
+  const deleteProject = useCallback(
+    async (id: string) => {
+      const { error } = await supabase.from("projects").update({ deleted_at: new Date().toISOString() }).eq("id", id);
+      if (error) throw error;
+      setProjectsState((list) => list.filter((p) => p.id !== id));
+      if (activeProjectId === id) {
+        const next = projectsState.find((p) => p.id !== id);
+        if (next) {
+          setActiveProjectIdState(next.id);
+          try { localStorage.setItem(AP_KEY, next.id); } catch { /* ignore */ }
+        }
+      }
+    },
+    [activeProjectId, projectsState],
+  );
+
   const markAllRead = useCallback(() => {
     setNotifications((n) => n.map((x) => ({ ...x, read: true })));
     try { localStorage.setItem(NR_KEY, "1"); } catch { /* ignore */ }
