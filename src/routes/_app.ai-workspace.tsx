@@ -31,6 +31,9 @@ function AIWorkspacePage() {
   const { t } = useI18n();
   const { activeProject } = useWorkspace();
 
+  // Sprint 9: pipeline steps stay as a generic workflow template
+  // (no brand-specific content). All progress is "pending" until the
+  // AI engine is wired to populate per-project status.
   const steps: {
     key: string;
     icon: typeof LineChart;
@@ -38,23 +41,19 @@ function AIWorkspacePage() {
     progress: number;
     minutes: number;
   }[] = [
-    { key: "market", icon: LineChart, status: "completed", progress: 100, minutes: 4 },
-    { key: "consumer", icon: Users, status: "running", progress: 62, minutes: 6 },
+    { key: "market", icon: LineChart, status: "pending", progress: 0, minutes: 4 },
+    { key: "consumer", icon: Users, status: "pending", progress: 0, minutes: 6 },
     { key: "localization", icon: Languages, status: "pending", progress: 0, minutes: 5 },
     { key: "compliance", icon: ShieldCheck, status: "pending", progress: 0, minutes: 3 },
     { key: "launch", icon: Rocket, status: "pending", progress: 0, minutes: 7 },
     { key: "report", icon: FileBarChart, status: "pending", progress: 0, minutes: 4 },
   ];
 
-  const activityKeys = Array.from({ length: 15 }, (_, i) => `aiws.activity.${i + 1}`);
-  // Stable, deterministic timestamps so SSR / hydration matches.
-  const baseMinutes = 9 * 60 + 12; // 09:12
-  const times = activityKeys.map((_, i) => {
-    const m = (baseMinutes + i * 2) % (24 * 60);
-    const hh = Math.floor(m / 60).toString().padStart(2, "0");
-    const mm = (m % 60).toString().padStart(2, "0");
-    return `${hh}:${mm}`;
-  });
+  // Sprint 9: activity log and AI outputs are project-driven; with no
+  // active job they render empty states instead of demo content.
+  const activityKeys: string[] = [];
+  const times: string[] = [];
+  const hasOutputs = false;
 
   // Subtle pulse for the "running" indicator only — no other animation.
   const [pulse, setPulse] = useState(0);
@@ -184,6 +183,9 @@ function AIWorkspacePage() {
               </span>
             }
           />
+          {activityKeys.length === 0 ? (
+            <p className="px-4 py-8 text-center text-xs text-[var(--muted-foreground)]">{t("common.empty")}</p>
+          ) : (
           <ul className="max-h-[640px] divide-y divide-[var(--border)] overflow-y-auto">
             {activityKeys.map((k, i) => {
               const isLast = i === activityKeys.length - 1;
@@ -212,6 +214,7 @@ function AIWorkspacePage() {
               );
             })}
           </ul>
+          )}
         </section>
 
         {/* RIGHT */}
@@ -222,25 +225,9 @@ function AIWorkspacePage() {
             sub={t("aiws.right.sub")}
           />
           <div className="space-y-3 p-3">
-            <OutputCard icon={LineChart} titleKey="aiws.out.summary" bodyKey="aiws.out.summary.body" />
-            <OutputCard icon={Users} titleKey="aiws.out.persona" bodyKey="aiws.out.persona.body" />
-            <OutputCard
-              icon={Languages}
-              titleKey="aiws.out.localization"
-              bodyKey="aiws.out.localization.body"
-            />
-            <OutputCard icon={Rocket} titleKey="aiws.out.launch" bodyKey="aiws.out.launch.body" />
-            <OutputCard
-              icon={ShieldCheck}
-              titleKey="aiws.out.confidence"
-              bodyKey="aiws.out.confidence.body"
-              meta="94%"
-            />
-            <OutputCard
-              icon={Database}
-              titleKey="aiws.out.sources"
-              bodyKey="aiws.out.sources.body"
-            />
+            {hasOutputs ? null : (
+              <p className="px-1 py-8 text-center text-xs text-[var(--muted-foreground)]">{t("common.empty")}</p>
+            )}
           </div>
         </section>
       </div>
