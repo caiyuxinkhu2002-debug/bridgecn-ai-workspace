@@ -4,7 +4,11 @@ import { ProjectContextBar } from "@/components/project-context-bar";
 import { WorkflowFooter } from "@/components/workflow-footer";
 import { useI18n } from "@/lib/i18n";
 import { useWorkspace } from "@/lib/workspace-context";
-import { Circle } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Circle, CheckCircle2, Loader2, Sparkles, Play } from "lucide-react";
+import { listChecklist, seedChecklist, toggleChecklistItem, type ChecklistItem } from "@/lib/checklist.functions";
+import { useAIJob } from "@/lib/ai/use-ai-job";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/launch-checklist")({
   head: () => ({ meta: [{ title: "Launch Checklist — BridgeCN AI" }] }),
@@ -15,49 +19,168 @@ export const Route = createFileRoute("/_app/launch-checklist")({
 // AI engine wires checklist generation, items will come from the active
 // project's AI jobs and Knowledge Base.
 // i18n-only template — every label is a translation key.
-const TEMPLATE_PHASES: { nameKey: string; itemKeys: string[] }[] = [
-  { nameKey: "launch.phase.research", itemKeys: ["launch.item.sizing", "launch.item.competitors", "launch.item.personas"] },
-  { nameKey: "launch.phase.localization", itemKeys: ["launch.item.names", "launch.item.pdp", "launch.item.regulatory", "launch.item.landing"] },
-  { nameKey: "launch.phase.launch", itemKeys: ["launch.item.seeding", "launch.item.flagship", "launch.item.live", "launch.item.review"] },
+// Fallback template — only used if AI generation hasn't run yet AND the
+// project still has no persisted checklist rows. Real items are generated
+// by Lovable AI tailored to the project's category and target market.
+const FALLBACK_PHASES = [
+  { key: "research", name: "Research", items: [
+    { key: "research.sizing", label: "Validate market sizing for the target market" },
+    { key: "research.competitors", label: "Audit top competitors and whitespace" },
+    { key: "research.personas", label: "Confirm target personas" },
+  ]},
+  { key: "localization", name: "Localization", items: [
+    { key: "loc.names", label: "Localize product / brand names" },
+    { key: "loc.pdp", label: "Translate product detail pages" },
+    { key: "loc.regulatory", label: "Pass regulatory / labeling review" },
+    { key: "loc.landing", label: "Build localized landing page" },
+  ]},
+  { key: "launch", name: "Launch", items: [
+    { key: "launch.seeding", label: "KOC / influencer seeding" },
+    { key: "launch.flagship", label: "Open flagship store on primary channel" },
+    { key: "launch.live", label: "Go live with launch campaign" },
+    { key: "launch.review", label: "30-day post-launch review" },
+  ]},
 ];
 
 function LaunchChecklistPage() {
   const { t } = useI18n();
   const { activeProject } = useWorkspace();
   const hasProject = Boolean(activeProject?.id);
+  const ai = useAIJob();
+  const [items, setItems] = useState<ChecklistItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [seeding, setSeeding] = useState(false);
+
+  const refresh = useCallback(async () => {
+    if (!activeProject?.id) { setItems([]); return; }
+    setLoading(true);
+    try {
+      const rows = await listChecklist({ data: { projectId: activeProject.id } });
+      setItems(rows);
+      if (rows.length === 0) {
+        // First time on this project: seed from the fallback template so the
+        // user sees something usable immediately. Generate AI version on demand.
+        setSeeding(true);
+        await seedChecklist({ data: { projectId: activeProject.id, phases: FALLBACK_PHASES } });
+        const seeded = await listChecklist({ data: { projectId: activeProject.id } });
+        setItems(seeded);
+        setSeeding(false);
+      }
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }, [activeProject?.id]);
+
+  useEffect(() => { refresh(); }, [refresh]);
+
+  const onToggle = useCallback(async (item: ChecklistItem) => {
+    const next = !item.checked;
+    // optimistic
+    setItems((list) => list.map((x) => x.id === item.id ? { ...x, checked: next } : x));
+    try {
+      await toggleChecklistItem({ data: { id: item.id, checked: next } });
+    } catch (e) {
+      setItems((list) => list.map((x) => x.id === item.id ? { ...x, checked: item.checked } : x));
+      toast.error((e as Error).message);
+    }
+  }, []);
+
+  const onGenerate = useCallback(async () => {
+    if (!activeProject?.id) return;
+    await ai.run({ module: "launch", prompt: `Generate launch checklist for ${activeProject.name}` });
+  }, [ai, activeProject?.id, activeProject?.name]);
+
+  // When AI returns phases, persist them as new checklist items.
+  useEffect(() => {
+    async function syncFromAI() {
+      if (ai.status !== "completed" || !activeProject?.id) return;
+      const phases = (ai.data?.phases as { key: string; name: string; items: { key: string; label: string }[] }[] | undefined);
+      if (!phases || phases.length === 0) return;
+      try {
+        await seedChecklist({ data: { projectId: activeProject.id, phases } });
+        await refresh();
+        toast.success(t("launch.toast.generated") || "Checklist generated");
+      } catch (e) { toast.error((e as Error).message); }
+    }
+    syncFromAI();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ai.status]);
+
+  const phases = useMemo(() => {
+    const grouped = new Map<string, ChecklistItem[]>();
+    for (const it of items) {
+      const arr = grouped.get(it.phase_key) ?? [];
+      arr.push(it);
+      grouped.set(it.phase_key, arr);
+    }
+    return Array.from(grouped.entries()).map(([key, list]) => ({
+      key,
+      name: list[0]?.phase_key ?? key,
+      items: list,
+      done: list.filter((x) => x.checked).length,
+      total: list.length,
+    }));
+  }, [items]);
 
   return (
     <div>
       <ProjectContextBar />
       <PageHeader title={t("launch.title")} description={t("launch.sub")} />
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[var(--border)] bg-[var(--background)] p-3 shadow-[var(--shadow-soft)]">
+        <div className="flex items-center gap-2 text-xs text-[var(--muted-foreground)]">
+          <Sparkles className="h-3.5 w-3.5 text-[var(--primary)]" />
+          <span>{ai.isRunning ? t("common.generating") : `${items.filter((x) => x.checked).length} / ${items.length} complete`}</span>
+        </div>
+        <button
+          onClick={onGenerate}
+          disabled={ai.isRunning || !hasProject}
+          className="inline-flex items-center gap-1.5 rounded-md bg-[var(--primary)] px-3 py-1.5 text-xs font-medium text-white shadow-[var(--shadow-soft)] hover:opacity-90 disabled:opacity-50"
+        >
+          {ai.isRunning ? <Loader2 className="h-3 w-3 animate-spin" /> : <Play className="h-3 w-3" />}
+          {ai.isRunning ? t("common.generating") : "Generate with AI"}
+        </button>
+      </div>
       {!hasProject ? (
         <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--background)] p-10 text-center text-sm text-[var(--muted-foreground)]">
           {t("common.empty")}
         </div>
+      ) : loading || seeding ? (
+        <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--background)] p-10 text-center text-xs text-[var(--muted-foreground)]">
+          <Loader2 className="mx-auto h-5 w-5 animate-spin text-[var(--primary)]" />
+        </div>
       ) : (
         <div className="space-y-6">
-          {TEMPLATE_PHASES.map((p) => (
-            <div key={p.nameKey} className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--background)] shadow-[var(--shadow-soft)]">
-              <div className="flex items-center justify-between gap-4 border-b border-[var(--border)] px-6 py-4">
-                <div>
-                  <h3 className="text-sm font-semibold">{t(p.nameKey)}</h3>
-                  <p className="mt-0.5 text-xs text-[var(--muted-foreground)]">0 / {p.itemKeys.length} {t("launch.complete")}</p>
+          {phases.map((p) => {
+            const pct = p.total > 0 ? Math.round((p.done / p.total) * 100) : 0;
+            return (
+              <div key={p.key} className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--background)] shadow-[var(--shadow-soft)]">
+                <div className="flex items-center justify-between gap-4 border-b border-[var(--border)] px-6 py-4">
+                  <div>
+                    <h3 className="text-sm font-semibold capitalize">{p.name}</h3>
+                    <p className="mt-0.5 text-xs text-[var(--muted-foreground)]">{p.done} / {p.total} {t("launch.complete")}</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="h-1.5 w-40 overflow-hidden rounded-full bg-[var(--muted)]"><div className="h-full rounded-full bg-[var(--primary)]" style={{ width: `${pct}%` }} /></div>
+                    <span className="text-xs tabular-nums text-[var(--muted-foreground)]">{pct}%</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="h-1.5 w-40 overflow-hidden rounded-full bg-[var(--muted)]"><div className="h-full rounded-full bg-[var(--primary)]" style={{ width: `0%` }} /></div>
-                  <span className="text-xs tabular-nums text-[var(--muted-foreground)]">0%</span>
-                </div>
+                <ul className="divide-y divide-[var(--border)]">
+                  {p.items.map((it) => (
+                    <li key={it.id} className="flex items-center gap-3 px-6 py-3">
+                      <button onClick={() => onToggle(it)} aria-label="toggle" className="text-[var(--muted-foreground)] hover:text-[var(--primary)]">
+                        {it.checked
+                          ? <CheckCircle2 className="h-5 w-5 text-[var(--primary)]" />
+                          : <Circle className="h-5 w-5" />}
+                      </button>
+                      <span className={`flex-1 text-sm ${it.checked ? "text-[var(--muted-foreground)] line-through" : ""}`}>{it.label}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <ul className="divide-y divide-[var(--border)]">
-                {p.itemKeys.map((itemKey) => (
-                  <li key={itemKey} className="flex items-center gap-3 px-6 py-3">
-                    <Circle className="h-5 w-5 text-[var(--muted-foreground)]" />
-                    <span className="flex-1 text-sm">{t(itemKey)}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
       <WorkflowFooter current="launch" />
