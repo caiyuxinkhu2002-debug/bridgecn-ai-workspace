@@ -17,6 +17,9 @@ import { useWorkspace } from "@/lib/workspace-context";
 import { listJobs } from "@/lib/ai/service";
 import type { AIJob } from "@/lib/ai/types";
 import { getReport, type ReportRow } from "@/lib/reports.functions";
+import { generateReportNow } from "@/lib/reports.functions";
+import { buildProjectContext } from "@/lib/ai/project-context";
+import { useRouter } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_app/report")({
   head: () => ({
@@ -40,6 +43,19 @@ function ReportPage() {
   const { t } = useI18n();
   const { activeProject, activeWorkspace } = useWorkspace();
   const { print, reportId } = Route.useSearch();
+  const router = useRouter();
+  const [generating, setGenerating] = useState(false);
+  const onGenerate = useCallback(async () => {
+    if (!activeWorkspace?.id || !activeProject?.id) { toast.error("Open a project first"); return; }
+    setGenerating(true);
+    try {
+      const ctx = buildProjectContext(activeProject);
+      const row = await generateReportNow({ data: { workspaceId: activeWorkspace.id, projectId: activeProject.id, projectContext: ctx } });
+      toast.success("Report generated");
+      router.navigate({ to: "/report", search: { reportId: row.id } as never });
+    } catch (e) { toast.error((e as Error).message); }
+    finally { setGenerating(false); }
+  }, [activeWorkspace?.id, activeProject, router]);
   const kb = activeProject?.knowledgeBase || {};
 
   // Load either a specific report by id, or fall back to the latest
@@ -194,12 +210,14 @@ function ReportPage() {
                   {t("report.empty.openKB")}
                 </Link>
               )}
-              <Link
-                to="/china-market-insight"
-                className="inline-flex h-9 items-center rounded-md bg-[var(--foreground)] px-3 text-xs font-medium text-[var(--background)] hover:opacity-90"
+              <button
+                onClick={onGenerate}
+                disabled={generating}
+                className="inline-flex h-9 items-center gap-1.5 rounded-md bg-[var(--primary)] px-3 text-xs font-medium text-white hover:opacity-90 disabled:opacity-50"
               >
-                {t("report.empty.generate")}
-              </Link>
+                {generating ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                {generating ? t("common.generating") : "Generate report with AI"}
+              </button>
             </div>
           </div>
         ) : (
