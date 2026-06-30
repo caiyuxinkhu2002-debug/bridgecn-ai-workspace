@@ -11,6 +11,7 @@ const en: Dict = {
   "nav.section.account": "Account",
   "nav.dashboard": "Dashboard",
   "nav.projects": "Projects",
+  "nav.aiWorkspace": "AI Workspace",
   "nav.market": "China Market Insight",
   "nav.consumer": "Consumer Insight",
   "nav.localization": "Localization Studio",
