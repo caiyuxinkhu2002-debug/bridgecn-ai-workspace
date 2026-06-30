@@ -40,7 +40,7 @@ export const Route = createFileRoute("/_app/report")({
 });
 
 function ReportPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { activeProject, activeWorkspace } = useWorkspace();
   const { print, reportId } = Route.useSearch();
   const router = useRouter();
@@ -55,7 +55,7 @@ function ReportPage() {
       router.navigate({ to: "/report", search: { reportId: row.id } as never });
     } catch (e) { toast.error((e as Error).message); }
     finally { setGenerating(false); }
-  }, [activeWorkspace?.id, activeProject, router, t]);
+  }, [activeWorkspace?.id, activeProject, router, t, locale]);
   const kb = activeProject?.knowledgeBase || {};
 
   // Load either a specific report by id, or fall back to the latest

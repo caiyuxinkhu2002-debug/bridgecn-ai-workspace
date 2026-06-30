@@ -16,7 +16,7 @@ export const Route = createFileRoute("/_app/reports")({
 });
 
 function ReportsPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const router = useRouter();
   const { activeProject, activeWorkspace } = useWorkspace();
   const [q, setQ] = useState("");
@@ -53,7 +53,7 @@ function ReportsPage() {
     } catch (e) {
       toast.error((e as Error).message);
     } finally { setGenerating(false); }
-  }, [activeWorkspace?.id, activeProject, refresh, router, t]);
+  }, [activeWorkspace?.id, activeProject, refresh, router, t, locale]);
 
   const onDelete = useCallback(async (id: string) => {
     try { await deleteReport({ data: { id } }); await refresh(); toast.success(t("reports.toast.deleted")); }
