@@ -439,6 +439,7 @@ const zh: Dict = {
   "nav.section.account": "账户",
   "nav.dashboard": "仪表盘",
   "nav.projects": "项目",
+  "nav.aiWorkspace": "AI 工作台",
   "nav.market": "中国市场洞察",
   "nav.consumer": "消费者洞察",
   "nav.localization": "本地化工作室",
