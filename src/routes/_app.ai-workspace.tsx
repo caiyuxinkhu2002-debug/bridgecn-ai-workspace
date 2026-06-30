@@ -231,32 +231,31 @@ function AIWorkspacePage() {
               </span>
             }
           />
-          {activityKeys.length === 0 ? (
+          {activity.length === 0 ? (
             <p className="px-4 py-8 text-center text-xs text-[var(--muted-foreground)]">{t("common.empty")}</p>
           ) : (
           <ul className="max-h-[640px] divide-y divide-[var(--border)] overflow-y-auto">
-            {activityKeys.map((k, i) => {
-              const isLast = i === activityKeys.length - 1;
+            {activity.map((a) => {
               return (
-                <li key={k} className="flex items-start gap-3 px-4 py-2.5">
+                <li key={a.id} className="flex items-start gap-3 px-4 py-2.5">
                   <span className="mt-1 w-12 shrink-0 font-mono text-[10px] text-[var(--muted-foreground)]">
-                    {times[i]}
+                    {a.time}
                   </span>
                   <span
                     className={`mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-md ${
-                      isLast
+                      a.running
                         ? "bg-[var(--primary)] text-white"
                         : "bg-[var(--muted)] text-[var(--muted-foreground)]"
                     }`}
                   >
-                    {isLast ? (
+                    {a.running ? (
                       <Loader2 className="h-3 w-3 animate-spin" />
                     ) : (
                       <CheckCircle2 className="h-3 w-3" />
                     )}
                   </span>
                   <p className="min-w-0 flex-1 text-[13px] leading-relaxed text-[var(--foreground)]">
-                    {t(k)}
+                    {a.label}
                   </p>
                 </li>
               );
