@@ -40,25 +40,25 @@ function ReportsPage() {
 
   const onGenerate = useCallback(async () => {
     if (!activeWorkspace?.id || !activeProject?.id) {
-      toast.error("Open a project first");
+      toast.error(t("reports.toast.noProject"));
       return;
     }
     setGenerating(true);
     try {
       const ctx = buildProjectContext(activeProject);
       const row = await generateReportNow({ data: { workspaceId: activeWorkspace.id, projectId: activeProject.id, projectContext: ctx } });
-      toast.success("Report generated");
+      toast.success(t("reports.toast.generated"));
       await refresh();
       router.navigate({ to: "/report", search: { reportId: row.id } as never });
     } catch (e) {
       toast.error((e as Error).message);
     } finally { setGenerating(false); }
-  }, [activeWorkspace?.id, activeProject, refresh, router]);
+  }, [activeWorkspace?.id, activeProject, refresh, router, t]);
 
   const onDelete = useCallback(async (id: string) => {
-    try { await deleteReport({ data: { id } }); await refresh(); toast.success("Deleted"); }
+    try { await deleteReport({ data: { id } }); await refresh(); toast.success(t("reports.toast.deleted")); }
     catch (e) { toast.error((e as Error).message); }
-  }, [refresh]);
+  }, [refresh, t]);
 
   async function onShare(id: string, title: string) {
     const url = `${window.location.origin}/report?reportId=${encodeURIComponent(id)}`;
@@ -93,7 +93,7 @@ function ReportsPage() {
           className="inline-flex h-9 items-center gap-1.5 rounded-md bg-[var(--primary)] px-3 text-xs font-medium text-white shadow-[var(--shadow-soft)] hover:opacity-90 disabled:opacity-50"
         >
           {generating ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
-          {generating ? t("common.generating") : "Generate report"}
+          {generating ? t("common.generating") : t("reports.action.generate")}
         </button>
       </div>
       <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--background)] shadow-[var(--shadow-soft)]">
