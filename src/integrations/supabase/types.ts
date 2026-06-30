@@ -131,6 +131,56 @@ export type Database = {
         }
         Relationships: []
       }
+      project_checklist: {
+        Row: {
+          checked: boolean
+          checked_at: string | null
+          checked_by: string | null
+          created_at: string
+          id: string
+          item_key: string
+          label: string
+          phase_key: string
+          project_id: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          checked?: boolean
+          checked_at?: string | null
+          checked_by?: string | null
+          created_at?: string
+          id?: string
+          item_key: string
+          label: string
+          phase_key: string
+          project_id: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          checked?: boolean
+          checked_at?: string | null
+          checked_by?: string | null
+          created_at?: string
+          id?: string
+          item_key?: string
+          label?: string
+          phase_key?: string
+          project_id?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_checklist_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       projects: {
         Row: {
           archived_at: string | null
@@ -147,6 +197,7 @@ export type Database = {
           progress: number
           region: string | null
           stage: Database["public"]["Enums"]["project_stage"]
+          stage_progress: Json
           summary: string | null
           target_market: string | null
           updated_at: string
@@ -168,6 +219,7 @@ export type Database = {
           progress?: number
           region?: string | null
           stage?: Database["public"]["Enums"]["project_stage"]
+          stage_progress?: Json
           summary?: string | null
           target_market?: string | null
           updated_at?: string
@@ -189,6 +241,7 @@ export type Database = {
           progress?: number
           region?: string | null
           stage?: Database["public"]["Enums"]["project_stage"]
+          stage_progress?: Json
           summary?: string | null
           target_market?: string | null
           updated_at?: string
@@ -198,6 +251,63 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "projects_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reports: {
+        Row: {
+          created_at: string
+          generated_by: string | null
+          id: string
+          payload: Json
+          project_id: string
+          status: string
+          summary: string | null
+          title: string
+          type: string
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          generated_by?: string | null
+          id?: string
+          payload?: Json
+          project_id: string
+          status?: string
+          summary?: string | null
+          title: string
+          type?: string
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          generated_by?: string | null
+          id?: string
+          payload?: Json
+          project_id?: string
+          status?: string
+          summary?: string | null
+          title?: string
+          type?: string
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reports_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reports_workspace_id_fkey"
             columns: ["workspace_id"]
             isOneToOne: false
             referencedRelation: "workspaces"
