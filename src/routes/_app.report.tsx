@@ -16,6 +16,7 @@ import { useI18n } from "@/lib/i18n";
 import { useWorkspace } from "@/lib/workspace-context";
 import { listJobs } from "@/lib/ai/service";
 import type { AIJob } from "@/lib/ai/types";
+import { getReport, type ReportRow } from "@/lib/reports.functions";
 
 export const Route = createFileRoute("/_app/report")({
   head: () => ({
@@ -38,38 +39,60 @@ export const Route = createFileRoute("/_app/report")({
 function ReportPage() {
   const { t } = useI18n();
   const { activeProject, activeWorkspace } = useWorkspace();
-  const { print } = Route.useSearch();
+  const { print, reportId } = Route.useSearch();
   const kb = activeProject?.knowledgeBase || {};
 
-  // Sprint A: load the latest completed market insight job for the active
-  // project — that's the working data source for a "report".
+  // Load either a specific report by id, or fall back to the latest
+  // completed Market job for the active project (legacy behaviour).
+  const [report, setReport] = useState<ReportRow | null>(null);
   const [job, setJob] = useState<AIJob | null>(null);
   const [loading, setLoading] = useState(false);
   useEffect(() => {
     let cancelled = false;
     async function go() {
-      if (!activeWorkspace?.id || !activeProject?.id) { setJob(null); return; }
       setLoading(true);
       try {
-        const list = await listJobs({ workspaceId: activeWorkspace.id, projectId: activeProject.id, module: "market", limit: 1 });
-        if (cancelled) return;
-        setJob(list.find((j) => j.status === "completed") || null);
+        if (reportId) {
+          const r = await getReport({ data: { id: reportId } });
+          if (!cancelled) { setReport(r); setJob(null); }
+        } else if (activeWorkspace?.id && activeProject?.id) {
+          const list = await listJobs({ workspaceId: activeWorkspace.id, projectId: activeProject.id, module: "market", limit: 1 });
+          if (cancelled) return;
+          setReport(null);
+          setJob(list.find((j) => j.status === "completed") || null);
+        } else {
+          setReport(null); setJob(null);
+        }
       } catch (e) { console.error(e); }
       finally { if (!cancelled) setLoading(false); }
     }
     go();
     return () => { cancelled = true; };
-  }, [activeWorkspace?.id, activeProject?.id]);
+  }, [activeWorkspace?.id, activeProject?.id, reportId]);
 
-  const data = (job?.output_data ?? {}) as {
+  type ReportData = {
     summary?: string;
     confidence?: number;
     kpis?: { label: string; value: string; sub?: string }[];
     sources?: string[];
     keywords?: { k: string; growth: string; platform: string; score: number }[];
     regions?: { name: string; v: number; growth: string }[];
+    title?: string;
+    executiveSummary?: string;
+    marketSection?: string;
+    consumerSection?: string;
+    localizationSection?: string;
+    launchPlan?: string;
+    risks?: string[];
+    recommendations?: string[];
   };
-  const hasReport = Boolean(job && (data.summary || (data.kpis?.length ?? 0) > 0));
+  const data: ReportData = report
+    ? (report.payload as unknown as ReportData)
+    : ((job?.output_data ?? {}) as ReportData);
+  if (report && !data.summary && data.executiveSummary) data.summary = data.executiveSummary;
+  const hasReport = Boolean(report || (job && (data.summary || (data.kpis?.length ?? 0) > 0)));
+  const dateStr = report?.created_at || job?.completed_at || null;
+  const titleStr = report?.title || (activeProject?.name ? `${activeProject.name} · ${t("reports.title")}` : t("reports.title"));
 
   const onShare = useCallback(async () => {
     const url = window.location.href;
@@ -105,7 +128,7 @@ function ReportPage() {
             </span>
             <span className="inline-flex items-center gap-1.5">
               <Calendar className="h-3 w-3" />
-              {new Date(job?.completed_at || Date.now()).toLocaleDateString()}
+              {new Date(dateStr || Date.now()).toLocaleDateString()}
             </span>
             {kb.industry && (
               <>
@@ -129,7 +152,7 @@ function ReportPage() {
                     {activeProject?.name || "—"}
                   </div>
                   <h1 className="text-3xl font-semibold tracking-[-0.02em] md:text-4xl">
-                    {t("reports.title")}
+                    {titleStr}
                   </h1>
                 </div>
               </div>
@@ -188,6 +211,42 @@ function ReportPage() {
                 {typeof data.confidence === "number" && (
                   <p className="mt-3 text-xs text-[var(--muted-foreground)]">{t("market.summary.confidence")}: <span className="font-medium text-[var(--foreground)]">{data.confidence}%</span></p>
                 )}
+              </section>
+            )}
+            {data.marketSection && (
+              <section>
+                <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">Market</h2>
+                <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-[var(--foreground)]/90">{data.marketSection}</p>
+              </section>
+            )}
+            {data.consumerSection && (
+              <section>
+                <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">Consumer</h2>
+                <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-[var(--foreground)]/90">{data.consumerSection}</p>
+              </section>
+            )}
+            {data.localizationSection && (
+              <section>
+                <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">Localization</h2>
+                <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-[var(--foreground)]/90">{data.localizationSection}</p>
+              </section>
+            )}
+            {data.launchPlan && (
+              <section>
+                <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">Launch plan</h2>
+                <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-[var(--foreground)]/90">{data.launchPlan}</p>
+              </section>
+            )}
+            {(data.risks?.length ?? 0) > 0 && (
+              <section>
+                <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">Risks</h2>
+                <ul className="list-disc space-y-1 pl-5">{data.risks!.map((r) => <li key={r}>{r}</li>)}</ul>
+              </section>
+            )}
+            {(data.recommendations?.length ?? 0) > 0 && (
+              <section>
+                <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">Recommendations</h2>
+                <ul className="list-disc space-y-1 pl-5">{data.recommendations!.map((r) => <li key={r}>{r}</li>)}</ul>
               </section>
             )}
             {(data.kpis?.length ?? 0) > 0 && (
