@@ -19,6 +19,7 @@ import { Route as AppSettingsRouteImport } from './routes/_app.settings'
 import { Route as AppReportsRouteImport } from './routes/_app.reports'
 import { Route as AppReportRouteImport } from './routes/_app.report'
 import { Route as AppProjectsRouteImport } from './routes/_app.projects'
+import { Route as AppNotificationsRouteImport } from './routes/_app.notifications'
 import { Route as AppLocalizationStudioRouteImport } from './routes/_app.localization-studio'
 import { Route as AppLaunchChecklistRouteImport } from './routes/_app.launch-checklist'
 import { Route as AppConsumerInsightRouteImport } from './routes/_app.consumer-insight'
@@ -74,6 +75,11 @@ const AppProjectsRoute = AppProjectsRouteImport.update({
   path: '/projects',
   getParentRoute: () => AppRoute,
 } as any)
+const AppNotificationsRoute = AppNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppLocalizationStudioRoute = AppLocalizationStudioRouteImport.update({
   id: '/localization-studio',
   path: '/localization-studio',
@@ -109,6 +115,7 @@ export interface FileRoutesByFullPath {
   '/consumer-insight': typeof AppConsumerInsightRoute
   '/launch-checklist': typeof AppLaunchChecklistRoute
   '/localization-studio': typeof AppLocalizationStudioRoute
+  '/notifications': typeof AppNotificationsRoute
   '/projects': typeof AppProjectsRouteWithChildren
   '/report': typeof AppReportRoute
   '/reports': typeof AppReportsRoute
@@ -124,6 +131,7 @@ export interface FileRoutesByTo {
   '/consumer-insight': typeof AppConsumerInsightRoute
   '/launch-checklist': typeof AppLaunchChecklistRoute
   '/localization-studio': typeof AppLocalizationStudioRoute
+  '/notifications': typeof AppNotificationsRoute
   '/projects': typeof AppProjectsRouteWithChildren
   '/report': typeof AppReportRoute
   '/reports': typeof AppReportsRoute
@@ -142,6 +150,7 @@ export interface FileRoutesById {
   '/_app/consumer-insight': typeof AppConsumerInsightRoute
   '/_app/launch-checklist': typeof AppLaunchChecklistRoute
   '/_app/localization-studio': typeof AppLocalizationStudioRoute
+  '/_app/notifications': typeof AppNotificationsRoute
   '/_app/projects': typeof AppProjectsRouteWithChildren
   '/_app/report': typeof AppReportRoute
   '/_app/reports': typeof AppReportsRoute
@@ -161,6 +170,7 @@ export interface FileRouteTypes {
     | '/consumer-insight'
     | '/launch-checklist'
     | '/localization-studio'
+    | '/notifications'
     | '/projects'
     | '/report'
     | '/reports'
@@ -176,6 +186,7 @@ export interface FileRouteTypes {
     | '/consumer-insight'
     | '/launch-checklist'
     | '/localization-studio'
+    | '/notifications'
     | '/projects'
     | '/report'
     | '/reports'
@@ -193,6 +204,7 @@ export interface FileRouteTypes {
     | '/_app/consumer-insight'
     | '/_app/launch-checklist'
     | '/_app/localization-studio'
+    | '/_app/notifications'
     | '/_app/projects'
     | '/_app/report'
     | '/_app/reports'
@@ -281,6 +293,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProjectsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/notifications': {
+      id: '/_app/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof AppNotificationsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/localization-studio': {
       id: '/_app/localization-studio'
       path: '/localization-studio'
@@ -336,6 +355,7 @@ interface AppRouteChildren {
   AppConsumerInsightRoute: typeof AppConsumerInsightRoute
   AppLaunchChecklistRoute: typeof AppLaunchChecklistRoute
   AppLocalizationStudioRoute: typeof AppLocalizationStudioRoute
+  AppNotificationsRoute: typeof AppNotificationsRoute
   AppProjectsRoute: typeof AppProjectsRouteWithChildren
   AppReportRoute: typeof AppReportRoute
   AppReportsRoute: typeof AppReportsRoute
@@ -349,6 +369,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppConsumerInsightRoute: AppConsumerInsightRoute,
   AppLaunchChecklistRoute: AppLaunchChecklistRoute,
   AppLocalizationStudioRoute: AppLocalizationStudioRoute,
+  AppNotificationsRoute: AppNotificationsRoute,
   AppProjectsRoute: AppProjectsRouteWithChildren,
   AppReportRoute: AppReportRoute,
   AppReportsRoute: AppReportsRoute,
