@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useRouter, notFound } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowRight, CheckCircle2, Circle, Pencil, Trash2, Loader2 } from "lucide-react";
+import { ArrowRight, CheckCircle2, Circle, Pencil, Trash2, Loader2, Copy, Archive, ArchiveRestore } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/app-shell";
 import { useI18n } from "@/lib/i18n";
@@ -25,7 +25,7 @@ function ProjectDetailPage() {
   const { projectId } = Route.useParams();
   const { t } = useI18n();
   const router = useRouter();
-  const { allProjects, setActiveProjectId, activeProjectId, updateProject, deleteProject } = useWorkspace();
+  const { allProjects, setActiveProjectId, activeProjectId, updateProject, deleteProject, duplicateProject, archiveProject, unarchiveProject } = useWorkspace();
   const project = allProjects.find((p) => p.id === projectId);
 
   useEffect(() => {
@@ -70,6 +70,28 @@ function ProjectDetailPage() {
     finally { setBusy(false); }
   }
 
+  async function onDuplicate() {
+    setBusy(true);
+    try {
+      const dup = await duplicateProject(project!.id);
+      if (dup) {
+        toast.success("Project duplicated");
+        setActiveProjectId(dup.id);
+        router.navigate({ to: "/projects/$projectId", params: { projectId: dup.id } });
+      }
+    } catch { toast.error("Could not duplicate"); }
+    finally { setBusy(false); }
+  }
+
+  async function onArchive() {
+    setBusy(true);
+    try {
+      if (project!.archived) { await unarchiveProject(project!.id); toast.success("Project restored"); }
+      else { await archiveProject(project!.id); toast.success("Project archived"); }
+    } catch { toast.error("Could not archive"); }
+    finally { setBusy(false); }
+  }
+
   const currentIdx = stageOrder.indexOf(project.stage);
 
   return (
@@ -86,6 +108,22 @@ function ProjectDetailPage() {
           >
             <Pencil className="h-3.5 w-3.5" />
             {editing ? "Cancel" : "Edit"}
+          </button>
+          <button
+            onClick={onDuplicate}
+            disabled={busy}
+            className="inline-flex h-8 items-center gap-1.5 rounded-md border border-[var(--border)] px-2.5 text-xs font-medium hover:bg-[var(--muted)] disabled:opacity-50"
+          >
+            <Copy className="h-3.5 w-3.5" />
+            Duplicate
+          </button>
+          <button
+            onClick={onArchive}
+            disabled={busy}
+            className="inline-flex h-8 items-center gap-1.5 rounded-md border border-[var(--border)] px-2.5 text-xs font-medium hover:bg-[var(--muted)] disabled:opacity-50"
+          >
+            {project.archived ? <ArchiveRestore className="h-3.5 w-3.5" /> : <Archive className="h-3.5 w-3.5" />}
+            {project.archived ? "Restore" : "Archive"}
           </button>
           <button
             onClick={onDelete}
