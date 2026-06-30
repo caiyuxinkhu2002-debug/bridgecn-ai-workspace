@@ -15,9 +15,12 @@ export type GenerateInput = {
   extra?: Record<string, unknown>;
 };
 
+// JSON-safe value type used for serializable server-fn return values.
+export type JsonValue = string | number | boolean | null | JsonValue[] | { [k: string]: JsonValue };
+
 export type GenerateResult = {
   summary: string;
-  output_data: Record<string, unknown>;
+  output_data: { [k: string]: JsonValue };
   provider: "lovable";
   model: string;
 };
@@ -152,7 +155,7 @@ function schemaFor(module: AIModuleKey): { system: string; user: string } {
   };
 }
 
-async function callGateway(system: string, user: string): Promise<Record<string, unknown>> {
+async function callGateway(system: string, user: string): Promise<{ [k: string]: JsonValue }> {
   const apiKey = process.env.LOVABLE_API_KEY;
   if (!apiKey) throw new Error("LOVABLE_API_KEY is not configured");
   const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -177,11 +180,11 @@ async function callGateway(system: string, user: string): Promise<Record<string,
   const json = (await res.json()) as { choices?: { message?: { content?: string } }[] };
   const content = json.choices?.[0]?.message?.content || "{}";
   try {
-    return JSON.parse(content) as Record<string, unknown>;
+    return JSON.parse(content) as { [k: string]: JsonValue };
   } catch {
     const m = content.match(/\{[\s\S]*\}/);
     if (m) {
-      try { return JSON.parse(m[0]) as Record<string, unknown>; } catch { /* fall */ }
+      try { return JSON.parse(m[0]) as { [k: string]: JsonValue }; } catch { /* fall */ }
     }
     throw new Error("AI returned non-JSON content");
   }
