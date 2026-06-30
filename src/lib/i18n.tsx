@@ -1553,6 +1553,10 @@ const zh: Dict = {
 
 const dicts: Record<Locale, Dict> = { en, ko, zh };
 
+Object.assign(en, enExtras);
+Object.assign(ko, koExtras);
+Object.assign(zh, zhExtras);
+
 export const localeLabels: Record<Locale, string> = {
   en: "English",
   ko: "한국어",
