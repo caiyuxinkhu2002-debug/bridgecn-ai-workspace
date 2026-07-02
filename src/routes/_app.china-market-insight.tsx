@@ -4,8 +4,33 @@ import { DataIntegrityBanner } from "@/components/data-integrity-banner";
 import { ProjectContextBar } from "@/components/project-context-bar";
 import { WorkflowFooter } from "@/components/workflow-footer";
 import { useI18n } from "@/lib/i18n";
-import { Bar, BarChart, ResponsiveContainer, Area, AreaChart, XAxis, Tooltip, CartesianGrid } from "recharts";
-import { TrendingUp, MapPin, Flame, Sparkles, ShieldCheck, Database, Clock, Loader2, CheckCircle2, History as HistoryIcon, Trash2, RotateCw, Play, Square, Activity } from "lucide-react";
+import {
+  Bar,
+  BarChart,
+  ResponsiveContainer,
+  Area,
+  AreaChart,
+  XAxis,
+  Tooltip,
+  CartesianGrid,
+} from "recharts";
+import {
+  TrendingUp,
+  MapPin,
+  Flame,
+  Sparkles,
+  ShieldCheck,
+  Database,
+  Clock,
+  Loader2,
+  CheckCircle2,
+  History as HistoryIcon,
+  Trash2,
+  RotateCw,
+  Play,
+  Square,
+  Activity,
+} from "lucide-react";
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useWorkspace } from "@/lib/workspace-context";
 import { useAIJob } from "@/lib/ai/use-ai-job";
@@ -41,7 +66,13 @@ function MarketInsightPage() {
     try {
       // Reap any AI jobs that have been stuck in queued/running for >5min
       // (e.g. browser closed mid-stream). Fire-and-forget; ignore errors.
-      try { await (supabase as unknown as { rpc: (n: string) => Promise<unknown> }).rpc("reap_stale_ai_jobs"); } catch { /* noop */ }
+      try {
+        await (supabase as unknown as { rpc: (n: string) => Promise<unknown> }).rpc(
+          "reap_stale_ai_jobs",
+        );
+      } catch {
+        /* noop */
+      }
       const list = await listJobs({
         workspaceId: activeWorkspace.id,
         projectId: activeProject?.id || null,
@@ -132,10 +163,10 @@ function MarketInsightPage() {
   // Merge live AI data with the selected/persisted job's data for display.
   const displayed = useMemo(() => {
     // While running, prefer live state
-    if (ai.isRunning || ai.status === "completed" && !selectedJob) {
+    if (ai.isRunning || (ai.status === "completed" && !selectedJob)) {
       const d = ai.data || {};
       return {
-      summary: ai.output || (d.summary as string | undefined) || "",
+        summary: ai.output || (d.summary as string | undefined) || "",
         confidence: (d.confidence as number | undefined) ?? null,
         sources: (d.sources as string[] | undefined) ?? [],
         keywords: (d.keywords as KeywordRow[] | undefined) ?? [],
@@ -170,12 +201,17 @@ function MarketInsightPage() {
   const sources = displayed.sources;
   const keywords = displayed.keywords;
   const regions = displayed.regions;
-  const growth = (((ai.data?.growth as GrowthRow[] | undefined) ?? (selectedJob?.output_data as { growth?: GrowthRow[] } | undefined)?.growth) ?? []) as GrowthRow[];
+  const growth = ((ai.data?.growth as GrowthRow[] | undefined) ??
+    (selectedJob?.output_data as { growth?: GrowthRow[] } | undefined)?.growth ??
+    []) as GrowthRow[];
   const confidence = displayed.confidence;
-  const hasAnyData = Boolean(displayed.summary) || sources.length > 0 || keywords.length > 0 || regions.length > 0;
+  const hasAnyData =
+    Boolean(displayed.summary) || sources.length > 0 || keywords.length > 0 || regions.length > 0;
   const lastUpdated = displayed.updatedAt
     ? new Date(displayed.updatedAt).toLocaleString()
-    : ai.isRunning ? t("market.summary.generating") : t("common.dash");
+    : ai.isRunning
+      ? t("market.summary.generating")
+      : t("common.dash");
 
   const onOpenJob = async (id: string) => {
     const j = await getJob(id);
@@ -209,15 +245,28 @@ function MarketInsightPage() {
         <div className="flex items-center gap-2 text-xs text-[var(--muted-foreground)]">
           <Sparkles className="h-3.5 w-3.5 text-[var(--primary)]" />
           <span>
-            {ai.isRunning
-              ? <>
-                  {t("market.status.statusLabel")}{" "}
-                  <span className="font-medium text-[var(--foreground)]">{t(`ai.status.${ai.status}`)}</span>
-                  {ai.phase ? <> {" · "}{t("market.status.phaseLabel")}{" "}<span className="font-medium text-[var(--foreground)]">{t(`phase.${ai.phase}`)}</span></> : null}
-                </>
-              : selectedJob
-                ? <>{t("market.status.showingFrom", { v: lastUpdated })}</>
-                : <>{t("market.status.noneYet")}</>}
+            {ai.isRunning ? (
+              <>
+                {t("market.status.statusLabel")}{" "}
+                <span className="font-medium text-[var(--foreground)]">
+                  {t(`ai.status.${ai.status}`)}
+                </span>
+                {ai.phase ? (
+                  <>
+                    {" "}
+                    {" · "}
+                    {t("market.status.phaseLabel")}{" "}
+                    <span className="font-medium text-[var(--foreground)]">
+                      {t(`phase.${ai.phase}`)}
+                    </span>
+                  </>
+                ) : null}
+              </>
+            ) : selectedJob ? (
+              <>{t("market.status.showingFrom", { v: lastUpdated })}</>
+            ) : (
+              <>{t("market.status.noneYet")}</>
+            )}
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -242,7 +291,11 @@ function MarketInsightPage() {
             disabled={ai.isRunning || !activeWorkspace?.id}
             className="inline-flex items-center gap-1.5 rounded-md bg-[var(--primary)] px-3 py-1.5 text-xs font-medium text-white shadow-[var(--shadow-soft)] hover:opacity-90 disabled:opacity-50"
           >
-            {ai.isRunning ? <Loader2 className="h-3 w-3 animate-spin" /> : <Play className="h-3 w-3" />}
+            {ai.isRunning ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : (
+              <Play className="h-3 w-3" />
+            )}
             {ai.isRunning ? t("common.generating") : t("market.action.generate")}
           </button>
           <button
@@ -251,7 +304,11 @@ function MarketInsightPage() {
             title="Fetch real keyword volumes, competitor traffic and domain SEO from SEMrush, then run analysis grounded in that data."
             className="inline-flex items-center gap-1.5 rounded-md border border-[oklch(0.55_0.14_150)]/40 bg-[oklch(0.55_0.14_150)]/10 px-3 py-1.5 text-xs font-medium text-[oklch(0.45_0.14_150)] hover:bg-[oklch(0.55_0.14_150)]/20 disabled:opacity-50"
           >
-            {semrushLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <DatabaseIcon className="h-3 w-3" />}
+            {semrushLoading ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : (
+              <DatabaseIcon className="h-3 w-3" />
+            )}
             {semrushLoading ? "Fetching SEMrush…" : "Refresh with SEMrush"}
           </button>
         </div>
@@ -260,30 +317,51 @@ function MarketInsightPage() {
       {semrush ? (
         <div className="mb-6 rounded-2xl border border-[oklch(0.55_0.14_150)]/30 bg-[oklch(0.55_0.14_150)]/5 p-4 text-xs">
           <div className="mb-2 flex items-center gap-2 font-medium text-[oklch(0.4_0.14_150)]">
-            <ShieldCheck className="h-3.5 w-3.5" /> Verified · SEMrush · {semrush.market.toUpperCase()} · {new Date(semrush.fetchedAt).toLocaleString()}
+            <ShieldCheck className="h-3.5 w-3.5" /> Verified · SEMrush ·{" "}
+            {semrush.market.toUpperCase()} · {new Date(semrush.fetchedAt).toLocaleString()}
           </div>
           <div className="grid gap-3 sm:grid-cols-3">
             {semrush.domainOverview ? (
               <div>
-                <p className="text-[10px] uppercase text-[var(--muted-foreground)]">Domain · {semrush.domain}</p>
-                <p className="mt-1 tabular-nums">{semrush.domainOverview.organicKeywords.toLocaleString()} keywords · {semrush.domainOverview.organicTraffic.toLocaleString()} monthly traffic</p>
+                <p className="text-[10px] uppercase text-[var(--muted-foreground)]">
+                  Domain · {semrush.domain}
+                </p>
+                <p className="mt-1 tabular-nums">
+                  {semrush.domainOverview.organicKeywords.toLocaleString()} keywords ·{" "}
+                  {semrush.domainOverview.organicTraffic.toLocaleString()} monthly traffic
+                </p>
               </div>
             ) : null}
             {semrush.competitors.length > 0 ? (
               <div>
-                <p className="text-[10px] uppercase text-[var(--muted-foreground)]">Top organic competitors</p>
-                <p className="mt-1">{semrush.competitors.slice(0, 3).map((c) => c.domain).join(", ")}</p>
+                <p className="text-[10px] uppercase text-[var(--muted-foreground)]">
+                  Top organic competitors
+                </p>
+                <p className="mt-1">
+                  {semrush.competitors
+                    .slice(0, 3)
+                    .map((c) => c.domain)
+                    .join(", ")}
+                </p>
               </div>
             ) : null}
             {semrush.keywords.length > 0 ? (
               <div>
-                <p className="text-[10px] uppercase text-[var(--muted-foreground)]">Seed keyword volume</p>
-                <p className="mt-1">{semrush.keywords.map((k) => `${k.phrase} (${k.volume.toLocaleString()}/mo)`).join(" · ")}</p>
+                <p className="text-[10px] uppercase text-[var(--muted-foreground)]">
+                  Seed keyword volume
+                </p>
+                <p className="mt-1">
+                  {semrush.keywords
+                    .map((k) => `${k.phrase} (${k.volume.toLocaleString()}/mo)`)
+                    .join(" · ")}
+                </p>
               </div>
             ) : null}
           </div>
           {semrush.errors.length > 0 ? (
-            <p className="mt-2 text-[10px] text-[var(--muted-foreground)]">Warnings: {semrush.errors.join(" · ")}</p>
+            <p className="mt-2 text-[10px] text-[var(--muted-foreground)]">
+              Warnings: {semrush.errors.join(" · ")}
+            </p>
           ) : null}
         </div>
       ) : null}
@@ -302,7 +380,8 @@ function MarketInsightPage() {
               </span>
               {ai.isRunning ? (
                 <span className="inline-flex items-center gap-1 rounded-full bg-[var(--primary-soft,var(--muted))] px-2 py-0.5 text-[10px] font-medium text-[var(--primary)]">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[var(--primary)] animate-pulse" /> {t("common.live")}
+                  <span className="h-1.5 w-1.5 rounded-full bg-[var(--primary)] animate-pulse" />{" "}
+                  {t("common.live")}
                 </span>
               ) : null}
             </div>
@@ -310,7 +389,8 @@ function MarketInsightPage() {
               <div className="flex items-center gap-2 text-xs">
                 <span className="inline-flex items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--muted)]/40 px-2 py-1 font-medium">
                   <ShieldCheck className="h-3 w-3 text-[oklch(0.55_0.14_150)]" />
-                  {t("market.summary.confidence")} <span className="tabular-nums text-[var(--foreground)]">{confidence}%</span>
+                  {t("market.summary.confidence")}{" "}
+                  <span className="tabular-nums text-[var(--foreground)]">{confidence}%</span>
                 </span>
               </div>
             )}
@@ -321,36 +401,72 @@ function MarketInsightPage() {
                 {ai.isRunning ? "" : t("market.history.empty")}
               </span>
             )}
-            {ai.isRunning ? <span className="ml-0.5 inline-block h-3 w-1.5 translate-y-0.5 animate-pulse bg-[var(--primary)]" /> : null}
+            {ai.isRunning ? (
+              <span className="ml-0.5 inline-block h-3 w-1.5 translate-y-0.5 animate-pulse bg-[var(--primary)]" />
+            ) : null}
           </p>
           <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-[var(--border)] pt-3 text-[11px] text-[var(--muted-foreground)]">
-            <span className="inline-flex items-center gap-1"><Database className="h-3 w-3" /> {t("market.summary.sources")}</span>
+            <span className="inline-flex items-center gap-1">
+              <Database className="h-3 w-3" /> {t("market.summary.sources")}
+            </span>
             {sources.map((s) => (
-              <span key={s} className="rounded-md bg-[var(--muted)]/60 px-1.5 py-0.5">{s}</span>
+              <span key={s} className="rounded-md bg-[var(--muted)]/60 px-1.5 py-0.5">
+                {s}
+              </span>
             ))}
-            <span className="ml-auto inline-flex items-center gap-1"><Clock className="h-3 w-3" /> {t("market.summary.lastUpdated", { v: lastUpdated })}</span>
+            <span className="ml-auto inline-flex items-center gap-1">
+              <Clock className="h-3 w-3" /> {t("market.summary.lastUpdated", { v: lastUpdated })}
+            </span>
           </div>
         </div>
 
         {/* KPI cards — derived from AI output */}
         {(() => {
-          const rawKpis = ((ai.data?.kpis as { label: string; value: string; sub?: string; src?: string; conf?: number }[] | undefined)
-            ?? ((selectedJob?.output_data as { kpis?: { label: string; value: string; sub?: string; src?: string; conf?: number }[] } | undefined)?.kpis)
-            ?? []);
+          const rawKpis =
+            (ai.data?.kpis as
+              | { label: string; value: string; sub?: string; src?: string; conf?: number }[]
+              | undefined) ??
+            (
+              selectedJob?.output_data as
+                | {
+                    kpis?: {
+                      label: string;
+                      value: string;
+                      sub?: string;
+                      src?: string;
+                      conf?: number;
+                    }[];
+                  }
+                | undefined
+            )?.kpis ??
+            [];
           if (rawKpis.length === 0) return null;
           return (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {rawKpis.map((s) => (
-                <div key={s.label} className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-5 shadow-[var(--shadow-soft)]">
+                <div
+                  key={s.label}
+                  className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-5 shadow-[var(--shadow-soft)]"
+                >
                   <div className="flex items-center justify-between">
                     <p className="text-xs text-[var(--muted-foreground)]">{s.label}</p>
                     {s.conf != null && (
-                      <span className="rounded-full bg-[var(--muted)]/60 px-1.5 py-0.5 text-[10px] font-medium text-[var(--muted-foreground)] tabular-nums">{s.conf}%</span>
+                      <span className="rounded-full bg-[var(--muted)]/60 px-1.5 py-0.5 text-[10px] font-medium text-[var(--muted-foreground)] tabular-nums">
+                        {s.conf}%
+                      </span>
                     )}
                   </div>
                   <p className="mt-2 text-2xl font-semibold tracking-tight">{s.value}</p>
-                  {s.sub && <p className="mt-0.5 text-[11px] leading-snug text-[var(--muted-foreground)]">{s.sub}</p>}
-                  {s.src && <p className="mt-2 text-[10px] text-[var(--muted-foreground)]/80">{t("market.kpi.source", { v: s.src })}</p>}
+                  {s.sub && (
+                    <p className="mt-0.5 text-[11px] leading-snug text-[var(--muted-foreground)]">
+                      {s.sub}
+                    </p>
+                  )}
+                  {s.src && (
+                    <p className="mt-2 text-[10px] text-[var(--muted-foreground)]/80">
+                      {t("market.kpi.source", { v: s.src })}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>
@@ -362,7 +478,9 @@ function MarketInsightPage() {
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h3 className="text-sm font-semibold">{t("market.growth")}</h3>
-                <p className="text-xs text-[var(--muted-foreground)]">{t("market.growth.sub")} · {t("market.chart.indexed")}</p>
+                <p className="text-xs text-[var(--muted-foreground)]">
+                  {t("market.growth.sub")} · {t("market.chart.indexed")}
+                </p>
               </div>
               {confidence != null && (
                 <div className="flex items-center gap-2">
@@ -374,21 +492,40 @@ function MarketInsightPage() {
               )}
             </div>
             {growth.length === 0 ? (
-              <p className="py-8 text-center text-xs text-[var(--muted-foreground)]">{t("market.history.empty")}</p>
+              <p className="py-8 text-center text-xs text-[var(--muted-foreground)]">
+                {t("market.history.empty")}
+              </p>
             ) : (
               <div className="h-56">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={growth} margin={{ top: 4, right: 4, bottom: 0, left: -16 }}>
-                  <defs>
-                    <linearGradient id="mg" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.3} />
-                      <stop offset="100%" stopColor="var(--primary)" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="m" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} />
-                  <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid var(--border)", fontSize: 12 }} />
-                  <Area type="monotone" dataKey="v" stroke="var(--primary)" strokeWidth={2} fill="url(#mg)" />
+                    <defs>
+                      <linearGradient id="mg" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.3} />
+                        <stop offset="100%" stopColor="var(--primary)" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
+                    <XAxis
+                      dataKey="m"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        borderRadius: 12,
+                        border: "1px solid var(--border)",
+                        fontSize: 12,
+                      }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="v"
+                      stroke="var(--primary)"
+                      strokeWidth={2}
+                      fill="url(#mg)"
+                    />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
@@ -410,16 +547,29 @@ function MarketInsightPage() {
               )}
             </div>
             {keywords.length === 0 ? (
-              <p className="py-8 text-center text-xs text-[var(--muted-foreground)]">{t("market.history.empty")}</p>
+              <p className="py-8 text-center text-xs text-[var(--muted-foreground)]">
+                {t("market.history.empty")}
+              </p>
             ) : (
-            <div className="grid grid-cols-[1.6rem_1fr_auto] gap-x-3 gap-y-3 text-xs">
-              <span className="text-[10px] uppercase tracking-wide text-[var(--muted-foreground)]">#</span>
-              <span className="text-[10px] uppercase tracking-wide text-[var(--muted-foreground)]">{t("market.kw.header")}</span>
-              <span className="text-right text-[10px] uppercase tracking-wide text-[var(--muted-foreground)]">{t("market.kw.growthScore")}</span>
-              {keywords.map((k, i) => (
-                <FragmentRow key={k.k} index={i} k={k} scoreLabel={t("market.kw.score", { v: k.score })} />
-              ))}
-            </div>
+              <div className="grid grid-cols-[1.6rem_1fr_auto] gap-x-3 gap-y-3 text-xs">
+                <span className="text-[10px] uppercase tracking-wide text-[var(--muted-foreground)]">
+                  #
+                </span>
+                <span className="text-[10px] uppercase tracking-wide text-[var(--muted-foreground)]">
+                  {t("market.kw.header")}
+                </span>
+                <span className="text-right text-[10px] uppercase tracking-wide text-[var(--muted-foreground)]">
+                  {t("market.kw.growthScore")}
+                </span>
+                {keywords.map((k, i) => (
+                  <FragmentRow
+                    key={k.k}
+                    index={i}
+                    k={k}
+                    scoreLabel={t("market.kw.score", { v: k.score })}
+                  />
+                ))}
+              </div>
             )}
             <p className="mt-4 text-[10px] text-[var(--muted-foreground)]">
               {t("market.kw.source", { v: lastUpdated })}
@@ -440,30 +590,49 @@ function MarketInsightPage() {
             )}
           </div>
           {regions.length === 0 ? (
-            <p className="py-8 text-center text-xs text-[var(--muted-foreground)]">{t("market.history.empty")}</p>
+            <p className="py-8 text-center text-xs text-[var(--muted-foreground)]">
+              {t("market.history.empty")}
+            </p>
           ) : (
-          <div className="grid gap-6 lg:grid-cols-5">
-            <div className="h-64 lg:col-span-3">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={regions} margin={{ top: 4, right: 4, bottom: 0, left: -16 }}>
-                  <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} />
-                  <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid var(--border)", fontSize: 12 }} />
-                  <Bar dataKey="v" fill="var(--primary)" radius={[6, 6, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="lg:col-span-2">
-              <div className="grid grid-cols-[1fr_auto_auto] gap-x-4 gap-y-2 text-xs">
-                <span className="text-[10px] uppercase tracking-wide text-[var(--muted-foreground)]">{t("market.regions.city")}</span>
-                <span className="text-right text-[10px] uppercase tracking-wide text-[var(--muted-foreground)]">{t("market.regions.demand")}</span>
-                <span className="text-right text-[10px] uppercase tracking-wide text-[var(--muted-foreground)]">{t("market.regions.growth")}</span>
-                {regions.map((r) => (
-                  <RegionRow key={r.name} r={r} />
-                ))}
+            <div className="grid gap-6 lg:grid-cols-5">
+              <div className="h-64 lg:col-span-3">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={regions} margin={{ top: 4, right: 4, bottom: 0, left: -16 }}>
+                    <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
+                    <XAxis
+                      dataKey="name"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        borderRadius: 12,
+                        border: "1px solid var(--border)",
+                        fontSize: 12,
+                      }}
+                    />
+                    <Bar dataKey="v" fill="var(--primary)" radius={[6, 6, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="lg:col-span-2">
+                <div className="grid grid-cols-[1fr_auto_auto] gap-x-4 gap-y-2 text-xs">
+                  <span className="text-[10px] uppercase tracking-wide text-[var(--muted-foreground)]">
+                    {t("market.regions.city")}
+                  </span>
+                  <span className="text-right text-[10px] uppercase tracking-wide text-[var(--muted-foreground)]">
+                    {t("market.regions.demand")}
+                  </span>
+                  <span className="text-right text-[10px] uppercase tracking-wide text-[var(--muted-foreground)]">
+                    {t("market.regions.growth")}
+                  </span>
+                  {regions.map((r) => (
+                    <RegionRow key={r.name} r={r} />
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
           )}
           <p className="mt-4 text-[10px] text-[var(--muted-foreground)]">
             {t("market.regions.source", { v: lastUpdated })}
@@ -480,7 +649,8 @@ function MarketInsightPage() {
               </div>
               {ai.isRunning ? (
                 <span className="inline-flex items-center gap-1 rounded-full bg-[var(--primary-soft,var(--muted))] px-2 py-0.5 text-[10px] font-medium text-[var(--primary)]">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[var(--primary)] animate-pulse" /> {t("common.live")}
+                  <span className="h-1.5 w-1.5 rounded-full bg-[var(--primary)] animate-pulse" />{" "}
+                  {t("common.live")}
                 </span>
               ) : null}
             </div>
@@ -494,14 +664,22 @@ function MarketInsightPage() {
                     ? t(`phase.${e.phase}`)
                     : e.key
                       ? t(e.key, e.params)
-                      : e.fallback ?? "";
+                      : (e.fallback ?? "");
                   return (
                     <li key={i} className="flex items-start gap-3 py-2 text-[13px]">
                       <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-md bg-[var(--muted)] text-[var(--muted-foreground)]">
-                        {isLast ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-3 w-3" />}
+                        {isLast ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <CheckCircle2 className="h-3 w-3" />
+                        )}
                       </span>
                       <span className="w-16 shrink-0 font-mono text-[10px] text-[var(--muted-foreground)]">
-                        {new Date(e.ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+                        {new Date(e.ts).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          second: "2-digit",
+                        })}
                       </span>
                       <span className="min-w-0 flex-1">{label}</span>
                     </li>
@@ -517,7 +695,9 @@ function MarketInsightPage() {
                 <HistoryIcon className="h-4 w-4 text-[var(--primary)]" />
                 <h3 className="text-sm font-semibold">{t("market.history.title")}</h3>
               </div>
-              <span className="text-[11px] text-[var(--muted-foreground)] tabular-nums">{history.length}</span>
+              <span className="text-[11px] text-[var(--muted-foreground)] tabular-nums">
+                {history.length}
+              </span>
             </div>
             {history.length === 0 ? (
               <p className="text-xs text-[var(--muted-foreground)]">{t("market.history.empty")}</p>
@@ -562,10 +742,20 @@ function MarketInsightPage() {
   );
 }
 
-function FragmentRow({ index, k, scoreLabel }: { index: number; k: { k: string; growth: string; platform: string; score: number }; scoreLabel: string }) {
+function FragmentRow({
+  index,
+  k,
+  scoreLabel,
+}: {
+  index: number;
+  k: { k: string; growth: string; platform: string; score: number };
+  scoreLabel: string;
+}) {
   return (
     <>
-      <span className="self-center text-[11px] tabular-nums text-[var(--muted-foreground)]">{String(index + 1).padStart(2, "0")}</span>
+      <span className="self-center text-[11px] tabular-nums text-[var(--muted-foreground)]">
+        {String(index + 1).padStart(2, "0")}
+      </span>
       <div className="min-w-0">
         <p className="truncate text-sm font-medium">{k.k}</p>
         <p className="text-[11px] text-[var(--muted-foreground)]">{k.platform}</p>

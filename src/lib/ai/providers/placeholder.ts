@@ -17,7 +17,14 @@ function delay(ms: number, signal?: AbortSignal) {
   return new Promise<void>((resolve, reject) => {
     if (signal?.aborted) return reject(new DOMException("Aborted", "AbortError"));
     const id = setTimeout(resolve, ms);
-    signal?.addEventListener("abort", () => { clearTimeout(id); reject(new DOMException("Aborted", "AbortError")); }, { once: true });
+    signal?.addEventListener(
+      "abort",
+      () => {
+        clearTimeout(id);
+        reject(new DOMException("Aborted", "AbortError"));
+      },
+      { once: true },
+    );
   });
 }
 
@@ -29,10 +36,10 @@ const PHASE_SCRIPT: { phase: AIJobPhase; message: string; ms: number }[] = [
 ];
 
 const LOC_PHASE_SCRIPT: { phase: AIJobPhase; message: string; ms: number }[] = [
-  { phase: "thinking",  message: "Thinking…",                          ms: 500 },
-  { phase: "searching", message: "Analyzing Brand",                    ms: 700 },
-  { phase: "analyzing", message: "Understanding Chinese Consumers",    ms: 800 },
-  { phase: "writing",   message: "Rewriting",                          ms: 500 },
+  { phase: "thinking", message: "Thinking…", ms: 500 },
+  { phase: "searching", message: "Analyzing Brand", ms: 700 },
+  { phase: "analyzing", message: "Understanding Chinese Consumers", ms: 800 },
+  { phase: "writing", message: "Rewriting", ms: 500 },
 ];
 
 const GROWTH_ROTATION = ["+42%", "+35%", "+28%", "+24%", "+19%", "+14%"];
@@ -102,7 +109,11 @@ function buildLocItems(ctx: ProjectContext) {
   const products = ctx.products.length ? ctx.products : [cat];
   const market = targetMarketLabel(ctx);
   const source = ctx.marketingCopy
-    ? ctx.marketingCopy.split(/\n+/).map((s) => s.trim()).filter(Boolean).slice(0, 3)
+    ? ctx.marketingCopy
+        .split(/\n+/)
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .slice(0, 3)
     : [
         `${company} — ${cat}`,
         products[0] ? `${products[0]} 신제품 라인업.` : `${company} 신제품.`,

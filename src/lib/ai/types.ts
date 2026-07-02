@@ -3,20 +3,9 @@
 
 export type AIJobStatus = "queued" | "running" | "completed" | "failed" | "cancelled";
 
-export type AIJobPhase =
-  | "thinking"
-  | "searching"
-  | "analyzing"
-  | "writing"
-  | "completed";
+export type AIJobPhase = "thinking" | "searching" | "analyzing" | "writing" | "completed";
 
-export type AIModule =
-  | "market"
-  | "consumer"
-  | "localization"
-  | "launch"
-  | "reports"
-  | "workspace";
+export type AIModule = "market" | "consumer" | "localization" | "launch" | "reports" | "workspace";
 
 export type AIProviderId =
   | "placeholder"

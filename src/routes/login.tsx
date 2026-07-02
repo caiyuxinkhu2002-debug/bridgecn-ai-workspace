@@ -18,7 +18,9 @@ function LoginPage() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => { if (data.user) router.navigate({ to: "/" }); });
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user) router.navigate({ to: "/" });
+    });
   }, [router]);
 
   async function submit(e: React.FormEvent) {
@@ -26,7 +28,10 @@ function LoginPage() {
     setBusy(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setBusy(false);
-    if (error) { toast.error(error.message || t("toast.signInFailed")); return; }
+    if (error) {
+      toast.error(error.message || t("toast.signInFailed"));
+      return;
+    }
     toast.success(t("toast.signedIn"));
     router.navigate({ to: "/" });
   }
@@ -47,10 +52,29 @@ function LoginPage() {
       <SocialButtons />
       <Divider label={t("auth.continueWith")} />
       <form onSubmit={submit} className="space-y-4">
-        <Field label={t("auth.email")} type="email" autoComplete="email" required value={email} onChange={setEmail} placeholder="you@company.com" />
-        <Field label={t("auth.password")} type="password" autoComplete="current-password" required value={password} onChange={setPassword} placeholder="••••••••" />
+        <Field
+          label={t("auth.email")}
+          type="email"
+          autoComplete="email"
+          required
+          value={email}
+          onChange={setEmail}
+          placeholder="you@company.com"
+        />
+        <Field
+          label={t("auth.password")}
+          type="password"
+          autoComplete="current-password"
+          required
+          value={password}
+          onChange={setPassword}
+          placeholder="••••••••"
+        />
         <div className="-mt-1 flex justify-end">
-          <Link to="/forgot-password" className="text-xs font-medium text-[var(--muted-foreground)] hover:text-[var(--foreground)]">
+          <Link
+            to="/forgot-password"
+            className="text-xs font-medium text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+          >
             {t("auth.forgotLink")}
           </Link>
         </div>

@@ -179,11 +179,17 @@ function NotificationBell() {
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2">
                               <p className="truncate text-sm font-medium">{t(n.titleKey)}</p>
-                              {!n.read && <span className="h-1.5 w-1.5 rounded-full bg-[var(--primary)]" />}
+                              {!n.read && (
+                                <span className="h-1.5 w-1.5 rounded-full bg-[var(--primary)]" />
+                              )}
                             </div>
-                            <p className="truncate text-xs text-[var(--muted-foreground)]">{t(n.bodyKey)}</p>
+                            <p className="truncate text-xs text-[var(--muted-foreground)]">
+                              {t(n.bodyKey)}
+                            </p>
                           </div>
-                          <span className="shrink-0 text-[11px] text-[var(--muted-foreground)]">{n.time}</span>
+                          <span className="shrink-0 text-[11px] text-[var(--muted-foreground)]">
+                            {n.time}
+                          </span>
                         </li>
                       );
                     })}
@@ -262,8 +268,18 @@ function UserMenu() {
   const ref = useOutside<HTMLDivElement>(() => setOpen(false));
   const displayName = profile?.name || user?.email?.split("@")[0] || "—";
   const email = profile?.email || user?.email || "";
-  const initials = (displayName || "·").split(/\s+/).map((s) => s[0]).slice(0, 2).join("").toUpperCase();
-  const items: { label: string; icon: typeof CircleUser; to: string; search?: Record<string, string> }[] = [
+  const initials = (displayName || "·")
+    .split(/\s+/)
+    .map((s) => s[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+  const items: {
+    label: string;
+    icon: typeof CircleUser;
+    to: string;
+    search?: Record<string, string>;
+  }[] = [
     { label: t("menu.profile"), icon: CircleUser, to: "/settings", search: { tab: "profile" } },
     { label: t("menu.workspace"), icon: Building2, to: "/settings", search: { tab: "workspace" } },
     { label: t("menu.notifications"), icon: Bell, to: "/notifications" },
@@ -279,8 +295,14 @@ function UserMenu() {
         className="grid h-9 w-9 place-items-center rounded-full bg-gradient-to-br from-[var(--primary)] to-[oklch(0.45_0.22_280)] text-xs font-semibold text-white ring-2 ring-[var(--background)] hover:opacity-90"
       >
         {profile?.avatar_url ? (
-          <img src={profile.avatar_url} alt="" className="h-full w-full rounded-full object-cover" />
-        ) : initials}
+          <img
+            src={profile.avatar_url}
+            alt=""
+            className="h-full w-full rounded-full object-cover"
+          />
+        ) : (
+          initials
+        )}
       </button>
       {open && (
         <div className="absolute right-0 z-50 mt-2 w-64 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--popover)] shadow-[var(--shadow-card)]">
@@ -351,7 +373,11 @@ function GlobalSearch() {
   const query = q.trim().toLowerCase();
   const results = !query
     ? searchIndex.slice(0, 8)
-    : searchIndex.filter((i) => i.title.toLowerCase().includes(query) || i.subtitle.toLowerCase().includes(query)).slice(0, 12);
+    : searchIndex
+        .filter(
+          (i) => i.title.toLowerCase().includes(query) || i.subtitle.toLowerCase().includes(query),
+        )
+        .slice(0, 12);
 
   const grouped = {
     project: results.filter((r) => r.kind === "project"),
@@ -389,37 +415,42 @@ function GlobalSearch() {
       {open && (
         <div className="absolute left-0 right-0 z-50 mt-2 max-h-[480px] overflow-auto rounded-2xl border border-[var(--border)] bg-[var(--popover)] p-1 shadow-[var(--shadow-card)]">
           {results.length === 0 ? (
-            <div className="px-4 py-6 text-center text-xs text-[var(--muted-foreground)]">{t("top.noResults")}</div>
+            <div className="px-4 py-6 text-center text-xs text-[var(--muted-foreground)]">
+              {t("top.noResults")}
+            </div>
           ) : (
-            (Object.entries(grouped) as [keyof typeof grouped, typeof results][]).map(([k, list]) =>
-              list.length === 0 ? null : (
-                <div key={k}>
-                  <div className="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">
-                    {t(`top.cat.${k}`)}
+            (Object.entries(grouped) as [keyof typeof grouped, typeof results][]).map(
+              ([k, list]) =>
+                list.length === 0 ? null : (
+                  <div key={k}>
+                    <div className="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">
+                      {t(`top.cat.${k}`)}
+                    </div>
+                    {list.map((r) => {
+                      const Icon = iconByKind[r.kind];
+                      return (
+                        <button
+                          key={`${r.kind}-${r.id}`}
+                          onClick={() => {
+                            if (r.projectId) setActiveProjectId(r.projectId);
+                            router.navigate({ to: r.link });
+                            setOpen(false);
+                            setQ("");
+                          }}
+                          className="flex w-full items-start gap-2.5 rounded-md px-3 py-2 text-left hover:bg-[var(--muted)]"
+                        >
+                          <Icon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--muted-foreground)]" />
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-medium">{r.title}</p>
+                            <p className="truncate text-xs text-[var(--muted-foreground)]">
+                              {r.subtitle}
+                            </p>
+                          </div>
+                        </button>
+                      );
+                    })}
                   </div>
-                  {list.map((r) => {
-                    const Icon = iconByKind[r.kind];
-                    return (
-                      <button
-                        key={`${r.kind}-${r.id}`}
-                        onClick={() => {
-                          if (r.projectId) setActiveProjectId(r.projectId);
-                          router.navigate({ to: r.link });
-                          setOpen(false);
-                          setQ("");
-                        }}
-                        className="flex w-full items-start gap-2.5 rounded-md px-3 py-2 text-left hover:bg-[var(--muted)]"
-                      >
-                        <Icon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--muted-foreground)]" />
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-medium">{r.title}</p>
-                          <p className="truncate text-xs text-[var(--muted-foreground)]">{r.subtitle}</p>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              ),
+                ),
             )
           )}
         </div>
@@ -439,7 +470,11 @@ export function AppShell({ children }: { children?: ReactNode }) {
     .filter((i) => (i.exact ? pathname === i.to : pathname.startsWith(i.to)))
     .sort((a, b) => b.to.length - a.to.length)[0];
   const moduleLabel = currentItem ? t(currentItem.labelKey) : "";
-  const showProjectCrumb = activeProject?.id && pathname !== "/projects" && !pathname.startsWith("/settings") && !pathname.startsWith("/notifications");
+  const showProjectCrumb =
+    activeProject?.id &&
+    pathname !== "/projects" &&
+    !pathname.startsWith("/settings") &&
+    !pathname.startsWith("/notifications");
 
   return (
     <div className="flex min-h-screen w-full bg-[var(--muted)]">
@@ -478,7 +513,9 @@ export function AppShell({ children }: { children?: ReactNode }) {
                       {active && (
                         <span className="absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-r-full bg-[var(--primary)]" />
                       )}
-                      <Icon className={`h-4 w-4 shrink-0 ${active ? "text-[var(--primary)]" : ""}`} />
+                      <Icon
+                        className={`h-4 w-4 shrink-0 ${active ? "text-[var(--primary)]" : ""}`}
+                      />
                       <span className="truncate">{t(item.labelKey)}</span>
                     </Link>
                   );
@@ -543,7 +580,9 @@ export function AppShell({ children }: { children?: ReactNode }) {
         <main className="flex-1 bg-[var(--muted)] px-4 py-6 md:px-8 md:py-8">
           <div className="mx-auto w-full max-w-7xl">
             <nav className="mb-4 flex items-center gap-1.5 text-[11px] text-[var(--muted-foreground)]">
-              <span className="font-medium text-[var(--foreground)]/80">{activeWorkspace?.name || "—"}</span>
+              <span className="font-medium text-[var(--foreground)]/80">
+                {activeWorkspace?.name || "—"}
+              </span>
               {showProjectCrumb && (
                 <>
                   <span>/</span>

@@ -49,7 +49,10 @@ function localeName(loc: Locale): string {
   return "English";
 }
 
-async function translateBundle(payload: Record<string, unknown>, target: Locale): Promise<Record<string, unknown>> {
+async function translateBundle(
+  payload: Record<string, unknown>,
+  target: Locale,
+): Promise<Record<string, unknown>> {
   const apiKey = process.env.LOVABLE_API_KEY;
   if (!apiKey) throw new Error("LOVABLE_API_KEY missing");
 
@@ -80,7 +83,8 @@ RULES:
     }),
   });
   if (res.status === 429) throw new Error("AI rate limit — please retry in a moment.");
-  if (res.status === 402) throw new Error("AI credits exhausted. Add credits in Settings → Plans & credits.");
+  if (res.status === 402)
+    throw new Error("AI credits exhausted. Add credits in Settings → Plans & credits.");
   if (!res.ok) {
     const body = await res.text().catch(() => "");
     throw new Error(`AI gateway ${res.status}: ${body.slice(0, 240)}`);
@@ -92,7 +96,11 @@ RULES:
   } catch {
     const m = content.match(/\{[\s\S]*\}/);
     if (m) {
-      try { return JSON.parse(m[0]) as Record<string, unknown>; } catch { /* fall */ }
+      try {
+        return JSON.parse(m[0]) as Record<string, unknown>;
+      } catch {
+        /* fall */
+      }
     }
     throw new Error("AI returned non-JSON content");
   }
@@ -113,7 +121,10 @@ export const translateProjectContent = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     if (!row) throw new Error("Project not found");
 
-    const kb = ((row.knowledge_base && typeof row.knowledge_base === "object" ? row.knowledge_base : {}) as KnowledgeBase) || {};
+    const kb =
+      ((row.knowledge_base && typeof row.knowledge_base === "object"
+        ? row.knowledge_base
+        : {}) as KnowledgeBase) || {};
 
     // Build a payload of just the translatable string fields. URLs and the
     // social channel list are intentionally excluded.
@@ -154,19 +165,31 @@ export const translateProjectContent = createServerFn({ method: "POST" })
       competitors: kb.competitors,
     };
 
-    const newDescription = typeof translated.description === "string" ? translated.description : row.description;
+    const newDescription =
+      typeof translated.description === "string" ? translated.description : row.description;
 
     const newKb: KnowledgeBase = {
       ...kb,
       industry: typeof translated.industry === "string" ? translated.industry : kb.industry,
       category: typeof translated.category === "string" ? translated.category : kb.category,
       brandStory: typeof translated.brandStory === "string" ? translated.brandStory : kb.brandStory,
-      targetAudience: typeof translated.targetAudience === "string" ? translated.targetAudience : kb.targetAudience,
+      targetAudience:
+        typeof translated.targetAudience === "string"
+          ? translated.targetAudience
+          : kb.targetAudience,
       koreanCopy: typeof translated.koreanCopy === "string" ? translated.koreanCopy : kb.koreanCopy,
-      products: Array.isArray(translated.products) ? (translated.products as string[]) : kb.products,
-      brandTone: Array.isArray(translated.brandTone) ? (translated.brandTone as string[]) : kb.brandTone,
-      keywords: Array.isArray(translated.keywords) ? (translated.keywords as string[]) : kb.keywords,
-      competitors: Array.isArray(translated.competitors) ? (translated.competitors as string[]) : kb.competitors,
+      products: Array.isArray(translated.products)
+        ? (translated.products as string[])
+        : kb.products,
+      brandTone: Array.isArray(translated.brandTone)
+        ? (translated.brandTone as string[])
+        : kb.brandTone,
+      keywords: Array.isArray(translated.keywords)
+        ? (translated.keywords as string[])
+        : kb.keywords,
+      competitors: Array.isArray(translated.competitors)
+        ? (translated.competitors as string[])
+        : kb.competitors,
       _locale: targetLocale,
       _originalEn: originalEn,
     };

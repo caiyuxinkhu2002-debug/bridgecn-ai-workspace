@@ -36,9 +36,7 @@ export function AuthLayout({
           <p className="mt-2 text-sm text-[var(--muted-foreground)]">{subtitle}</p>
           <div className="mt-8 space-y-4">{children}</div>
           {footer && (
-            <div className="mt-8 text-center text-sm text-[var(--muted-foreground)]">
-              {footer}
-            </div>
+            <div className="mt-8 text-center text-sm text-[var(--muted-foreground)]">{footer}</div>
           )}
         </div>
         <p className="text-center text-[11px] text-[var(--muted-foreground)]">
@@ -71,9 +69,13 @@ export function AuthLayout({
           <rect width="100%" height="100%" fill="url(#grid)" />
           {/* Korea → China arc */}
           <circle cx="430" cy="220" r="6" fill="white" />
-          <text x="445" y="225" fill="white" fontSize="11" fontFamily="Inter">Seoul</text>
+          <text x="445" y="225" fill="white" fontSize="11" fontFamily="Inter">
+            Seoul
+          </text>
           <circle cx="250" cy="430" r="6" fill="white" />
-          <text x="160" y="435" fill="white" fontSize="11" fontFamily="Inter" textAnchor="end">Shanghai</text>
+          <text x="160" y="435" fill="white" fontSize="11" fontFamily="Inter" textAnchor="end">
+            Shanghai
+          </text>
           <path
             d="M 430 220 Q 320 280 250 430"
             stroke="white"
@@ -106,8 +108,14 @@ export function SocialButtons() {
   async function signInGoogle() {
     try {
       setLoading("google");
-      const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
-      if (result.error) { toast.error(t("toast.googleFailed")); setLoading(null); return; }
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin,
+      });
+      if (result.error) {
+        toast.error(t("toast.googleFailed"));
+        setLoading(null);
+        return;
+      }
       if (result.redirected) return;
       window.location.href = "/";
     } catch {
@@ -126,7 +134,11 @@ export function SocialButtons() {
         <AppleIcon />
         {t("auth.apple")} · {t("common.comingSoon")}
       </button>
-      <button disabled className={`${btn} bg-[#FEE500] border-transparent text-[#191919] cursor-not-allowed`} title={t("common.comingSoon")}>
+      <button
+        disabled
+        className={`${btn} bg-[#FEE500] border-transparent text-[#191919] cursor-not-allowed`}
+        title={t("common.comingSoon")}
+      >
         <KakaoIcon />
         {t("auth.kakao")} · {t("common.comingSoon")}
       </button>
@@ -138,7 +150,9 @@ export function Divider({ label }: { label: string }) {
   return (
     <div className="relative flex items-center py-2">
       <div className="flex-1 border-t border-[var(--border)]" />
-      <span className="px-3 text-[11px] uppercase tracking-wider text-[var(--muted-foreground)]">{label}</span>
+      <span className="px-3 text-[11px] uppercase tracking-wider text-[var(--muted-foreground)]">
+        {label}
+      </span>
       <div className="flex-1 border-t border-[var(--border)]" />
     </div>
   );

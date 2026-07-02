@@ -83,9 +83,34 @@ export async function* createAndRunJob(
   // table is generated in supabase types after the migration; cast is intentional.
   const sb = supabase as unknown as {
     from: (t: string) => {
-      insert: (v: Record<string, unknown>) => { select: (q: string) => { maybeSingle: () => Promise<{ data: DbAIJob | null; error: { message: string } | null }> } };
-      update: (v: Record<string, unknown>) => { eq: (c: string, v: string) => { select: (q: string) => { maybeSingle: () => Promise<{ data: DbAIJob | null; error: { message: string } | null }> } } & Promise<{ data: unknown; error: { message: string } | null }> };
-      select: (q: string) => { eq: (c: string, v: string) => { order: (c: string, opts: { ascending: boolean }) => Promise<{ data: DbAIJob[] | null; error: { message: string } | null }> } & { maybeSingle: () => Promise<{ data: DbAIJob | null; error: { message: string } | null }> } };
+      insert: (v: Record<string, unknown>) => {
+        select: (q: string) => {
+          maybeSingle: () => Promise<{ data: DbAIJob | null; error: { message: string } | null }>;
+        };
+      };
+      update: (v: Record<string, unknown>) => {
+        eq: (
+          c: string,
+          v: string,
+        ) => {
+          select: (q: string) => {
+            maybeSingle: () => Promise<{ data: DbAIJob | null; error: { message: string } | null }>;
+          };
+        } & Promise<{ data: unknown; error: { message: string } | null }>;
+      };
+      select: (q: string) => {
+        eq: (
+          c: string,
+          v: string,
+        ) => {
+          order: (
+            c: string,
+            opts: { ascending: boolean },
+          ) => Promise<{ data: DbAIJob[] | null; error: { message: string } | null }>;
+        } & {
+          maybeSingle: () => Promise<{ data: DbAIJob | null; error: { message: string } | null }>;
+        };
+      };
     };
   };
 
@@ -116,7 +141,10 @@ export async function* createAndRunJob(
   yield { type: "created", job };
 
   // 2) mark running
-  await sb.from("ai_jobs").update({ status: "running", phase: "thinking", started_at: new Date().toISOString() }).eq("id", job.id);
+  await sb
+    .from("ai_jobs")
+    .update({ status: "running", phase: "thinking", started_at: new Date().toISOString() })
+    .eq("id", job.id);
   job = { ...job, status: "running", phase: "thinking", started_at: new Date().toISOString() };
   yield { type: "status", status: "running", phase: "thinking" };
 
@@ -125,7 +153,13 @@ export async function* createAndRunJob(
   let lastPersist = Date.now();
 
   try {
-    const stream = provider.run({ module: input.module, prompt: input.prompt, input: input.input, model: input.model, signal });
+    const stream = provider.run({
+      module: input.module,
+      prompt: input.prompt,
+      input: input.input,
+      model: input.model,
+      signal,
+    });
     for await (const ev of stream as AsyncGenerator<AIStreamEvent>) {
       if (signal?.aborted) break;
       if (ev.type === "phase") {
@@ -172,7 +206,19 @@ export async function* createAndRunJob(
       .eq("id", job.id)
       .select("*")
       .maybeSingle();
-    yield { type: "completed", job: completed.data ? fromDb(completed.data) : { ...job, status: "completed", phase: "completed", output, output_data: outputData, completed_at: new Date().toISOString() } };
+    yield {
+      type: "completed",
+      job: completed.data
+        ? fromDb(completed.data)
+        : {
+            ...job,
+            status: "completed",
+            phase: "completed",
+            output,
+            output_data: outputData,
+            completed_at: new Date().toISOString(),
+          },
+    };
   } catch (e) {
     const msg = (e as Error)?.message || "Unknown error";
     const failed = await sb
@@ -187,26 +233,44 @@ export async function* createAndRunJob(
 
 // History helpers
 
-export async function listJobs(opts: { workspaceId: string; projectId?: string | null; module?: AIModule; limit?: number }) {
+export async function listJobs(opts: {
+  workspaceId: string;
+  projectId?: string | null;
+  module?: AIModule;
+  limit?: number;
+}) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let q: any = (supabase as unknown as { from: (t: string) => any }).from("ai_jobs").select("*").eq("workspace_id", opts.workspaceId);
+  let q: any = (supabase as unknown as { from: (t: string) => any })
+    .from("ai_jobs")
+    .select("*")
+    .eq("workspace_id", opts.workspaceId);
   if (opts.projectId) q = q.eq("project_id", opts.projectId);
   if (opts.module) q = q.eq("module", opts.module);
   q = q.order("created_at", { ascending: false }).limit(opts.limit ?? 50);
-  const { data, error } = (await q) as { data: DbAIJob[] | null; error: { message: string } | null };
+  const { data, error } = (await q) as {
+    data: DbAIJob[] | null;
+    error: { message: string } | null;
+  };
   if (error) throw new Error(error.message);
   return (data ?? []).map(fromDb);
 }
 
 export async function getJob(id: string): Promise<AIJob | null> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const res = await ((supabase as unknown as { from: (t: string) => any }).from("ai_jobs").select("*").eq("id", id).maybeSingle()) as { data: DbAIJob | null; error: { message: string } | null };
+  const res = (await (supabase as unknown as { from: (t: string) => any })
+    .from("ai_jobs")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle()) as { data: DbAIJob | null; error: { message: string } | null };
   if (res.error) throw new Error(res.error.message);
   return res.data ? fromDb(res.data) : null;
 }
 
 export async function deleteJob(id: string): Promise<void> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const res = await ((supabase as unknown as { from: (t: string) => any }).from("ai_jobs").delete().eq("id", id)) as { error: { message: string } | null };
+  const res = (await (supabase as unknown as { from: (t: string) => any })
+    .from("ai_jobs")
+    .delete()
+    .eq("id", id)) as { error: { message: string } | null };
   if (res.error) throw new Error(res.error.message);
 }

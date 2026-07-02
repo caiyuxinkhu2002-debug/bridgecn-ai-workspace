@@ -27,18 +27,37 @@ export const listChecklist = createServerFn({ method: "POST" })
 
 export const seedChecklist = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { projectId: string; phases: { key: string; name: string; items: { key: string; label: string }[] }[] }) => input)
+  .inputValidator(
+    (input: {
+      projectId: string;
+      phases: { key: string; name: string; items: { key: string; label: string }[] }[];
+    }) => input,
+  )
   .handler(async ({ data, context }) => {
     let order = 0;
-    const rows: { project_id: string; phase_key: string; item_key: string; label: string; sort_order: number }[] = [];
+    const rows: {
+      project_id: string;
+      phase_key: string;
+      item_key: string;
+      label: string;
+      sort_order: number;
+    }[] = [];
     for (const p of data.phases) {
       for (const it of p.items) {
-        rows.push({ project_id: data.projectId, phase_key: p.key, item_key: it.key, label: it.label, sort_order: order++ });
+        rows.push({
+          project_id: data.projectId,
+          phase_key: p.key,
+          item_key: it.key,
+          label: it.label,
+          sort_order: order++,
+        });
       }
     }
     if (rows.length === 0) return { inserted: 0 };
     // Upsert by (project_id, item_key) — preserves existing checked state.
-    const { error } = await context.supabase.from("project_checklist").upsert(rows, { onConflict: "project_id,item_key", ignoreDuplicates: true });
+    const { error } = await context.supabase
+      .from("project_checklist")
+      .upsert(rows, { onConflict: "project_id,item_key", ignoreDuplicates: true });
     if (error) throw new Error(error.message);
     return { inserted: rows.length };
   });

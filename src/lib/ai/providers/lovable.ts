@@ -14,15 +14,22 @@ function delay(ms: number, signal?: AbortSignal) {
   return new Promise<void>((resolve, reject) => {
     if (signal?.aborted) return reject(new DOMException("Aborted", "AbortError"));
     const id = setTimeout(resolve, ms);
-    signal?.addEventListener("abort", () => { clearTimeout(id); reject(new DOMException("Aborted", "AbortError")); }, { once: true });
+    signal?.addEventListener(
+      "abort",
+      () => {
+        clearTimeout(id);
+        reject(new DOMException("Aborted", "AbortError"));
+      },
+      { once: true },
+    );
   });
 }
 
 const PHASES: { phase: AIJobPhase; message: string; ms: number }[] = [
-  { phase: "thinking",  message: "Thinking…",        ms: 300 },
+  { phase: "thinking", message: "Thinking…", ms: 300 },
   { phase: "searching", message: "Reading project Knowledge Base…", ms: 350 },
-  { phase: "analyzing", message: "Analyzing market signals…",       ms: 400 },
-  { phase: "writing",   message: "Writing response…",                ms: 200 },
+  { phase: "analyzing", message: "Analyzing market signals…", ms: 400 },
+  { phase: "writing", message: "Writing response…", ms: 200 },
 ];
 
 type SubmoduleMap = Record<string, "market" | "consumer" | "localization" | "launch" | "report">;
@@ -39,13 +46,18 @@ export const lovableProvider: AIProvider = {
   id: "lovable",
   label: "Lovable AI (Gemini)",
   async *run({ module, input, signal, prompt }) {
-    const ctx = ((input?.projectContext ?? {}) as ProjectContext);
+    const ctx = (input?.projectContext ?? {}) as ProjectContext;
     const sub = MODULE_TO_SUB[module] ?? "market";
-    const uiLocale = (input?.uiLocale as "en" | "ko" | "zh" | undefined);
+    const uiLocale = input?.uiLocale as "en" | "ko" | "zh" | undefined;
 
     // Phases for visual feedback while the real call is in flight.
     const callPromise = generateAIOutput({
-      data: { module: sub, projectContext: ctx, uiLocale, extra: (input?.extra as Record<string, unknown> | undefined) },
+      data: {
+        module: sub,
+        projectContext: ctx,
+        uiLocale,
+        extra: input?.extra as Record<string, unknown> | undefined,
+      },
     });
 
     try {
@@ -61,12 +73,32 @@ export const lovableProvider: AIProvider = {
 
       // Emit structured data events so existing pages light up immediately.
       const dataEvents: Record<string, unknown> = {};
-      for (const key of ["confidence", "kpis", "sources", "keywords", "regions", "growth",
-                          "personas", "painPoints", "purchaseDrivers", "channels", "signals",
-                          "items", "insights", "compliance", "scores",
-                          "phases", "title", "executiveSummary", "marketSection",
-                          "consumerSection", "localizationSection", "launchPlan",
-                          "risks", "recommendations"]) {
+      for (const key of [
+        "confidence",
+        "kpis",
+        "sources",
+        "keywords",
+        "regions",
+        "growth",
+        "personas",
+        "painPoints",
+        "purchaseDrivers",
+        "channels",
+        "signals",
+        "items",
+        "insights",
+        "compliance",
+        "scores",
+        "phases",
+        "title",
+        "executiveSummary",
+        "marketSection",
+        "consumerSection",
+        "localizationSection",
+        "launchPlan",
+        "risks",
+        "recommendations",
+      ]) {
         if (key in out) dataEvents[key] = out[key];
       }
       if (Object.keys(dataEvents).length) {
@@ -95,11 +127,20 @@ export const lovableProvider: AIProvider = {
       const errMsg = (e as Error)?.message || "AI generation failed";
       // Fallback: degrade to placeholder so the user sees something useful.
       console.warn("[lovable provider] falling back to placeholder:", errMsg);
-      const fallback: AsyncGenerator<AIStreamEvent> = placeholderProvider.run({ module, input, signal, prompt });
+      const fallback: AsyncGenerator<AIStreamEvent> = placeholderProvider.run({
+        module,
+        input,
+        signal,
+        prompt,
+      });
       for await (const ev of fallback) {
         if (ev.type === "done") {
           const od = (ev.output_data ?? {}) as Record<string, unknown>;
-          yield { type: "done", output: ev.output, output_data: { ...od, provider: "placeholder", fallback: true, error: errMsg } };
+          yield {
+            type: "done",
+            output: ev.output,
+            output_data: { ...od, provider: "placeholder", fallback: true, error: errMsg },
+          };
         } else {
           yield ev;
         }

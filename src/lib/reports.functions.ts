@@ -54,7 +54,14 @@ export const deleteReport = createServerFn({ method: "POST" })
 
 export const generateReportNow = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { workspaceId: string; projectId: string; projectContext: ProjectContext; uiLocale?: "en" | "ko" | "zh" }) => input)
+  .inputValidator(
+    (input: {
+      workspaceId: string;
+      projectId: string;
+      projectContext: ProjectContext;
+      uiLocale?: "en" | "ko" | "zh";
+    }) => input,
+  )
   .handler(async ({ data, context }) => {
     // Pull the latest completed market/consumer/localization jobs to enrich the report.
     const sb = context.supabase;
@@ -67,7 +74,11 @@ export const generateReportNow = createServerFn({ method: "POST" })
       .order("completed_at", { ascending: false })
       .limit(50);
     const latest: Record<string, { output_data: unknown; output: string | null }> = {};
-    for (const j of (jobs ?? []) as { module: string; output_data: unknown; output: string | null }[]) {
+    for (const j of (jobs ?? []) as {
+      module: string;
+      output_data: unknown;
+      output: string | null;
+    }[]) {
       if (!latest[j.module]) latest[j.module] = { output_data: j.output_data, output: j.output };
     }
     const extra = {
@@ -77,7 +88,12 @@ export const generateReportNow = createServerFn({ method: "POST" })
     };
 
     const result = await generateAIOutput({
-      data: { module: "report", projectContext: data.projectContext, uiLocale: data.uiLocale, extra: extra as unknown as Record<string, unknown> },
+      data: {
+        module: "report",
+        projectContext: data.projectContext,
+        uiLocale: data.uiLocale,
+        extra: extra as unknown as Record<string, unknown>,
+      },
     });
 
     const payload = result.output_data;

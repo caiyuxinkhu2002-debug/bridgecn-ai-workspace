@@ -39,15 +39,27 @@ function AIWorkspacePage() {
   useEffect(() => {
     let cancelled = false;
     async function go() {
-      if (!activeWorkspace?.id || !activeProject?.id) { setJobs([]); return; }
+      if (!activeWorkspace?.id || !activeProject?.id) {
+        setJobs([]);
+        return;
+      }
       try {
-        const list = await listJobs({ workspaceId: activeWorkspace.id, projectId: activeProject.id, limit: 30 });
+        const list = await listJobs({
+          workspaceId: activeWorkspace.id,
+          projectId: activeProject.id,
+          limit: 30,
+        });
         if (!cancelled) setJobs(list);
-      } catch (e) { console.error(e); }
+      } catch (e) {
+        console.error(e);
+      }
     }
     go();
     const id = setInterval(go, 5000);
-    return () => { cancelled = true; clearInterval(id); };
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
   }, [activeWorkspace?.id, activeProject?.id]);
 
   function latestFor(mod: AIModule): AIJob | undefined {
@@ -75,12 +87,54 @@ function AIWorkspacePage() {
     progress: number;
     minutes: number;
   }[] = [
-    { key: "market",       module: "market",       icon: LineChart,   status: statusFor("market"),       progress: progressFor("market"),       minutes: 4 },
-    { key: "consumer",     module: "consumer",     icon: Users,       status: statusFor("consumer"),     progress: progressFor("consumer"),     minutes: 6 },
-    { key: "localization", module: "localization", icon: Languages,   status: statusFor("localization"), progress: progressFor("localization"), minutes: 5 },
-    { key: "compliance",   module: "localization", icon: ShieldCheck, status: statusFor("localization"), progress: progressFor("localization"), minutes: 3 },
-    { key: "launch",       module: "launch",       icon: Rocket,      status: statusFor("launch"),       progress: progressFor("launch"),       minutes: 7 },
-    { key: "report",       module: "reports",      icon: FileBarChart,status: statusFor("reports"),      progress: progressFor("reports"),      minutes: 4 },
+    {
+      key: "market",
+      module: "market",
+      icon: LineChart,
+      status: statusFor("market"),
+      progress: progressFor("market"),
+      minutes: 4,
+    },
+    {
+      key: "consumer",
+      module: "consumer",
+      icon: Users,
+      status: statusFor("consumer"),
+      progress: progressFor("consumer"),
+      minutes: 6,
+    },
+    {
+      key: "localization",
+      module: "localization",
+      icon: Languages,
+      status: statusFor("localization"),
+      progress: progressFor("localization"),
+      minutes: 5,
+    },
+    {
+      key: "compliance",
+      module: "localization",
+      icon: ShieldCheck,
+      status: statusFor("localization"),
+      progress: progressFor("localization"),
+      minutes: 3,
+    },
+    {
+      key: "launch",
+      module: "launch",
+      icon: Rocket,
+      status: statusFor("launch"),
+      progress: progressFor("launch"),
+      minutes: 7,
+    },
+    {
+      key: "report",
+      module: "reports",
+      icon: FileBarChart,
+      status: statusFor("reports"),
+      progress: progressFor("reports"),
+      minutes: 4,
+    },
   ];
 
   // Activity feed reads recent jobs.
@@ -89,7 +143,10 @@ function AIWorkspacePage() {
     return {
       id: j.id,
       time: new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      label: t(`aiws.step.${j.module === "reports" ? "report" : j.module}`) + " · " + t(`ai.status.${j.status}`),
+      label:
+        t(`aiws.step.${j.module === "reports" ? "report" : j.module}`) +
+        " · " +
+        t(`ai.status.${j.status}`),
       done: j.status === "completed",
       running: j.status === "running" || j.status === "queued",
     };
@@ -232,35 +289,37 @@ function AIWorkspacePage() {
             }
           />
           {activity.length === 0 ? (
-            <p className="px-4 py-8 text-center text-xs text-[var(--muted-foreground)]">{t("common.empty")}</p>
+            <p className="px-4 py-8 text-center text-xs text-[var(--muted-foreground)]">
+              {t("common.empty")}
+            </p>
           ) : (
-          <ul className="max-h-[640px] divide-y divide-[var(--border)] overflow-y-auto">
-            {activity.map((a) => {
-              return (
-                <li key={a.id} className="flex items-start gap-3 px-4 py-2.5">
-                  <span className="mt-1 w-12 shrink-0 font-mono text-[10px] text-[var(--muted-foreground)]">
-                    {a.time}
-                  </span>
-                  <span
-                    className={`mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-md ${
-                      a.running
-                        ? "bg-[var(--primary)] text-white"
-                        : "bg-[var(--muted)] text-[var(--muted-foreground)]"
-                    }`}
-                  >
-                    {a.running ? (
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                    ) : (
-                      <CheckCircle2 className="h-3 w-3" />
-                    )}
-                  </span>
-                  <p className="min-w-0 flex-1 text-[13px] leading-relaxed text-[var(--foreground)]">
-                    {a.label}
-                  </p>
-                </li>
-              );
-            })}
-          </ul>
+            <ul className="max-h-[640px] divide-y divide-[var(--border)] overflow-y-auto">
+              {activity.map((a) => {
+                return (
+                  <li key={a.id} className="flex items-start gap-3 px-4 py-2.5">
+                    <span className="mt-1 w-12 shrink-0 font-mono text-[10px] text-[var(--muted-foreground)]">
+                      {a.time}
+                    </span>
+                    <span
+                      className={`mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-md ${
+                        a.running
+                          ? "bg-[var(--primary)] text-white"
+                          : "bg-[var(--muted)] text-[var(--muted-foreground)]"
+                      }`}
+                    >
+                      {a.running ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <CheckCircle2 className="h-3 w-3" />
+                      )}
+                    </span>
+                    <p className="min-w-0 flex-1 text-[13px] leading-relaxed text-[var(--foreground)]">
+                      {a.label}
+                    </p>
+                  </li>
+                );
+              })}
+            </ul>
           )}
         </section>
 
@@ -273,7 +332,9 @@ function AIWorkspacePage() {
           />
           <div className="space-y-3 p-3">
             {hasOutputs ? null : (
-              <p className="px-1 py-8 text-center text-xs text-[var(--muted-foreground)]">{t("common.empty")}</p>
+              <p className="px-1 py-8 text-center text-xs text-[var(--muted-foreground)]">
+                {t("common.empty")}
+              </p>
             )}
           </div>
         </section>
@@ -307,24 +368,14 @@ function AIWorkspacePage() {
   );
 }
 
-function ContextStat({
-  label,
-  value,
-  accent,
-}: {
-  label: string;
-  value: string;
-  accent?: boolean;
-}) {
+function ContextStat({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
   return (
     <div className="rounded-lg border border-[var(--border)] bg-[var(--muted)]/40 px-3 py-1.5 sm:bg-transparent sm:border-l sm:border-y-0 sm:border-r-0 sm:rounded-none sm:pl-4 sm:pr-0">
       <div className="text-[10px] uppercase tracking-wider text-[var(--muted-foreground)]">
         {label}
       </div>
       <div
-        className={`mt-0.5 truncate text-sm font-semibold ${
-          accent ? "text-[var(--primary)]" : ""
-        }`}
+        className={`mt-0.5 truncate text-sm font-semibold ${accent ? "text-[var(--primary)]" : ""}`}
       >
         {value}
       </div>
@@ -351,9 +402,7 @@ function PanelHeader({
         </span>
         <div className="min-w-0">
           <h2 className="truncate text-sm font-semibold">{title}</h2>
-          {sub && (
-            <p className="truncate text-[11px] text-[var(--muted-foreground)]">{sub}</p>
-          )}
+          {sub && <p className="truncate text-[11px] text-[var(--muted-foreground)]">{sub}</p>}
         </div>
       </div>
       {right}

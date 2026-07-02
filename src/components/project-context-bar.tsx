@@ -34,14 +34,21 @@ export function ProjectContextBar() {
       </div>
       <div className="hidden items-center gap-6 md:flex">
         <div className="text-xs">
-          <div className="text-[10px] uppercase tracking-wider text-[var(--muted-foreground)]">{t("projectBar.stage")}</div>
+          <div className="text-[10px] uppercase tracking-wider text-[var(--muted-foreground)]">
+            {t("projectBar.stage")}
+          </div>
           <div className="mt-0.5 font-medium">{t(stageLabelKey[activeProject.stage])}</div>
         </div>
         <div className="flex items-center gap-2 text-xs">
           <div className="h-1 w-32 overflow-hidden rounded-full bg-[var(--muted)]">
-            <div className="h-full rounded-full bg-[var(--primary)]" style={{ width: `${activeProject.progress}%` }} />
+            <div
+              className="h-full rounded-full bg-[var(--primary)]"
+              style={{ width: `${activeProject.progress}%` }}
+            />
           </div>
-          <span className="tabular-nums text-[var(--muted-foreground)]">{activeProject.progress}%</span>
+          <span className="tabular-nums text-[var(--muted-foreground)]">
+            {activeProject.progress}%
+          </span>
         </div>
       </div>
       <div className="relative" ref={ref}>
@@ -63,9 +70,13 @@ export function ProjectContextBar() {
                 }}
                 className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-sm hover:bg-[var(--muted)]"
               >
-                <span className="grid h-6 w-6 place-items-center rounded bg-[var(--muted)] text-[10px] font-semibold">{p.initials}</span>
+                <span className="grid h-6 w-6 place-items-center rounded bg-[var(--muted)] text-[10px] font-semibold">
+                  {p.initials}
+                </span>
                 <span className="flex-1 truncate text-left">{p.name}</span>
-                {p.id === activeProject.id && <Check className="h-3.5 w-3.5 text-[var(--primary)]" />}
+                {p.id === activeProject.id && (
+                  <Check className="h-3.5 w-3.5 text-[var(--primary)]" />
+                )}
               </button>
             ))}
             <Link

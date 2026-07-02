@@ -38,7 +38,10 @@ export const BUILDER_STEP_KEY: Record<BuilderStep, string> = {
 
 function normalizeDomain(website?: string): string {
   if (!website) return "";
-  return website.replace(/^https?:\/\//i, "").replace(/^www\./i, "").replace(/\/.*$/, "");
+  return website
+    .replace(/^https?:\/\//i, "")
+    .replace(/^www\./i, "")
+    .replace(/\/.*$/, "");
 }
 
 // Placeholder generator — deterministic, brand-agnostic skeleton.

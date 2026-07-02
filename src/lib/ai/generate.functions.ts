@@ -33,7 +33,8 @@ const MODEL = "google/gemini-3-flash-preview";
 // BridgeCN never queries any of these directly — if SEMrush isn't connected,
 // the only honest label is "AI inference". This regex is used to scrub the
 // `sources` array (and any per-KPI `src` field) before the result reaches UI.
-const FAKE_SOURCE_RE = /(euromonitor|questmobile|iimedia|nielsen|tmall(\s+global)?\s+insights?|xiaohongshu.*(trend|report)|red\s+(trend|report)|sasa|sephora|hkrma|hong\s*kong\s+retail\s+management|kantar|mintel|statista|frost\s*&?\s*sullivan|china\s+national\s+bureau|national\s+bureau\s+of\s+statistics|baidu\s+index|douyin\s+(trend|report)|weibo\s+(trend|report)|l'?or[ée]al.*(review|annual))/i;
+const FAKE_SOURCE_RE =
+  /(euromonitor|questmobile|iimedia|nielsen|tmall(\s+global)?\s+insights?|xiaohongshu.*(trend|report)|red\s+(trend|report)|sasa|sephora|hkrma|hong\s*kong\s+retail\s+management|kantar|mintel|statista|frost\s*&?\s*sullivan|china\s+national\s+bureau|national\s+bureau\s+of\s+statistics|baidu\s+index|douyin\s+(trend|report)|weibo\s+(trend|report)|l'?or[ée]al.*(review|annual))/i;
 
 function isFakeSource(s: string): boolean {
   if (!s) return true;
@@ -43,7 +44,7 @@ function isFakeSource(s: string): boolean {
 }
 
 function sanitizeSources(value: unknown, hasSemrush: boolean, market: string): string[] {
-  const arr = Array.isArray(value) ? value.filter((v) => typeof v === "string") as string[] : [];
+  const arr = Array.isArray(value) ? (value.filter((v) => typeof v === "string") as string[]) : [];
   const cleaned = arr.filter((s) => !isFakeSource(s));
   if (cleaned.length === 0) {
     return hasSemrush
@@ -55,12 +56,19 @@ function sanitizeSources(value: unknown, hasSemrush: boolean, market: string): s
 
 function sanitizeKpiSrc(src: unknown, hasSemrush: boolean, market: string): string {
   const s = typeof src === "string" ? src : "";
-  if (!s) return hasSemrush ? `AI inference (SEMrush ${market.toUpperCase()} unavailable for this metric)` : "AI inference · category benchmark";
+  if (!s)
+    return hasSemrush
+      ? `AI inference (SEMrush ${market.toUpperCase()} unavailable for this metric)`
+      : "AI inference · category benchmark";
   if (isFakeSource(s)) return "AI inference · category benchmark";
   return s;
 }
 
-function scrubOutput(parsed: { [k: string]: JsonValue }, hasSemrush: boolean, market: string): { [k: string]: JsonValue } {
+function scrubOutput(
+  parsed: { [k: string]: JsonValue },
+  hasSemrush: boolean,
+  market: string,
+): { [k: string]: JsonValue } {
   const out = { ...parsed };
   if ("sources" in out) {
     out.sources = sanitizeSources(out.sources, hasSemrush, market) as JsonValue;
@@ -91,7 +99,8 @@ function contextBrief(ctx: ProjectContext): string {
   if (ctx.brandStory) lines.push(`Brand story: ${ctx.brandStory.slice(0, 600)}`);
   if (ctx.marketingCopy) lines.push(`Existing marketing copy: ${ctx.marketingCopy.slice(0, 800)}`);
   if (ctx.website) lines.push(`Website: ${ctx.website}`);
-  if (ctx.socialChannels.length) lines.push(`Social: ${ctx.socialChannels.map((s) => `${s.label} ${s.url}`).join(", ")}`);
+  if (ctx.socialChannels.length)
+    lines.push(`Social: ${ctx.socialChannels.map((s) => `${s.label} ${s.url}`).join(", ")}`);
   return lines.join("\n");
 }
 
@@ -244,7 +253,8 @@ async function callGateway(system: string, user: string): Promise<{ [k: string]:
     }),
   });
   if (res.status === 429) throw new Error("AI rate limit — please retry in a moment.");
-  if (res.status === 402) throw new Error("AI credits exhausted. Add credits in Settings → Plans & credits.");
+  if (res.status === 402)
+    throw new Error("AI credits exhausted. Add credits in Settings → Plans & credits.");
   if (!res.ok) {
     const body = await res.text().catch(() => "");
     throw new Error(`AI gateway ${res.status}: ${body.slice(0, 240)}`);
@@ -256,7 +266,11 @@ async function callGateway(system: string, user: string): Promise<{ [k: string]:
   } catch {
     const m = content.match(/\{[\s\S]*\}/);
     if (m) {
-      try { return JSON.parse(m[0]) as { [k: string]: JsonValue }; } catch { /* fall */ }
+      try {
+        return JSON.parse(m[0]) as { [k: string]: JsonValue };
+      } catch {
+        /* fall */
+      }
     }
     throw new Error("AI returned non-JSON content");
   }
@@ -273,8 +287,22 @@ export const generateAIOutput = createServerFn({ method: "POST" })
     let hasSemrush = false;
     let semrushMarket = "";
     if (extra && Object.keys(extra).length) {
-      const sem = (extra as { semrush?: { market?: string; domainOverview?: unknown; keywords?: unknown[]; competitors?: unknown[] } }).semrush;
-      if (sem && (sem.domainOverview || (sem.keywords && sem.keywords.length) || (sem.competitors && sem.competitors.length))) {
+      const sem = (
+        extra as {
+          semrush?: {
+            market?: string;
+            domainOverview?: unknown;
+            keywords?: unknown[];
+            competitors?: unknown[];
+          };
+        }
+      ).semrush;
+      if (
+        sem &&
+        (sem.domainOverview ||
+          (sem.keywords && sem.keywords.length) ||
+          (sem.competitors && sem.competitors.length))
+      ) {
         hasSemrush = true;
         semrushMarket = sem.market || "";
         extraBlock = `\n\n--- SEMRUSH DATA (REAL, VERIFIED — USE VERBATIM) ---\n${JSON.stringify(sem).slice(0, 5000)}`;

@@ -75,27 +75,69 @@ const CATEGORY_PRESETS: { match: RegExp; keywords: string[]; regions?: string[] 
   },
   {
     match: /(coffee|tea|caf)/i,
-    keywords: ["Specialty Coffee", "Single Origin", "Cold Brew", "Premium Tea", "Daily Ritual", "Sustainable Sourcing"],
+    keywords: [
+      "Specialty Coffee",
+      "Single Origin",
+      "Cold Brew",
+      "Premium Tea",
+      "Daily Ritual",
+      "Sustainable Sourcing",
+    ],
   },
   {
     match: /(snack|food|confection|bakery)/i,
-    keywords: ["Healthy Snacking", "Clean Label", "Plant-based", "On-the-go", "Premium Ingredients", "Family-friendly"],
+    keywords: [
+      "Healthy Snacking",
+      "Clean Label",
+      "Plant-based",
+      "On-the-go",
+      "Premium Ingredients",
+      "Family-friendly",
+    ],
   },
   {
     match: /(skincare|cosmetic|beauty|derma)/i,
-    keywords: ["Glass Skin", "Sensitive Skin", "Ingredient-led", "Clean Beauty", "Barrier Care", "K-beauty Routine"],
+    keywords: [
+      "Glass Skin",
+      "Sensitive Skin",
+      "Ingredient-led",
+      "Clean Beauty",
+      "Barrier Care",
+      "K-beauty Routine",
+    ],
   },
   {
     match: /(fashion|apparel|clothing|wear)/i,
-    keywords: ["Quiet Luxury", "Capsule Wardrobe", "Sustainable Fashion", "Streetwear", "Minimalist Style", "Heritage Craft"],
+    keywords: [
+      "Quiet Luxury",
+      "Capsule Wardrobe",
+      "Sustainable Fashion",
+      "Streetwear",
+      "Minimalist Style",
+      "Heritage Craft",
+    ],
   },
   {
     match: /(tech|saas|software|app|platform)/i,
-    keywords: ["Productivity", "Workflow Automation", "AI-native", "Enterprise Ready", "Self-serve", "Integrations"],
+    keywords: [
+      "Productivity",
+      "Workflow Automation",
+      "AI-native",
+      "Enterprise Ready",
+      "Self-serve",
+      "Integrations",
+    ],
   },
   {
     match: /(health|wellness|supplement|nutrition)/i,
-    keywords: ["Daily Wellness", "Functional Health", "Clean Ingredients", "Science-backed", "Clinically Tested", "Premium Formula"],
+    keywords: [
+      "Daily Wellness",
+      "Functional Health",
+      "Clean Ingredients",
+      "Science-backed",
+      "Clinically Tested",
+      "Premium Formula",
+    ],
   },
 ];
 
@@ -276,7 +318,10 @@ export function deriveConfidence(ctx: ProjectContext): number {
 }
 
 // Category-aware KPI presets.
-export function deriveKpis(ctx: ProjectContext, conf: number): { label: string; value: string; sub?: string; src?: string; conf?: number }[] {
+export function deriveKpis(
+  ctx: ProjectContext,
+  conf: number,
+): { label: string; value: string; sub?: string; src?: string; conf?: number }[] {
   const market = targetMarketLabel(ctx);
   const cat = (ctx.category || ctx.industry || "category").toLowerCase();
   const presetMatches = (re: RegExp) => re.test(cat);
@@ -285,26 +330,74 @@ export function deriveKpis(ctx: ProjectContext, conf: number): { label: string; 
   let aov = "—";
   let penetration = "—";
   if (presetMatches(/(water|mineral|beverage|drink|hydration)/)) {
-    size = "USD 18.4B"; cagr = "6.8%"; aov = "USD 12"; penetration = "62%";
+    size = "USD 18.4B";
+    cagr = "6.8%";
+    aov = "USD 12";
+    penetration = "62%";
   } else if (presetMatches(/(skincare|cosmetic|beauty|derma)/)) {
-    size = "USD 54.2B"; cagr = "9.2%"; aov = "USD 38"; penetration = "71%";
+    size = "USD 54.2B";
+    cagr = "9.2%";
+    aov = "USD 38";
+    penetration = "71%";
   } else if (presetMatches(/(snack|food|confection|bakery)/)) {
-    size = "USD 92.7B"; cagr = "5.4%"; aov = "USD 22"; penetration = "84%";
+    size = "USD 92.7B";
+    cagr = "5.4%";
+    aov = "USD 22";
+    penetration = "84%";
   } else if (presetMatches(/(tech|saas|software|app|platform)/)) {
-    size = "USD 47.1B"; cagr = "14.6%"; aov = "USD 480"; penetration = "33%";
+    size = "USD 47.1B";
+    cagr = "14.6%";
+    aov = "USD 480";
+    penetration = "33%";
   } else if (presetMatches(/(fashion|apparel|clothing|wear)/)) {
-    size = "USD 73.8B"; cagr = "7.1%"; aov = "USD 64"; penetration = "58%";
+    size = "USD 73.8B";
+    cagr = "7.1%";
+    aov = "USD 64";
+    penetration = "58%";
   } else if (presetMatches(/(health|wellness|supplement|nutrition)/)) {
-    size = "USD 31.5B"; cagr = "8.9%"; aov = "USD 45"; penetration = "47%";
+    size = "USD 31.5B";
+    cagr = "8.9%";
+    aov = "USD 45";
+    penetration = "47%";
   } else if (presetMatches(/(coffee|tea|caf)/)) {
-    size = "USD 28.6B"; cagr = "7.3%"; aov = "USD 18"; penetration = "68%";
+    size = "USD 28.6B";
+    cagr = "7.3%";
+    aov = "USD 18";
+    penetration = "68%";
   } else {
-    size = "—"; cagr = "—"; aov = "—"; penetration = "—";
+    size = "—";
+    cagr = "—";
+    aov = "—";
+    penetration = "—";
   }
   return [
-    { label: `Market size (${market})`, value: size, sub: "Annual gross merchandise value", src: "Industry benchmark", conf },
-    { label: "CAGR (3y)", value: cagr, sub: "Compound annual growth", src: "Industry benchmark", conf },
-    { label: "Average order value", value: aov, sub: "Category online median", src: "Marketplace data", conf },
-    { label: "Category penetration", value: penetration, sub: "Adoption among target audience", src: "Survey panels", conf },
+    {
+      label: `Market size (${market})`,
+      value: size,
+      sub: "Annual gross merchandise value",
+      src: "Industry benchmark",
+      conf,
+    },
+    {
+      label: "CAGR (3y)",
+      value: cagr,
+      sub: "Compound annual growth",
+      src: "Industry benchmark",
+      conf,
+    },
+    {
+      label: "Average order value",
+      value: aov,
+      sub: "Category online median",
+      src: "Marketplace data",
+      conf,
+    },
+    {
+      label: "Category penetration",
+      value: penetration,
+      sub: "Adoption among target audience",
+      src: "Survey panels",
+      conf,
+    },
   ];
 }
