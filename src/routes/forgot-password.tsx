@@ -24,7 +24,10 @@ function ForgotPage() {
       redirectTo: `${window.location.origin}/login`,
     });
     setBusy(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     setSent(true);
   }
 
@@ -45,7 +48,15 @@ function ForgotPage() {
         </div>
       ) : (
         <form onSubmit={submit} className="space-y-4">
-          <Field label={t("auth.email")} type="email" required value={email} onChange={setEmail} placeholder="you@company.com" autoComplete="email" />
+          <Field
+            label={t("auth.email")}
+            type="email"
+            required
+            value={email}
+            onChange={setEmail}
+            placeholder="you@company.com"
+            autoComplete="email"
+          />
           <button
             type="submit"
             disabled={busy}

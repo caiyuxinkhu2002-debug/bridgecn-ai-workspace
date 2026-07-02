@@ -21,16 +21,24 @@ function RegisterPage() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (password.length < 6) { toast.error(t("toast.passwordShort")); return; }
+    if (password.length < 6) {
+      toast.error(t("toast.passwordShort"));
+      return;
+    }
     setBusy(true);
     const { error, data } = await supabase.auth.signUp({
-      email, password,
+      email,
+      password,
       options: {
         emailRedirectTo: window.location.origin,
         data: { name, company },
       },
     });
-    if (error) { setBusy(false); toast.error(error.message); return; }
+    if (error) {
+      setBusy(false);
+      toast.error(error.message);
+      return;
+    }
     // Patch profile with company once it's auto-created
     if (data.user && company) {
       await supabase.from("profiles").update({ company, name }).eq("id", data.user.id);
@@ -56,10 +64,39 @@ function RegisterPage() {
       <SocialButtons />
       <Divider label={t("auth.continueWith")} />
       <form onSubmit={submit} className="space-y-4">
-        <Field label={t("auth.name")} required value={name} onChange={setName} placeholder="Sora Kim" autoComplete="name" />
-        <Field label={t("auth.company")} value={company} onChange={setCompany} placeholder="Your company" autoComplete="organization" />
-        <Field label={t("auth.email")} type="email" required value={email} onChange={setEmail} placeholder="you@company.com" autoComplete="email" />
-        <Field label={t("auth.password")} type="password" required value={password} onChange={setPassword} placeholder="••••••••" autoComplete="new-password" />
+        <Field
+          label={t("auth.name")}
+          required
+          value={name}
+          onChange={setName}
+          placeholder="Sora Kim"
+          autoComplete="name"
+        />
+        <Field
+          label={t("auth.company")}
+          value={company}
+          onChange={setCompany}
+          placeholder="Your company"
+          autoComplete="organization"
+        />
+        <Field
+          label={t("auth.email")}
+          type="email"
+          required
+          value={email}
+          onChange={setEmail}
+          placeholder="you@company.com"
+          autoComplete="email"
+        />
+        <Field
+          label={t("auth.password")}
+          type="password"
+          required
+          value={password}
+          onChange={setPassword}
+          placeholder="••••••••"
+          autoComplete="new-password"
+        />
         <button
           type="submit"
           disabled={busy}

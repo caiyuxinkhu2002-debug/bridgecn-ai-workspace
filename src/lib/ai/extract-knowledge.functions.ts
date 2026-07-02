@@ -41,20 +41,40 @@ function normalizeUrl(input: string): string {
 }
 
 function originOf(url: string): string {
-  try { return new URL(url).origin; } catch { return ""; }
+  try {
+    return new URL(url).origin;
+  } catch {
+    return "";
+  }
 }
 
-function stripHtml(html: string): { text: string; title: string; meta: string; ogDesc: string; links: { href: string; text: string }[]; socials: { label: string; url: string }[] } {
+function stripHtml(html: string): {
+  text: string;
+  title: string;
+  meta: string;
+  ogDesc: string;
+  links: { href: string; text: string }[];
+  socials: { label: string; url: string }[];
+} {
   const title = (html.match(/<title[^>]*>([^<]{1,300})<\/title>/i)?.[1] || "").trim();
-  const meta = (html.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']{1,500})["']/i)?.[1] || "").trim();
-  const ogDesc = (html.match(/<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']{1,500})["']/i)?.[1] || "").trim();
+  const meta = (
+    html.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']{1,500})["']/i)?.[1] || ""
+  ).trim();
+  const ogDesc = (
+    html.match(
+      /<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']{1,500})["']/i,
+    )?.[1] || ""
+  ).trim();
 
   const links: { href: string; text: string }[] = [];
   const linkRe = /<a\b[^>]*href=["']([^"'#]+)["'][^>]*>([\s\S]*?)<\/a>/gi;
   let m: RegExpExecArray | null;
   while ((m = linkRe.exec(html)) && links.length < 200) {
     const href = m[1];
-    const text = m[2].replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
+    const text = m[2]
+      .replace(/<[^>]+>/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
     if (text || href) links.push({ href, text });
   }
 
@@ -119,7 +139,8 @@ async function tryFetch(url: string, timeoutMs = 8000): Promise<string> {
 }
 
 function pickKeyLinks(links: { href: string; text: string }[], origin: string): string[] {
-  const wanted = /(about|brand|story|company|product|shop|collection|press|sustain|mission|values)/i;
+  const wanted =
+    /(about|brand|story|company|product|shop|collection|press|sustain|mission|values)/i;
   const out: string[] = [];
   const seen = new Set<string>();
   for (const l of links) {
@@ -136,15 +157,22 @@ function pickKeyLinks(links: { href: string; text: string }[], origin: string): 
   return out;
 }
 
-async function callLovableAI(payload: { brandName?: string; website?: string; targetMarket?: string; corpus: string; uiLocale?: "en" | "ko" | "zh" }): Promise<ExtractedKB> {
+async function callLovableAI(payload: {
+  brandName?: string;
+  website?: string;
+  targetMarket?: string;
+  corpus: string;
+  uiLocale?: "en" | "ko" | "zh";
+}): Promise<ExtractedKB> {
   const apiKey = process.env.LOVABLE_API_KEY;
   if (!apiKey) throw new Error("LOVABLE_API_KEY missing");
 
-  const langName = payload.uiLocale === "zh"
-    ? "Simplified Chinese (简体中文)"
-    : payload.uiLocale === "ko"
-      ? "Korean (한국어)"
-      : "English";
+  const langName =
+    payload.uiLocale === "zh"
+      ? "Simplified Chinese (简体中文)"
+      : payload.uiLocale === "ko"
+        ? "Korean (한국어)"
+        : "English";
   const system = `You are a brand research analyst. From the provided website content, extract a structured Knowledge Base for a brand that is preparing to enter the Chinese market. Be specific and grounded in the source — never invent products or competitors that are not implied. If a field cannot be determined, return the most reasonable inference based on industry context, and lower its confidence.
 
 LANGUAGE: Write ALL free-text values (industry, category, brandStory, brandPositioning, brandTone, keywords, competitors, targetAudience, koreanCopy, product descriptions) in ${langName}. Keep JSON KEYS in English. Keep brand names, product SKU codes, URLs, social handles, and platform names (Xiaohongshu/Tmall/TikTok/Instagram) in their original form.
@@ -201,9 +229,17 @@ ${schemaHint}`;
   const json = (await res.json()) as { choices?: { message?: { content?: string } }[] };
   const content = json.choices?.[0]?.message?.content || "{}";
   let parsed: ExtractedKB = {};
-  try { parsed = JSON.parse(content); } catch {
+  try {
+    parsed = JSON.parse(content);
+  } catch {
     const match = content.match(/\{[\s\S]*\}/);
-    if (match) { try { parsed = JSON.parse(match[0]); } catch { /* ignore */ } }
+    if (match) {
+      try {
+        parsed = JSON.parse(match[0]);
+      } catch {
+        /* ignore */
+      }
+    }
   }
   return parsed;
 }

@@ -52,116 +52,148 @@ export function useAIJob() {
     abortRef.current?.abort();
   }, []);
 
-  const run = useCallback(async (req: { module: AIModule; prompt: string; input?: Record<string, unknown> }) => {
-    if (!user || !activeWorkspace?.id) {
-      setState((s) => ({ ...s, status: "failed", error: "No active workspace or user." }));
-      return null;
-    }
-    abortRef.current?.abort();
-    const ctrl = new AbortController();
-    abortRef.current = ctrl;
+  const run = useCallback(
+    async (req: { module: AIModule; prompt: string; input?: Record<string, unknown> }) => {
+      if (!user || !activeWorkspace?.id) {
+        setState((s) => ({ ...s, status: "failed", error: "No active workspace or user." }));
+        return null;
+      }
+      abortRef.current?.abort();
+      const ctrl = new AbortController();
+      abortRef.current = ctrl;
 
+      setState({
+        status: "queued",
+        phase: null,
+        output: "",
+        error: null,
+        job: null,
+        isRunning: true,
+        data: {},
+        events: [{ ts: Date.now(), kind: "status", key: "ai.event.queued" }],
+      });
+
+      // Build a shared ProjectContext from the active project Knowledge Base
+      // and auto-inject it into every AI job. Providers MUST derive output
+      // from this object — no hardcoded brand/category data.
+      const projectContext = buildProjectContext(activeProject);
+
+      const payload: CreateJobInput = {
+        workspaceId: activeWorkspace.id,
+        projectId: activeProject?.id || null,
+        userId: user.id,
+        module: req.module,
+        prompt: req.prompt,
+        input: { ...(req.input ?? {}), projectContext, uiLocale: locale },
+      };
+
+      let finalJob: AIJob | null = null;
+      try {
+        for await (const ev of createAndRunJob(payload, ctrl.signal)) {
+          if (ev.type === "created") {
+            setState((s) => ({
+              ...s,
+              job: ev.job,
+              status: ev.job.status,
+              events: [...s.events, { ts: Date.now(), kind: "status", key: "ai.event.jobCreated" }],
+            }));
+          } else if (ev.type === "status") {
+            setState((s) => ({
+              ...s,
+              status: ev.status,
+              phase: ev.phase ?? s.phase,
+              events: ev.phase
+                ? [
+                    ...s.events,
+                    { ts: Date.now(), kind: "phase", phase: ev.phase, fallback: ev.label },
+                  ]
+                : s.events,
+            }));
+          } else if (ev.type === "delta") {
+            setState((s) => ({ ...s, output: ev.output }));
+          } else if (ev.type === "data") {
+            setState((s) => {
+              const data = mergeData(s.data, ev.data);
+              const ev2 = describeData(ev.data);
+              return {
+                ...s,
+                data,
+                events: ev2 ? [...s.events, { ts: Date.now(), kind: "data", ...ev2 }] : s.events,
+              };
+            });
+          } else if (ev.type === "completed") {
+            finalJob = ev.job;
+            setState((s) => ({
+              ...s,
+              status: "completed",
+              phase: "completed",
+              job: ev.job,
+              output: ev.job.output,
+              isRunning: false,
+              data: mergeData(s.data, (ev.job.output_data ?? {}) as Record<string, unknown>),
+              events: [...s.events, { ts: Date.now(), kind: "status", key: "ai.event.completed" }],
+            }));
+          } else if (ev.type === "failed") {
+            setState((s) => ({
+              ...s,
+              status: "failed",
+              error: ev.error,
+              job: ev.job ?? s.job,
+              isRunning: false,
+              events: [
+                ...s.events,
+                {
+                  ts: Date.now(),
+                  kind: "status",
+                  key: "ai.event.failed",
+                  params: { v: ev.error },
+                  fallback: ev.error,
+                },
+              ],
+            }));
+          } else if (ev.type === "cancelled") {
+            setState((s) => ({
+              ...s,
+              status: "cancelled",
+              job: ev.job ?? s.job,
+              isRunning: false,
+              events: [...s.events, { ts: Date.now(), kind: "status", key: "ai.event.cancelled" }],
+            }));
+          }
+        }
+      } catch (e) {
+        setState((s) => ({
+          ...s,
+          status: "failed",
+          error: (e as Error)?.message || "Unknown error",
+          isRunning: false,
+        }));
+      }
+      return finalJob;
+    },
+    [user, activeWorkspace?.id, activeProject, locale],
+  );
+
+  const reset = useCallback(() => {
     setState({
-      status: "queued",
+      status: "idle",
       phase: null,
       output: "",
       error: null,
       job: null,
-      isRunning: true,
+      isRunning: false,
       data: {},
-      events: [{ ts: Date.now(), kind: "status", key: "ai.event.queued" }],
+      events: [],
     });
-
-    // Build a shared ProjectContext from the active project Knowledge Base
-    // and auto-inject it into every AI job. Providers MUST derive output
-    // from this object — no hardcoded brand/category data.
-    const projectContext = buildProjectContext(activeProject);
-
-    const payload: CreateJobInput = {
-      workspaceId: activeWorkspace.id,
-      projectId: activeProject?.id || null,
-      userId: user.id,
-      module: req.module,
-      prompt: req.prompt,
-      input: { ...(req.input ?? {}), projectContext, uiLocale: locale },
-    };
-
-    let finalJob: AIJob | null = null;
-    try {
-      for await (const ev of createAndRunJob(payload, ctrl.signal)) {
-        if (ev.type === "created") {
-          setState((s) => ({
-            ...s,
-            job: ev.job,
-            status: ev.job.status,
-            events: [...s.events, { ts: Date.now(), kind: "status", key: "ai.event.jobCreated" }],
-          }));
-        } else if (ev.type === "status") {
-          setState((s) => ({
-            ...s,
-            status: ev.status,
-            phase: ev.phase ?? s.phase,
-            events: ev.phase
-              ? [...s.events, { ts: Date.now(), kind: "phase", phase: ev.phase, fallback: ev.label }]
-              : s.events,
-          }));
-        } else if (ev.type === "delta") {
-          setState((s) => ({ ...s, output: ev.output }));
-        } else if (ev.type === "data") {
-          setState((s) => {
-            const data = mergeData(s.data, ev.data);
-            const ev2 = describeData(ev.data);
-            return {
-              ...s,
-              data,
-              events: ev2 ? [...s.events, { ts: Date.now(), kind: "data", ...ev2 }] : s.events,
-            };
-          });
-        } else if (ev.type === "completed") {
-          finalJob = ev.job;
-          setState((s) => ({
-            ...s,
-            status: "completed",
-            phase: "completed",
-            job: ev.job,
-            output: ev.job.output,
-            isRunning: false,
-            data: mergeData(s.data, (ev.job.output_data ?? {}) as Record<string, unknown>),
-            events: [...s.events, { ts: Date.now(), kind: "status", key: "ai.event.completed" }],
-          }));
-        } else if (ev.type === "failed") {
-          setState((s) => ({
-            ...s,
-            status: "failed",
-            error: ev.error,
-            job: ev.job ?? s.job,
-            isRunning: false,
-            events: [...s.events, { ts: Date.now(), kind: "status", key: "ai.event.failed", params: { v: ev.error }, fallback: ev.error }],
-          }));
-        } else if (ev.type === "cancelled") {
-          setState((s) => ({
-            ...s,
-            status: "cancelled",
-            job: ev.job ?? s.job,
-            isRunning: false,
-            events: [...s.events, { ts: Date.now(), kind: "status", key: "ai.event.cancelled" }],
-          }));
-        }
-      }
-    } catch (e) {
-      setState((s) => ({ ...s, status: "failed", error: (e as Error)?.message || "Unknown error", isRunning: false }));
-    }
-    return finalJob;
-  }, [user, activeWorkspace?.id, activeProject, locale]);
-
-  const reset = useCallback(() => {
-    setState({ status: "idle", phase: null, output: "", error: null, job: null, isRunning: false, data: {}, events: [] });
   }, []);
 
   return { ...state, run, cancel, reset };
 }
 
-function mergeData(prev: Record<string, unknown>, next: Record<string, unknown>): Record<string, unknown> {
+function mergeData(
+  prev: Record<string, unknown>,
+  next: Record<string, unknown>,
+): Record<string, unknown> {
   const out = { ...prev };
   for (const [k, v] of Object.entries(next)) {
     if (k === "sourceAppend" && typeof v === "string") {
@@ -183,8 +215,11 @@ function mergeData(prev: Record<string, unknown>, next: Record<string, unknown>)
   return out;
 }
 
-function describeData(d: Record<string, unknown>): Pick<AIJobEventItem, "key" | "params" | "fallback"> | null {
-  if ("sourceAppend" in d) return { key: "ai.event.sourceIndexed", params: { v: String(d.sourceAppend) } };
+function describeData(
+  d: Record<string, unknown>,
+): Pick<AIJobEventItem, "key" | "params" | "fallback"> | null {
+  if ("sourceAppend" in d)
+    return { key: "ai.event.sourceIndexed", params: { v: String(d.sourceAppend) } };
   if ("regionAppend" in d) {
     const r = d.regionAppend as { name?: string };
     return { key: "ai.event.regionalDemand", params: { v: r?.name ?? "" } };
@@ -193,7 +228,8 @@ function describeData(d: Record<string, unknown>): Pick<AIJobEventItem, "key" | 
     const k = d.keywordAppend as { k?: string };
     return { key: "ai.event.trendingKeyword", params: { v: k?.k ?? "" } };
   }
-  if ("confidence" in d) return { key: "ai.event.confidenceUpdated", params: { v: String(d.confidence) } };
+  if ("confidence" in d)
+    return { key: "ai.event.confidenceUpdated", params: { v: String(d.confidence) } };
   if ("itemAppend" in d) {
     const it = d.itemAppend as { note?: string };
     return { key: "ai.event.localizedSegment", params: { v: it?.note ?? "" } };

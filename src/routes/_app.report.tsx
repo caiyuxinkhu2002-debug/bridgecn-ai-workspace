@@ -1,13 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import {
-  Sparkles,
-  Download,
-  Share2,
-  FileText,
-  Calendar,
-  MapPin,
-  Loader2,
-} from "lucide-react";
+import { Sparkles, Download, Share2, FileText, Calendar, MapPin, Loader2 } from "lucide-react";
 import { useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/app-shell";
@@ -47,15 +39,28 @@ function ReportPage() {
   const router = useRouter();
   const [generating, setGenerating] = useState(false);
   const onGenerate = useCallback(async () => {
-    if (!activeWorkspace?.id || !activeProject?.id) { toast.error(t("reports.toast.noProject")); return; }
+    if (!activeWorkspace?.id || !activeProject?.id) {
+      toast.error(t("reports.toast.noProject"));
+      return;
+    }
     setGenerating(true);
     try {
       const ctx = buildProjectContext(activeProject);
-      const row = await generateReportNow({ data: { workspaceId: activeWorkspace.id, projectId: activeProject.id, projectContext: ctx, uiLocale: locale } });
+      const row = await generateReportNow({
+        data: {
+          workspaceId: activeWorkspace.id,
+          projectId: activeProject.id,
+          projectContext: ctx,
+          uiLocale: locale,
+        },
+      });
       toast.success(t("reports.toast.generated"));
       router.navigate({ to: "/report", search: { reportId: row.id } as never });
-    } catch (e) { toast.error((e as Error).message); }
-    finally { setGenerating(false); }
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setGenerating(false);
+    }
   }, [activeWorkspace?.id, activeProject, router, t, locale]);
   const kb = activeProject?.knowledgeBase || {};
 
@@ -71,20 +76,34 @@ function ReportPage() {
       try {
         if (reportId) {
           const r = await getReport({ data: { id: reportId } });
-          if (!cancelled) { setReport(r); setJob(null); }
+          if (!cancelled) {
+            setReport(r);
+            setJob(null);
+          }
         } else if (activeWorkspace?.id && activeProject?.id) {
-          const list = await listJobs({ workspaceId: activeWorkspace.id, projectId: activeProject.id, module: "market", limit: 1 });
+          const list = await listJobs({
+            workspaceId: activeWorkspace.id,
+            projectId: activeProject.id,
+            module: "market",
+            limit: 1,
+          });
           if (cancelled) return;
           setReport(null);
           setJob(list.find((j) => j.status === "completed") || null);
         } else {
-          setReport(null); setJob(null);
+          setReport(null);
+          setJob(null);
         }
-      } catch (e) { console.error(e); }
-      finally { if (!cancelled) setLoading(false); }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     }
     go();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [activeWorkspace?.id, activeProject?.id, reportId]);
 
   type ReportData = {
@@ -109,18 +128,31 @@ function ReportPage() {
   if (report && !data.summary && data.executiveSummary) data.summary = data.executiveSummary;
   const hasReport = Boolean(report || (job && (data.summary || (data.kpis?.length ?? 0) > 0)));
   const dateStr = report?.created_at || job?.completed_at || null;
-  const titleStr = report?.title || (activeProject?.name ? `${activeProject.name} · ${t("reports.title")}` : t("reports.title"));
+  const titleStr =
+    report?.title ||
+    (activeProject?.name ? `${activeProject.name} · ${t("reports.title")}` : t("reports.title"));
 
   const onShare = useCallback(async () => {
     const url = window.location.href;
     try {
-      if (navigator.share) { await navigator.share({ title: activeProject?.name || "Report", url }); return; }
-    } catch { /* fallthrough */ }
-    try { await navigator.clipboard.writeText(url); toast.success(t("common.linkCopied")); }
-    catch { toast.error(t("common.shareFailed")); }
+      if (navigator.share) {
+        await navigator.share({ title: activeProject?.name || "Report", url });
+        return;
+      }
+    } catch {
+      /* fallthrough */
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success(t("common.linkCopied"));
+    } catch {
+      toast.error(t("common.shareFailed"));
+    }
   }, [activeProject?.name, t]);
 
-  const onExport = useCallback(() => { window.print(); }, []);
+  const onExport = useCallback(() => {
+    window.print();
+  }, []);
 
   useEffect(() => {
     if (print && hasReport) {
@@ -133,7 +165,9 @@ function ReportPage() {
     <div>
       <ProjectContextBar />
       <PageHeader
-        title={activeProject?.name ? `${activeProject.name} · ${t("reports.title")}` : t("reports.title")}
+        title={
+          activeProject?.name ? `${activeProject.name} · ${t("reports.title")}` : t("reports.title")
+        }
         description={t("reports.sub")}
       />
       <DataIntegrityBanner />
@@ -176,11 +210,18 @@ function ReportPage() {
               </div>
             </div>
             <div className="flex items-center gap-2 print:hidden">
-              <button onClick={onShare} className="inline-flex h-9 items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--background)] px-3.5 text-xs font-medium hover:bg-[var(--muted)]">
+              <button
+                onClick={onShare}
+                className="inline-flex h-9 items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--background)] px-3.5 text-xs font-medium hover:bg-[var(--muted)]"
+              >
                 <Share2 className="h-3.5 w-3.5" />
                 {t("common.share")}
               </button>
-              <button onClick={onExport} disabled={!hasReport} className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[var(--foreground)] px-3.5 text-xs font-medium text-[var(--background)] hover:opacity-90 disabled:opacity-50">
+              <button
+                onClick={onExport}
+                disabled={!hasReport}
+                className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[var(--foreground)] px-3.5 text-xs font-medium text-[var(--background)] hover:opacity-90 disabled:opacity-50"
+              >
                 <Download className="h-3.5 w-3.5" />
                 {t("common.export")} PDF
               </button>
@@ -199,9 +240,7 @@ function ReportPage() {
             <p className="mt-3 text-sm font-medium">
               {t("report.empty.title", { v: activeProject?.name || t("common.thisProject") })}
             </p>
-            <p className="mt-1 text-xs text-[var(--muted-foreground)]">
-              {t("report.empty.desc")}
-            </p>
+            <p className="mt-1 text-xs text-[var(--muted-foreground)]">{t("report.empty.desc")}</p>
             <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
               {activeProject?.id && (
                 <Link
@@ -217,7 +256,11 @@ function ReportPage() {
                 disabled={generating}
                 className="inline-flex h-9 items-center gap-1.5 rounded-md bg-[var(--primary)] px-3 text-xs font-medium text-white hover:opacity-90 disabled:opacity-50"
               >
-                {generating ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                {generating ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <Sparkles className="h-3 w-3" />
+                )}
                 {generating ? t("common.generating") : t("report.action.generateWithAI")}
               </button>
             </div>
@@ -226,58 +269,100 @@ function ReportPage() {
           <article className="space-y-8 text-sm leading-relaxed">
             {data.summary && (
               <section>
-                <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">{t("report.section.summary")}</h2>
-                <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-[var(--foreground)]/90">{data.summary}</p>
+                <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">
+                  {t("report.section.summary")}
+                </h2>
+                <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-[var(--foreground)]/90">
+                  {data.summary}
+                </p>
                 {typeof data.confidence === "number" && (
-                  <p className="mt-3 text-xs text-[var(--muted-foreground)]">{t("market.summary.confidence")}: <span className="font-medium text-[var(--foreground)]">{data.confidence}%</span></p>
+                  <p className="mt-3 text-xs text-[var(--muted-foreground)]">
+                    {t("market.summary.confidence")}:{" "}
+                    <span className="font-medium text-[var(--foreground)]">{data.confidence}%</span>
+                  </p>
                 )}
               </section>
             )}
             {data.marketSection && (
               <section>
-                <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">{t("report.section.market")}</h2>
-                <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-[var(--foreground)]/90">{data.marketSection}</p>
+                <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">
+                  {t("report.section.market")}
+                </h2>
+                <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-[var(--foreground)]/90">
+                  {data.marketSection}
+                </p>
               </section>
             )}
             {data.consumerSection && (
               <section>
-                <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">{t("report.section.consumer")}</h2>
-                <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-[var(--foreground)]/90">{data.consumerSection}</p>
+                <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">
+                  {t("report.section.consumer")}
+                </h2>
+                <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-[var(--foreground)]/90">
+                  {data.consumerSection}
+                </p>
               </section>
             )}
             {data.localizationSection && (
               <section>
-                <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">{t("report.section.localization")}</h2>
-                <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-[var(--foreground)]/90">{data.localizationSection}</p>
+                <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">
+                  {t("report.section.localization")}
+                </h2>
+                <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-[var(--foreground)]/90">
+                  {data.localizationSection}
+                </p>
               </section>
             )}
             {data.launchPlan && (
               <section>
-                <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">{t("report.section.launchPlan")}</h2>
-                <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-[var(--foreground)]/90">{data.launchPlan}</p>
+                <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">
+                  {t("report.section.launchPlan")}
+                </h2>
+                <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-[var(--foreground)]/90">
+                  {data.launchPlan}
+                </p>
               </section>
             )}
             {(data.risks?.length ?? 0) > 0 && (
               <section>
-                <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">{t("report.section.risks")}</h2>
-                <ul className="list-disc space-y-1 pl-5">{data.risks!.map((r) => <li key={r}>{r}</li>)}</ul>
+                <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">
+                  {t("report.section.risks")}
+                </h2>
+                <ul className="list-disc space-y-1 pl-5">
+                  {data.risks!.map((r) => (
+                    <li key={r}>{r}</li>
+                  ))}
+                </ul>
               </section>
             )}
             {(data.recommendations?.length ?? 0) > 0 && (
               <section>
-                <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">{t("report.section.recommendations")}</h2>
-                <ul className="list-disc space-y-1 pl-5">{data.recommendations!.map((r) => <li key={r}>{r}</li>)}</ul>
+                <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">
+                  {t("report.section.recommendations")}
+                </h2>
+                <ul className="list-disc space-y-1 pl-5">
+                  {data.recommendations!.map((r) => (
+                    <li key={r}>{r}</li>
+                  ))}
+                </ul>
               </section>
             )}
             {(data.kpis?.length ?? 0) > 0 && (
               <section>
-                <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">{t("report.section.kpis")}</h2>
+                <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">
+                  {t("report.section.kpis")}
+                </h2>
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                   {data.kpis!.map((k) => (
-                    <div key={k.label} className="rounded-xl border border-[var(--border)] bg-[var(--background)] p-4">
+                    <div
+                      key={k.label}
+                      className="rounded-xl border border-[var(--border)] bg-[var(--background)] p-4"
+                    >
                       <p className="text-[11px] text-[var(--muted-foreground)]">{k.label}</p>
                       <p className="mt-1 text-xl font-semibold tabular-nums">{k.value}</p>
-                      {k.sub && <p className="mt-0.5 text-[11px] text-[var(--muted-foreground)]">{k.sub}</p>}
+                      {k.sub && (
+                        <p className="mt-0.5 text-[11px] text-[var(--muted-foreground)]">{k.sub}</p>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -285,12 +370,19 @@ function ReportPage() {
             )}
             {(data.regions?.length ?? 0) > 0 && (
               <section>
-                <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">{t("report.section.regions")}</h2>
+                <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">
+                  {t("report.section.regions")}
+                </h2>
                 <ul className="divide-y divide-[var(--border)] rounded-xl border border-[var(--border)] bg-[var(--background)]">
                   {data.regions!.map((r) => (
-                    <li key={r.name} className="flex items-center justify-between px-4 py-2 text-sm">
+                    <li
+                      key={r.name}
+                      className="flex items-center justify-between px-4 py-2 text-sm"
+                    >
                       <span>{r.name}</span>
-                      <span className="text-xs text-[var(--muted-foreground)]"><span className="tabular-nums">{r.v}</span> · {r.growth}</span>
+                      <span className="text-xs text-[var(--muted-foreground)]">
+                        <span className="tabular-nums">{r.v}</span> · {r.growth}
+                      </span>
                     </li>
                   ))}
                 </ul>
@@ -298,12 +390,16 @@ function ReportPage() {
             )}
             {(data.keywords?.length ?? 0) > 0 && (
               <section>
-                <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">{t("report.section.keywords")}</h2>
+                <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">
+                  {t("report.section.keywords")}
+                </h2>
                 <ul className="divide-y divide-[var(--border)] rounded-xl border border-[var(--border)] bg-[var(--background)]">
                   {data.keywords!.map((kw) => (
                     <li key={kw.k} className="flex items-center justify-between px-4 py-2 text-sm">
                       <span className="font-medium">{kw.k}</span>
-                      <span className="text-xs text-[var(--muted-foreground)]">{kw.platform} · {kw.growth} · {t("market.kw.score", { v: kw.score })}</span>
+                      <span className="text-xs text-[var(--muted-foreground)]">
+                        {kw.platform} · {kw.growth} · {t("market.kw.score", { v: kw.score })}
+                      </span>
                     </li>
                   ))}
                 </ul>
@@ -311,10 +407,17 @@ function ReportPage() {
             )}
             {(data.sources?.length ?? 0) > 0 && (
               <section>
-                <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">{t("report.section.sources")}</h2>
+                <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">
+                  {t("report.section.sources")}
+                </h2>
                 <div className="flex flex-wrap gap-1.5">
                   {data.sources!.map((s) => (
-                    <span key={s} className="rounded-full bg-[var(--muted)] px-2 py-0.5 text-[11px] text-[var(--muted-foreground)]">{s}</span>
+                    <span
+                      key={s}
+                      className="rounded-full bg-[var(--muted)] px-2 py-0.5 text-[11px] text-[var(--muted-foreground)]"
+                    >
+                      {s}
+                    </span>
                   ))}
                 </div>
               </section>

@@ -19,7 +19,16 @@ const REGISTRY: Partial<Record<AIProviderId, AIProvider>> = {
 const DEFAULT_PROVIDER_KEY = "bridgecn.ai.provider";
 
 export function listProviders(): { id: AIProviderId; label: string; available: boolean }[] {
-  const all: AIProviderId[] = ["lovable", "placeholder", "openai", "claude", "gemini", "openrouter", "deepseek", "qwen"];
+  const all: AIProviderId[] = [
+    "lovable",
+    "placeholder",
+    "openai",
+    "claude",
+    "gemini",
+    "openrouter",
+    "deepseek",
+    "qwen",
+  ];
   return all.map((id) => ({ id, label: PROVIDER_LABELS[id], available: Boolean(REGISTRY[id]) }));
 }
 
@@ -39,13 +48,19 @@ export function getDefaultProviderId(): AIProviderId {
   try {
     const saved = window.localStorage.getItem(DEFAULT_PROVIDER_KEY);
     if (saved && REGISTRY[saved as AIProviderId]) return saved as AIProviderId;
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
   return "lovable";
 }
 
 export function setDefaultProviderId(id: AIProviderId) {
   if (typeof window === "undefined") return;
-  try { window.localStorage.setItem(DEFAULT_PROVIDER_KEY, id); } catch { /* ignore */ }
+  try {
+    window.localStorage.setItem(DEFAULT_PROVIDER_KEY, id);
+  } catch {
+    /* ignore */
+  }
 }
 
 export function getProvider(id?: AIProviderId): AIProvider {

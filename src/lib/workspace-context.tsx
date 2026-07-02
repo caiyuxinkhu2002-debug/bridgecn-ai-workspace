@@ -1,9 +1,23 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import type { Stage } from "./workflow";
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
 
-export type Workspace = { id: string; name: string; plan: string; region: string; logo_url: string | null };
+export type Workspace = {
+  id: string;
+  name: string;
+  plan: string;
+  region: string;
+  logo_url: string | null;
+};
 
 export type KnowledgeBase = {
   company?: string;
@@ -86,7 +100,15 @@ export type SearchItem = {
 };
 
 function initialsOf(name: string): string {
-  return name.split(/\s+/).map((p) => p[0]).filter(Boolean).slice(0, 2).join("").toUpperCase() || "·";
+  return (
+    name
+      .split(/\s+/)
+      .map((p) => p[0])
+      .filter(Boolean)
+      .slice(0, 2)
+      .join("")
+      .toUpperCase() || "·"
+  );
 }
 
 function relativeTime(iso: string): string {
@@ -106,8 +128,22 @@ function relativeTime(iso: string): string {
 // Sprint 9: removed hardcoded demo arrays. Reports, localization jobs,
 // market/consumer research items and notifications come from the active
 // project Knowledge Base + AI jobs; pages render empty states when missing.
-const REPORTS: { id: string; projectId: string; title: string; type: string; date: string; status: string }[] = [];
-const LOC_JOBS: { id: string; projectId: string; title: string; lang: string; date: string; status: string }[] = [];
+const REPORTS: {
+  id: string;
+  projectId: string;
+  title: string;
+  type: string;
+  date: string;
+  status: string;
+}[] = [];
+const LOC_JOBS: {
+  id: string;
+  projectId: string;
+  title: string;
+  lang: string;
+  date: string;
+  status: string;
+}[] = [];
 const MARKET_RESEARCH: { id: string; projectId: string; title: string; date: string }[] = [];
 const CONSUMER_RESEARCH: { id: string; projectId: string; title: string; date: string }[] = [];
 
@@ -142,8 +178,28 @@ type Ctx = {
   refreshWorkspaces: () => Promise<void>;
   refreshMembers: () => Promise<void>;
   refreshProjects: () => Promise<void>;
-  createProject: (input: { name: string; industry?: string; targetMarket?: string; description?: string; website?: string; knowledgeBase?: KnowledgeBase }) => Promise<Project | null>;
-  updateProject: (id: string, patch: Partial<{ name: string; industry: string; region: string; targetMarket: string; description: string; summary: string; stage: Stage; website: string; knowledgeBase: KnowledgeBase }>) => Promise<void>;
+  createProject: (input: {
+    name: string;
+    industry?: string;
+    targetMarket?: string;
+    description?: string;
+    website?: string;
+    knowledgeBase?: KnowledgeBase;
+  }) => Promise<Project | null>;
+  updateProject: (
+    id: string,
+    patch: Partial<{
+      name: string;
+      industry: string;
+      region: string;
+      targetMarket: string;
+      description: string;
+      summary: string;
+      stage: Stage;
+      website: string;
+      knowledgeBase: KnowledgeBase;
+    }>,
+  ) => Promise<void>;
   deleteProject: (id: string) => Promise<void>;
   archiveProject: (id: string) => Promise<void>;
   unarchiveProject: (id: string) => Promise<void>;
@@ -201,14 +257,20 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       targetMarket: r.target_market || "",
       archived: Boolean((r as { archived_at?: string | null }).archived_at),
       website: r.website || "",
-      knowledgeBase: (r.knowledge_base && typeof r.knowledge_base === "object" ? r.knowledge_base : {}) as KnowledgeBase,
+      knowledgeBase: (r.knowledge_base && typeof r.knowledge_base === "object"
+        ? r.knowledge_base
+        : {}) as KnowledgeBase,
     }),
     [],
   );
 
   const refreshProfile = useCallback(async () => {
     const { data: u } = await supabase.auth.getUser();
-    if (!u.user) { setUser(null); setProfile(null); return; }
+    if (!u.user) {
+      setUser(null);
+      setProfile(null);
+      return;
+    }
     setUser(u.user);
     let { data: p } = await supabase.from("profiles").select("*").eq("id", u.user.id).maybeSingle();
     if (!p) {
@@ -229,12 +291,15 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const refreshWorkspaces = useCallback(async () => {
-    const { data } = await supabase.from("workspaces").select("id,name,plan,region,logo_url").order("created_at", { ascending: true });
+    const { data } = await supabase
+      .from("workspaces")
+      .select("id,name,plan,region,logo_url")
+      .order("created_at", { ascending: true });
     const list = (data || []) as Workspace[];
     setWorkspaces(list);
     if (list.length && !list.find((w) => w.id === workspaceId)) {
       const saved = typeof window !== "undefined" ? localStorage.getItem(WS_KEY) : null;
-      const chosen = (saved && list.find((w) => w.id === saved)) ? saved : list[0].id;
+      const chosen = saved && list.find((w) => w.id === saved) ? saved : list[0].id;
       setWorkspaceIdState(chosen);
     }
   }, [workspaceId]);
@@ -252,14 +317,21 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     const active = mapped.filter((p) => !p.archived);
     if (active.length && !active.find((p) => p.id === activeProjectId)) {
       const saved = typeof window !== "undefined" ? localStorage.getItem(AP_KEY) : null;
-      const chosen = (saved && active.find((p) => p.id === saved)) ? saved : active[0].id;
+      const chosen = saved && active.find((p) => p.id === saved) ? saved : active[0].id;
       setActiveProjectIdState(chosen);
     }
   }, [workspaceId, activeProjectId, mapProject]);
 
   const refreshMembers = useCallback(async () => {
-    if (!workspaceId) { setMembers([]); return; }
-    const { data } = await supabase.from("workspace_members").select("*").eq("workspace_id", workspaceId).order("invited_at", { ascending: true });
+    if (!workspaceId) {
+      setMembers([]);
+      return;
+    }
+    const { data } = await supabase
+      .from("workspace_members")
+      .select("*")
+      .eq("workspace_id", workspaceId)
+      .order("invited_at", { ascending: true });
     setMembers((data || []) as WsMember[]);
   }, [workspaceId]);
 
@@ -285,45 +357,86 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         refreshWorkspaces();
       }
     });
-    return () => { cancelled = true; sub.subscription.unsubscribe(); };
+    return () => {
+      cancelled = true;
+      sub.subscription.unsubscribe();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => { if (workspaceId) { refreshProjects(); refreshMembers(); } }, [workspaceId, refreshProjects, refreshMembers]);
+  useEffect(() => {
+    if (workspaceId) {
+      refreshProjects();
+      refreshMembers();
+    }
+  }, [workspaceId, refreshProjects, refreshMembers]);
 
   // Apply preferred theme from profile (write-through to localStorage so root bootstrap also picks it up)
   useEffect(() => {
     if (!profile?.theme) return;
-    try { localStorage.setItem("bridgecn.settings.theme", JSON.stringify(profile.theme)); } catch { /* ignore */ }
+    try {
+      localStorage.setItem("bridgecn.settings.theme", JSON.stringify(profile.theme));
+    } catch {
+      /* ignore */
+    }
     if (typeof document !== "undefined") {
-      const wantDark = profile.theme === "Dark" || (profile.theme === "System" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+      const wantDark =
+        profile.theme === "Dark" ||
+        (profile.theme === "System" && window.matchMedia("(prefers-color-scheme: dark)").matches);
       document.documentElement.classList.toggle("dark", wantDark);
     }
   }, [profile?.theme]);
 
   const setWorkspaceId = useCallback((id: string) => {
     setWorkspaceIdState(id);
-    try { localStorage.setItem(WS_KEY, id); } catch { /* ignore */ }
+    try {
+      localStorage.setItem(WS_KEY, id);
+    } catch {
+      /* ignore */
+    }
   }, []);
 
-  const setActiveProjectId = useCallback((id: string) => {
-    setActiveProjectIdState(id);
-    try { localStorage.setItem(AP_KEY, id); } catch { /* ignore */ }
-    const p = projectsState.find((x) => x.id === id);
-    if (p && p.workspaceId !== workspaceId) {
-      setWorkspaceIdState(p.workspaceId);
-      try { localStorage.setItem(WS_KEY, p.workspaceId); } catch { /* ignore */ }
-    }
-  }, [workspaceId, projectsState]);
+  const setActiveProjectId = useCallback(
+    (id: string) => {
+      setActiveProjectIdState(id);
+      try {
+        localStorage.setItem(AP_KEY, id);
+      } catch {
+        /* ignore */
+      }
+      const p = projectsState.find((x) => x.id === id);
+      if (p && p.workspaceId !== workspaceId) {
+        setWorkspaceIdState(p.workspaceId);
+        try {
+          localStorage.setItem(WS_KEY, p.workspaceId);
+        } catch {
+          /* ignore */
+        }
+      }
+    },
+    [workspaceId, projectsState],
+  );
 
-  const advanceStage = useCallback(async (s: Stage) => {
-    if (!activeProjectId) return;
-    setProjectsState((list) => list.map((p) => (p.id === activeProjectId ? { ...p, stage: s, updated: "just now" } : p)));
-    await supabase.from("projects").update({ stage: s }).eq("id", activeProjectId);
-  }, [activeProjectId]);
+  const advanceStage = useCallback(
+    async (s: Stage) => {
+      if (!activeProjectId) return;
+      setProjectsState((list) =>
+        list.map((p) => (p.id === activeProjectId ? { ...p, stage: s, updated: "just now" } : p)),
+      );
+      await supabase.from("projects").update({ stage: s }).eq("id", activeProjectId);
+    },
+    [activeProjectId],
+  );
 
   const createProject = useCallback(
-    async (input: { name: string; industry?: string; targetMarket?: string; description?: string; website?: string; knowledgeBase?: KnowledgeBase }): Promise<Project | null> => {
+    async (input: {
+      name: string;
+      industry?: string;
+      targetMarket?: string;
+      description?: string;
+      website?: string;
+      knowledgeBase?: KnowledgeBase;
+    }): Promise<Project | null> => {
       if (!workspaceId) return null;
       const name = input.name.trim();
       if (!name) return null;
@@ -351,14 +464,31 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       const mapped = mapProject(data);
       setProjectsState((list) => [...list, mapped]);
       setActiveProjectIdState(mapped.id);
-      try { localStorage.setItem(AP_KEY, mapped.id); } catch { /* ignore */ }
+      try {
+        localStorage.setItem(AP_KEY, mapped.id);
+      } catch {
+        /* ignore */
+      }
       return mapped;
     },
     [workspaceId, profile?.name, user?.id, mapProject],
   );
 
   const updateProject = useCallback(
-    async (id: string, patch: Partial<{ name: string; industry: string; region: string; targetMarket: string; description: string; summary: string; stage: Stage; website: string; knowledgeBase: KnowledgeBase }>) => {
+    async (
+      id: string,
+      patch: Partial<{
+        name: string;
+        industry: string;
+        region: string;
+        targetMarket: string;
+        description: string;
+        summary: string;
+        stage: Stage;
+        website: string;
+        knowledgeBase: KnowledgeBase;
+      }>,
+    ) => {
       type ProjectUpdate = {
         name?: string;
         initials?: string;
@@ -372,7 +502,10 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         knowledge_base?: KnowledgeBase;
       };
       const dbPatch: ProjectUpdate = {};
-      if (patch.name !== undefined) { dbPatch.name = patch.name.trim(); dbPatch.initials = initialsOf(patch.name); }
+      if (patch.name !== undefined) {
+        dbPatch.name = patch.name.trim();
+        dbPatch.initials = initialsOf(patch.name);
+      }
       if (patch.industry !== undefined) dbPatch.industry = patch.industry.trim() || null;
       if (patch.region !== undefined) dbPatch.region = patch.region.trim() || null;
       if (patch.targetMarket !== undefined) {
@@ -387,7 +520,10 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       if (patch.stage !== undefined) dbPatch.stage = patch.stage;
       if (patch.website !== undefined) dbPatch.website = patch.website.trim() || null;
       if (patch.knowledgeBase !== undefined) dbPatch.knowledge_base = patch.knowledgeBase;
-      const { error } = await supabase.from("projects").update(dbPatch as never).eq("id", id);
+      const { error } = await supabase
+        .from("projects")
+        .update(dbPatch as never)
+        .eq("id", id);
       if (error) throw error;
       await refreshProjects();
     },
@@ -396,95 +532,187 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
 
   const deleteProject = useCallback(
     async (id: string) => {
-      const { error } = await supabase.from("projects").update({ deleted_at: new Date().toISOString() }).eq("id", id);
+      const { error } = await supabase
+        .from("projects")
+        .update({ deleted_at: new Date().toISOString() })
+        .eq("id", id);
       if (error) throw error;
       setProjectsState((list) => list.filter((p) => p.id !== id));
       if (activeProjectId === id) {
         const next = projectsState.find((p) => p.id !== id && !p.archived);
         if (next) {
           setActiveProjectIdState(next.id);
-          try { localStorage.setItem(AP_KEY, next.id); } catch { /* ignore */ }
+          try {
+            localStorage.setItem(AP_KEY, next.id);
+          } catch {
+            /* ignore */
+          }
         }
       }
     },
     [activeProjectId, projectsState],
   );
 
-  const archiveProject = useCallback(async (id: string) => {
-    const { error } = await supabase.from("projects").update({ archived_at: new Date().toISOString() } as never).eq("id", id);
-    if (error) throw error;
-    setProjectsState((list) => list.map((p) => (p.id === id ? { ...p, archived: true } : p)));
-    if (activeProjectId === id) {
-      const next = projectsState.find((p) => p.id !== id && !p.archived);
-      if (next) {
-        setActiveProjectIdState(next.id);
-        try { localStorage.setItem(AP_KEY, next.id); } catch { /* ignore */ }
+  const archiveProject = useCallback(
+    async (id: string) => {
+      const { error } = await supabase
+        .from("projects")
+        .update({ archived_at: new Date().toISOString() } as never)
+        .eq("id", id);
+      if (error) throw error;
+      setProjectsState((list) => list.map((p) => (p.id === id ? { ...p, archived: true } : p)));
+      if (activeProjectId === id) {
+        const next = projectsState.find((p) => p.id !== id && !p.archived);
+        if (next) {
+          setActiveProjectIdState(next.id);
+          try {
+            localStorage.setItem(AP_KEY, next.id);
+          } catch {
+            /* ignore */
+          }
+        }
       }
-    }
-  }, [activeProjectId, projectsState]);
+    },
+    [activeProjectId, projectsState],
+  );
 
   const unarchiveProject = useCallback(async (id: string) => {
-    const { error } = await supabase.from("projects").update({ archived_at: null } as never).eq("id", id);
+    const { error } = await supabase
+      .from("projects")
+      .update({ archived_at: null } as never)
+      .eq("id", id);
     if (error) throw error;
     setProjectsState((list) => list.map((p) => (p.id === id ? { ...p, archived: false } : p)));
   }, []);
 
-  const duplicateProject = useCallback(async (id: string): Promise<Project | null> => {
-    const src = projectsState.find((p) => p.id === id);
-    if (!src || !workspaceId) return null;
-    const newName = `${src.name} (Copy)`;
-    const { data, error } = await supabase
-      .from("projects")
-      .insert({
-        workspace_id: workspaceId,
-        name: newName,
-        initials: initialsOf(newName),
-        industry: src.industry === "—" ? null : src.industry,
-        region: src.region === "—" ? null : src.region,
-        target_market: src.targetMarket || null,
-        description: src.description || null,
-        summary: src.summary || null,
-        owner_name: profile?.name || src.owner || null,
-        created_by: user?.id || null,
-        stage: "research",
-        progress: 0,
-      })
-      .select("*")
-      .maybeSingle();
-    if (error || !data) return null;
-    const mapped = mapProject(data);
-    setProjectsState((list) => [...list, mapped]);
-    return mapped;
-  }, [projectsState, workspaceId, profile?.name, user?.id, mapProject]);
+  const duplicateProject = useCallback(
+    async (id: string): Promise<Project | null> => {
+      const src = projectsState.find((p) => p.id === id);
+      if (!src || !workspaceId) return null;
+      const newName = `${src.name} (Copy)`;
+      const { data, error } = await supabase
+        .from("projects")
+        .insert({
+          workspace_id: workspaceId,
+          name: newName,
+          initials: initialsOf(newName),
+          industry: src.industry === "—" ? null : src.industry,
+          region: src.region === "—" ? null : src.region,
+          target_market: src.targetMarket || null,
+          description: src.description || null,
+          summary: src.summary || null,
+          owner_name: profile?.name || src.owner || null,
+          created_by: user?.id || null,
+          stage: "research",
+          progress: 0,
+        })
+        .select("*")
+        .maybeSingle();
+      if (error || !data) return null;
+      const mapped = mapProject(data);
+      setProjectsState((list) => [...list, mapped]);
+      return mapped;
+    },
+    [projectsState, workspaceId, profile?.name, user?.id, mapProject],
+  );
 
   const markAllRead = useCallback(() => {
     setNotifications((n) => n.map((x) => ({ ...x, read: true })));
-    try { localStorage.setItem(NR_KEY, "1"); } catch { /* ignore */ }
+    try {
+      localStorage.setItem(NR_KEY, "1");
+    } catch {
+      /* ignore */
+    }
   }, []);
 
   const FALLBACK_WS: Workspace = { id: "", name: "—", plan: "Free", region: "KR", logo_url: null };
-  const FALLBACK_PROJECT: Project = { id: "", workspaceId: "", name: "—", initials: "—", industry: "—", region: "—", stage: "research" as Stage, owner: "—", progress: 0, updated: "", kpi: [], summary: "", description: "", targetMarket: "", archived: false, website: "", knowledgeBase: {} };
-  const activeWorkspace = useMemo<Workspace>(() => workspaces.find((w) => w.id === workspaceId) ?? workspaces[0] ?? FALLBACK_WS, [workspaces, workspaceId]);
-  const projects = useMemo(() => projectsState.filter((p) => p.workspaceId === workspaceId && !p.archived), [projectsState, workspaceId]);
-  const archivedProjects = useMemo(() => projectsState.filter((p) => p.workspaceId === workspaceId && p.archived), [projectsState, workspaceId]);
-  const activeProject = useMemo<Project>(() => projectsState.find((p) => p.id === activeProjectId) ?? projects[0] ?? FALLBACK_PROJECT, [projectsState, activeProjectId, projects]);
+  const FALLBACK_PROJECT: Project = {
+    id: "",
+    workspaceId: "",
+    name: "—",
+    initials: "—",
+    industry: "—",
+    region: "—",
+    stage: "research" as Stage,
+    owner: "—",
+    progress: 0,
+    updated: "",
+    kpi: [],
+    summary: "",
+    description: "",
+    targetMarket: "",
+    archived: false,
+    website: "",
+    knowledgeBase: {},
+  };
+  const activeWorkspace = useMemo<Workspace>(
+    () => workspaces.find((w) => w.id === workspaceId) ?? workspaces[0] ?? FALLBACK_WS,
+    [workspaces, workspaceId],
+  );
+  const projects = useMemo(
+    () => projectsState.filter((p) => p.workspaceId === workspaceId && !p.archived),
+    [projectsState, workspaceId],
+  );
+  const archivedProjects = useMemo(
+    () => projectsState.filter((p) => p.workspaceId === workspaceId && p.archived),
+    [projectsState, workspaceId],
+  );
+  const activeProject = useMemo<Project>(
+    () => projectsState.find((p) => p.id === activeProjectId) ?? projects[0] ?? FALLBACK_PROJECT,
+    [projectsState, activeProjectId, projects],
+  );
 
   const searchIndex = useMemo<SearchItem[]>(() => {
     const items: SearchItem[] = [];
     for (const p of projectsState) {
-      items.push({ kind: "project", id: p.id, title: p.name, subtitle: p.industry, link: `/projects/${p.id}`, projectId: p.id });
+      items.push({
+        kind: "project",
+        id: p.id,
+        title: p.name,
+        subtitle: p.industry,
+        link: `/projects/${p.id}`,
+        projectId: p.id,
+      });
     }
     for (const r of REPORTS) {
-      items.push({ kind: "report", id: r.id, title: r.title, subtitle: `${r.type} · ${r.date}`, link: "/reports", projectId: r.projectId });
+      items.push({
+        kind: "report",
+        id: r.id,
+        title: r.title,
+        subtitle: `${r.type} · ${r.date}`,
+        link: "/reports",
+        projectId: r.projectId,
+      });
     }
     for (const l of LOC_JOBS) {
-      items.push({ kind: "localization", id: l.id, title: l.title, subtitle: `${l.lang} · ${l.status}`, link: "/localization-studio", projectId: l.projectId });
+      items.push({
+        kind: "localization",
+        id: l.id,
+        title: l.title,
+        subtitle: `${l.lang} · ${l.status}`,
+        link: "/localization-studio",
+        projectId: l.projectId,
+      });
     }
     for (const m of MARKET_RESEARCH) {
-      items.push({ kind: "market", id: m.id, title: m.title, subtitle: `Market research · ${m.date}`, link: "/china-market-insight", projectId: m.projectId });
+      items.push({
+        kind: "market",
+        id: m.id,
+        title: m.title,
+        subtitle: `Market research · ${m.date}`,
+        link: "/china-market-insight",
+        projectId: m.projectId,
+      });
     }
     for (const c of CONSUMER_RESEARCH) {
-      items.push({ kind: "consumer", id: c.id, title: c.title, subtitle: `Consumer research · ${c.date}`, link: "/consumer-insight", projectId: c.projectId });
+      items.push({
+        kind: "consumer",
+        id: c.id,
+        title: c.title,
+        subtitle: `Consumer research · ${c.date}`,
+        link: "/consumer-insight",
+        projectId: c.projectId,
+      });
     }
     return items;
   }, [projectsState]);

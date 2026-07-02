@@ -20,7 +20,10 @@ export const Route = createFileRoute("/_app/")({
   head: () => ({
     meta: [
       { title: "Dashboard — BridgeCN AI" },
-      { name: "description", content: "BridgeCN AI workspace for Korean companies expanding into China." },
+      {
+        name: "description",
+        content: "BridgeCN AI workspace for Korean companies expanding into China.",
+      },
     ],
   }),
   component: DashboardPage,
@@ -56,7 +59,8 @@ function DashboardPage() {
               </p>
               <p className="mt-0.5 text-lg font-semibold tracking-tight">{activeProject.name}</p>
               <p className="text-xs text-[var(--muted-foreground)]">
-                {activeProject.industry} · {t(stageLabelKey[activeProject.stage])} · {activeProject.progress}%
+                {activeProject.industry} · {t(stageLabelKey[activeProject.stage])} ·{" "}
+                {activeProject.progress}%
               </p>
             </div>
           </div>
@@ -103,14 +107,20 @@ function DashboardPage() {
         <div className="lg:col-span-2">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-sm font-semibold">{t("dash.recentProjects")}</h2>
-            <Link to="/projects" className="text-xs font-medium text-[var(--muted-foreground)] hover:text-[var(--foreground)]">
+            <Link
+              to="/projects"
+              className="text-xs font-medium text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+            >
               {t("common.viewAll")} →
             </Link>
           </div>
           <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--background)] shadow-[var(--shadow-soft)]">
             <ul className="divide-y divide-[var(--border)]">
               {projects.slice(0, 5).map((p) => (
-                <li key={p.id} className="flex items-center gap-3 px-4 py-3 hover:bg-[var(--muted)]/60">
+                <li
+                  key={p.id}
+                  className="flex items-center gap-3 px-4 py-3 hover:bg-[var(--muted)]/60"
+                >
                   <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-[var(--muted)] to-[var(--primary-soft)] text-xs font-semibold">
                     {p.initials}
                   </div>
@@ -118,7 +128,10 @@ function DashboardPage() {
                     <button
                       onClick={() => {
                         setActiveProjectId(p.id);
-                        router.navigate({ to: "/projects/$projectId", params: { projectId: p.id } });
+                        router.navigate({
+                          to: "/projects/$projectId",
+                          params: { projectId: p.id },
+                        });
                       }}
                       className="block truncate text-left text-sm font-medium hover:underline"
                     >
@@ -129,7 +142,9 @@ function DashboardPage() {
                   <span className="hidden md:inline-flex items-center rounded-full bg-[var(--primary-soft)] px-2 py-0.5 text-[11px] font-medium text-[var(--primary)]">
                     {t(stageLabelKey[p.stage])}
                   </span>
-                  <span className="hidden md:inline text-xs text-[var(--muted-foreground)]">{p.updated}</span>
+                  <span className="hidden md:inline text-xs text-[var(--muted-foreground)]">
+                    {p.updated}
+                  </span>
                 </li>
               ))}
             </ul>
@@ -145,11 +160,16 @@ function DashboardPage() {
               <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--background)] p-4 text-xs text-[var(--muted-foreground)]">
                 {t("common.empty")}
               </div>
-            ) : suggestions.map((s) => (
-              <div key={s} className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-4 shadow-[var(--shadow-soft)]">
-                <p className="text-sm font-medium">{s}</p>
-              </div>
-            ))}
+            ) : (
+              suggestions.map((s) => (
+                <div
+                  key={s}
+                  className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-4 shadow-[var(--shadow-soft)]"
+                >
+                  <p className="text-sm font-medium">{s}</p>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </section>
@@ -163,13 +183,18 @@ function DashboardPage() {
           </h2>
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--background)] shadow-[var(--shadow-soft)]">
             {trends.length === 0 ? (
-              <p className="px-4 py-4 text-xs text-[var(--muted-foreground)]">{t("common.empty")}</p>
+              <p className="px-4 py-4 text-xs text-[var(--muted-foreground)]">
+                {t("common.empty")}
+              </p>
             ) : (
               <ul className="divide-y divide-[var(--border)]">
                 {trends.map((tr) => (
                   <li key={tr} className="flex items-center justify-between gap-3 px-4 py-3">
                     <span className="text-sm">{tr}</span>
-                    <Link to="/china-market-insight" className="text-xs font-medium text-[var(--muted-foreground)] hover:text-[var(--foreground)]">
+                    <Link
+                      to="/china-market-insight"
+                      className="text-xs font-medium text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+                    >
                       {t("common.open")} →
                     </Link>
                   </li>
@@ -182,14 +207,23 @@ function DashboardPage() {
           <h2 className="mb-3 text-sm font-semibold">{t("dash.recentReports")}</h2>
           <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--background)] shadow-[var(--shadow-soft)]">
             {reports.length === 0 ? (
-              <p className="px-4 py-4 text-xs text-[var(--muted-foreground)]">{t("common.empty")}</p>
+              <p className="px-4 py-4 text-xs text-[var(--muted-foreground)]">
+                {t("common.empty")}
+              </p>
             ) : (
               <ul className="divide-y divide-[var(--border)]">
                 {reports.slice(0, 4).map((r) => (
                   <li key={r.id} className="flex items-center justify-between gap-3 px-4 py-3">
                     <div className="min-w-0">
-                      <Link to="/report" className="block truncate text-sm font-medium hover:underline">{r.title}</Link>
-                      <p className="truncate text-xs text-[var(--muted-foreground)]">{r.type} · {r.date}</p>
+                      <Link
+                        to="/report"
+                        className="block truncate text-sm font-medium hover:underline"
+                      >
+                        {r.title}
+                      </Link>
+                      <p className="truncate text-xs text-[var(--muted-foreground)]">
+                        {r.type} · {r.date}
+                      </p>
                     </div>
                   </li>
                 ))}
@@ -208,7 +242,9 @@ function DashboardPage() {
           </h2>
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--background)] shadow-[var(--shadow-soft)]">
             {activity.length === 0 ? (
-              <p className="px-4 py-4 text-xs text-[var(--muted-foreground)]">{t("common.empty")}</p>
+              <p className="px-4 py-4 text-xs text-[var(--muted-foreground)]">
+                {t("common.empty")}
+              </p>
             ) : (
               <ul className="divide-y divide-[var(--border)]">
                 {activity.map((a) => (
@@ -228,12 +264,17 @@ function DashboardPage() {
           </h2>
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--background)] shadow-[var(--shadow-soft)]">
             {tasks.length === 0 ? (
-              <p className="px-4 py-4 text-xs text-[var(--muted-foreground)]">{t("common.empty")}</p>
+              <p className="px-4 py-4 text-xs text-[var(--muted-foreground)]">
+                {t("common.empty")}
+              </p>
             ) : (
               <ul className="divide-y divide-[var(--border)]">
                 {tasks.map((tk) => (
                   <li key={tk} className="flex items-center gap-3 px-4 py-3 text-sm">
-                    <input type="checkbox" className="h-3.5 w-3.5 rounded border-[var(--border)] accent-[var(--primary)]" />
+                    <input
+                      type="checkbox"
+                      className="h-3.5 w-3.5 rounded border-[var(--border)] accent-[var(--primary)]"
+                    />
                     <span className="flex-1">{tk}</span>
                   </li>
                 ))}

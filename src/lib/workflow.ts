@@ -1,6 +1,13 @@
 export type Stage = "research" | "consumer" | "localization" | "launch" | "reports" | "completed";
 
-export const stageOrder: Stage[] = ["research", "consumer", "localization", "launch", "reports", "completed"];
+export const stageOrder: Stage[] = [
+  "research",
+  "consumer",
+  "localization",
+  "launch",
+  "reports",
+  "completed",
+];
 
 export const stageToPath: Record<Stage, string> = {
   research: "/china-market-insight",

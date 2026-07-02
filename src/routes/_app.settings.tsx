@@ -2,8 +2,19 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
-  CircleUser, Building2, Users, CreditCard, Shield, Plug, KeyRound, Bell, Palette,
-  Languages as LanguagesIcon, Trash2, Sparkles, Check,
+  CircleUser,
+  Building2,
+  Users,
+  CreditCard,
+  Shield,
+  Plug,
+  KeyRound,
+  Bell,
+  Palette,
+  Languages as LanguagesIcon,
+  Trash2,
+  Sparkles,
+  Check,
 } from "lucide-react";
 import { PageHeader } from "@/components/app-shell";
 import { useI18n, localeLabels, type Locale } from "@/lib/i18n";
@@ -16,8 +27,16 @@ export const Route = createFileRoute("/_app/settings")({
 });
 
 type TabKey =
-  | "profile" | "workspace" | "members" | "billing" | "security"
-  | "integrations" | "apikeys" | "notifications" | "appearance" | "language";
+  | "profile"
+  | "workspace"
+  | "members"
+  | "billing"
+  | "security"
+  | "integrations"
+  | "apikeys"
+  | "notifications"
+  | "appearance"
+  | "language";
 
 function SettingsPage() {
   const { t } = useI18n();
@@ -68,12 +87,22 @@ function SettingsPage() {
   );
 }
 
-function Card({ title, description, children }: { title: string; description?: string; children: React.ReactNode }) {
+function Card({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description?: string;
+  children: React.ReactNode;
+}) {
   return (
     <div className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-6 shadow-[var(--shadow-soft)]">
       <div className="mb-5">
         <h3 className="text-sm font-semibold">{title}</h3>
-        {description && <p className="mt-1 text-xs text-[var(--muted-foreground)]">{description}</p>}
+        {description && (
+          <p className="mt-1 text-xs text-[var(--muted-foreground)]">{description}</p>
+        )}
       </div>
       {children}
     </div>
@@ -91,24 +120,38 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
 
 function renderTab(tab: TabKey) {
   switch (tab) {
-    case "profile": return <ProfileTab />;
-    case "workspace": return <WorkspaceTab />;
-    case "members": return <MembersTab />;
-    case "language": return <LanguageTab />;
-    case "appearance": return <AppearanceTab />;
-    case "notifications": return <NotificationsTab />;
-    case "billing": return <ComingSoonTab tag="billing" />;
-    case "security": return <ComingSoonTab tag="security" />;
-    case "integrations": return <ComingSoonTab tag="integrations" />;
-    case "apikeys": return <ComingSoonTab tag="apikeys" />;
+    case "profile":
+      return <ProfileTab />;
+    case "workspace":
+      return <WorkspaceTab />;
+    case "members":
+      return <MembersTab />;
+    case "language":
+      return <LanguageTab />;
+    case "appearance":
+      return <AppearanceTab />;
+    case "notifications":
+      return <NotificationsTab />;
+    case "billing":
+      return <ComingSoonTab tag="billing" />;
+    case "security":
+      return <ComingSoonTab tag="security" />;
+    case "integrations":
+      return <ComingSoonTab tag="integrations" />;
+    case "apikeys":
+      return <ComingSoonTab tag="apikeys" />;
   }
 }
 
 // ------------------ Storage helpers (signed URLs for private buckets) ------------------
 async function uploadAndSignedUrl(bucket: string, path: string, file: File): Promise<string> {
-  const { error } = await supabase.storage.from(bucket).upload(path, file, { upsert: true, contentType: file.type });
+  const { error } = await supabase.storage
+    .from(bucket)
+    .upload(path, file, { upsert: true, contentType: file.type });
   if (error) throw error;
-  const { data: signed, error: signErr } = await supabase.storage.from(bucket).createSignedUrl(path, 60 * 60 * 24 * 365);
+  const { data: signed, error: signErr } = await supabase.storage
+    .from(bucket)
+    .createSignedUrl(path, 60 * 60 * 24 * 365);
   if (signErr || !signed?.signedUrl) throw signErr || new Error("Sign failed");
   return signed.signedUrl;
 }
@@ -131,24 +174,48 @@ function ProfileTab() {
     });
   }, [profile, user]);
 
-  if (!profile) return <Card title={t("settings.profile.title")}><p className="text-sm text-[var(--muted-foreground)]">…</p></Card>;
+  if (!profile)
+    return (
+      <Card title={t("settings.profile.title")}>
+        <p className="text-sm text-[var(--muted-foreground)]">…</p>
+      </Card>
+    );
 
-  const initials = (profile.name || profile.email || "·").split(/\s+/).map((s) => s[0]).slice(0, 2).join("").toUpperCase();
+  const initials = (profile.name || profile.email || "·")
+    .split(/\s+/)
+    .map((s) => s[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
 
   async function onAvatar(e: React.ChangeEvent<HTMLInputElement>) {
-    const f = e.target.files?.[0]; if (!f || !user) return;
-    if (!/^image\/(png|jpe?g|webp)$/.test(f.type)) { toast.error(t("toast.invalidImage")); return; }
-    if (f.size > 2 * 1024 * 1024) { toast.error(t("toast.fileTooLarge")); return; }
+    const f = e.target.files?.[0];
+    if (!f || !user) return;
+    if (!/^image\/(png|jpe?g|webp)$/.test(f.type)) {
+      toast.error(t("toast.invalidImage"));
+      return;
+    }
+    if (f.size > 2 * 1024 * 1024) {
+      toast.error(t("toast.fileTooLarge"));
+      return;
+    }
     try {
       const ext = f.name.split(".").pop() || "png";
       const path = `${user.id}/avatar-${Date.now()}.${ext}`;
       const url = await uploadAndSignedUrl("avatars", path, f);
-      const { error } = await supabase.from("profiles").update({ avatar_url: url }).eq("id", user.id);
+      const { error } = await supabase
+        .from("profiles")
+        .update({ avatar_url: url })
+        .eq("id", user.id);
       if (error) throw error;
       await refreshProfile();
       toast.success(t("toast.avatarUpdated"));
-    } catch (err) { console.error(err); toast.error(t("toast.uploadFailed")); }
-    finally { if (fileRef.current) fileRef.current.value = ""; }
+    } catch (err) {
+      console.error(err);
+      toast.error(t("toast.uploadFailed"));
+    } finally {
+      if (fileRef.current) fileRef.current.value = "";
+    }
   }
 
   async function removeAvatar() {
@@ -161,11 +228,20 @@ function ProfileTab() {
   async function save() {
     if (!user) return;
     setBusy(true);
-    const { error } = await supabase.from("profiles")
-      .update({ name: draft.name.trim() || null, company: draft.company.trim() || null, role: draft.role.trim() || null, email: draft.email.trim() || null })
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        name: draft.name.trim() || null,
+        company: draft.company.trim() || null,
+        role: draft.role.trim() || null,
+        email: draft.email.trim() || null,
+      })
       .eq("id", user.id);
     setBusy(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     await refreshProfile();
     setEditing(false);
     toast.success(t("toast.profileSaved"));
@@ -184,41 +260,105 @@ function ProfileTab() {
           )}
           <div>
             <p className="text-base font-semibold">{profile.name || "—"}</p>
-            <p className="text-xs text-[var(--muted-foreground)]">{profile.role || "—"}{profile.company ? ` · ${profile.company}` : ""}</p>
+            <p className="text-xs text-[var(--muted-foreground)]">
+              {profile.role || "—"}
+              {profile.company ? ` · ${profile.company}` : ""}
+            </p>
           </div>
-          <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={onAvatar} />
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            className="hidden"
+            onChange={onAvatar}
+          />
           <div className="ml-auto flex items-center gap-2">
             {profile.avatar_url && (
-              <button onClick={removeAvatar} className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs font-medium hover:bg-[var(--muted)]">
+              <button
+                onClick={removeAvatar}
+                className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs font-medium hover:bg-[var(--muted)]"
+              >
                 {t("settings.profile.removeAvatar")}
               </button>
             )}
-            <button onClick={() => fileRef.current?.click()} className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs font-medium hover:bg-[var(--muted)]">
+            <button
+              onClick={() => fileRef.current?.click()}
+              className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs font-medium hover:bg-[var(--muted)]"
+            >
               {t("settings.profile.changeAvatar")}
             </button>
           </div>
         </div>
         <Row label={t("settings.profile.name")}>
-          {editing ? <input value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} className="h-8 w-full max-w-sm rounded-md border border-[var(--border)] bg-[var(--background)] px-2 text-sm" /> : (profile.name || "—")}
+          {editing ? (
+            <input
+              value={draft.name}
+              onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+              className="h-8 w-full max-w-sm rounded-md border border-[var(--border)] bg-[var(--background)] px-2 text-sm"
+            />
+          ) : (
+            profile.name || "—"
+          )}
         </Row>
         <Row label={t("settings.profile.company")}>
-          {editing ? <input value={draft.company} onChange={(e) => setDraft({ ...draft, company: e.target.value })} className="h-8 w-full max-w-sm rounded-md border border-[var(--border)] bg-[var(--background)] px-2 text-sm" /> : (profile.company || "—")}
+          {editing ? (
+            <input
+              value={draft.company}
+              onChange={(e) => setDraft({ ...draft, company: e.target.value })}
+              className="h-8 w-full max-w-sm rounded-md border border-[var(--border)] bg-[var(--background)] px-2 text-sm"
+            />
+          ) : (
+            profile.company || "—"
+          )}
         </Row>
         <Row label={t("settings.profile.role")}>
-          {editing ? <input value={draft.role} onChange={(e) => setDraft({ ...draft, role: e.target.value })} className="h-8 w-full max-w-sm rounded-md border border-[var(--border)] bg-[var(--background)] px-2 text-sm" /> : (profile.role || "—")}
+          {editing ? (
+            <input
+              value={draft.role}
+              onChange={(e) => setDraft({ ...draft, role: e.target.value })}
+              className="h-8 w-full max-w-sm rounded-md border border-[var(--border)] bg-[var(--background)] px-2 text-sm"
+            />
+          ) : (
+            profile.role || "—"
+          )}
         </Row>
         <Row label={t("settings.profile.email")}>
-          {editing ? <input type="email" value={draft.email} onChange={(e) => setDraft({ ...draft, email: e.target.value })} className="h-8 w-full max-w-sm rounded-md border border-[var(--border)] bg-[var(--background)] px-2 text-sm" /> : (profile.email || user?.email || "—")}
+          {editing ? (
+            <input
+              type="email"
+              value={draft.email}
+              onChange={(e) => setDraft({ ...draft, email: e.target.value })}
+              className="h-8 w-full max-w-sm rounded-md border border-[var(--border)] bg-[var(--background)] px-2 text-sm"
+            />
+          ) : (
+            profile.email || user?.email || "—"
+          )}
         </Row>
         <Row label={t("menu.workspace")}>{activeWorkspace.name}</Row>
         <div className="mt-4 flex justify-end gap-2">
           {editing ? (
             <>
-              <button onClick={() => setEditing(false)} className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs font-medium hover:bg-[var(--muted)]">{t("settings.profile.cancel")}</button>
-              <button onClick={save} disabled={busy} className="rounded-md bg-[var(--foreground)] px-3 py-1.5 text-xs font-medium text-[var(--background)] hover:opacity-90 disabled:opacity-50">{t("settings.profile.save")}</button>
+              <button
+                onClick={() => setEditing(false)}
+                className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs font-medium hover:bg-[var(--muted)]"
+              >
+                {t("settings.profile.cancel")}
+              </button>
+              <button
+                onClick={save}
+                disabled={busy}
+                className="rounded-md bg-[var(--foreground)] px-3 py-1.5 text-xs font-medium text-[var(--background)] hover:opacity-90 disabled:opacity-50"
+              >
+                {t("settings.profile.save")}
+              </button>
             </>
           ) : (
-            <button onClick={() => setEditing(true)} className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs font-medium hover:bg-[var(--muted)]">{t("settings.profile.edit")}</button>
+            <button
+              onClick={() => setEditing(true)}
+              className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs font-medium hover:bg-[var(--muted)]"
+            >
+              {t("settings.profile.edit")}
+            </button>
           )}
         </div>
       </Card>
@@ -238,28 +378,48 @@ function WorkspaceTab() {
 
   async function save() {
     setBusy(true);
-    const { error } = await supabase.from("workspaces").update({ name: draft.trim() || activeWorkspace.name }).eq("id", activeWorkspace.id);
+    const { error } = await supabase
+      .from("workspaces")
+      .update({ name: draft.trim() || activeWorkspace.name })
+      .eq("id", activeWorkspace.id);
     setBusy(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     await refreshWorkspaces();
     setEditing(false);
     toast.success(t("toast.workspaceSaved"));
   }
 
   async function onLogo(e: React.ChangeEvent<HTMLInputElement>) {
-    const f = e.target.files?.[0]; if (!f) return;
-    if (!/^image\/(png|jpe?g|webp|svg\+xml)$/.test(f.type)) { toast.error(t("toast.invalidImage")); return; }
-    if (f.size > 2 * 1024 * 1024) { toast.error(t("toast.fileTooLarge")); return; }
+    const f = e.target.files?.[0];
+    if (!f) return;
+    if (!/^image\/(png|jpe?g|webp|svg\+xml)$/.test(f.type)) {
+      toast.error(t("toast.invalidImage"));
+      return;
+    }
+    if (f.size > 2 * 1024 * 1024) {
+      toast.error(t("toast.fileTooLarge"));
+      return;
+    }
     try {
       const ext = f.name.split(".").pop() || "png";
       const path = `${activeWorkspace.id}/logo-${Date.now()}.${ext}`;
       const url = await uploadAndSignedUrl("workspace-logos", path, f);
-      const { error } = await supabase.from("workspaces").update({ logo_url: url }).eq("id", activeWorkspace.id);
+      const { error } = await supabase
+        .from("workspaces")
+        .update({ logo_url: url })
+        .eq("id", activeWorkspace.id);
       if (error) throw error;
       await refreshWorkspaces();
       toast.success(t("toast.logoUpdated"));
-    } catch (err) { console.error(err); toast.error(t("toast.uploadFailed")); }
-    finally { if (fileRef.current) fileRef.current.value = ""; }
+    } catch (err) {
+      console.error(err);
+      toast.error(t("toast.uploadFailed"));
+    } finally {
+      if (fileRef.current) fileRef.current.value = "";
+    }
   }
 
   async function removeLogo() {
@@ -274,30 +434,73 @@ function WorkspaceTab() {
         <Row label={t("settings.workspace.name")}>
           {editing ? (
             <div className="flex items-center gap-2">
-              <input value={draft} onChange={(e) => setDraft(e.target.value)} className="h-8 w-full max-w-sm rounded-md border border-[var(--border)] bg-[var(--background)] px-2 text-sm" />
-              <button onClick={save} disabled={busy} className="rounded-md bg-[var(--foreground)] px-3 py-1 text-xs font-medium text-[var(--background)] disabled:opacity-50">{t("common.save")}</button>
-              <button onClick={() => { setDraft(activeWorkspace.name); setEditing(false); }} className="rounded-md border border-[var(--border)] px-3 py-1 text-xs font-medium hover:bg-[var(--muted)]">{t("common.cancel")}</button>
+              <input
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                className="h-8 w-full max-w-sm rounded-md border border-[var(--border)] bg-[var(--background)] px-2 text-sm"
+              />
+              <button
+                onClick={save}
+                disabled={busy}
+                className="rounded-md bg-[var(--foreground)] px-3 py-1 text-xs font-medium text-[var(--background)] disabled:opacity-50"
+              >
+                {t("common.save")}
+              </button>
+              <button
+                onClick={() => {
+                  setDraft(activeWorkspace.name);
+                  setEditing(false);
+                }}
+                className="rounded-md border border-[var(--border)] px-3 py-1 text-xs font-medium hover:bg-[var(--muted)]"
+              >
+                {t("common.cancel")}
+              </button>
             </div>
           ) : (
             <div className="flex items-center gap-2">
               <span>{activeWorkspace.name}</span>
-              <button onClick={() => setEditing(true)} className="rounded-md border border-[var(--border)] px-2 py-0.5 text-[11px] font-medium hover:bg-[var(--muted)]">{t("settings.profile.edit")}</button>
+              <button
+                onClick={() => setEditing(true)}
+                className="rounded-md border border-[var(--border)] px-2 py-0.5 text-[11px] font-medium hover:bg-[var(--muted)]"
+              >
+                {t("settings.profile.edit")}
+              </button>
             </div>
           )}
         </Row>
         <Row label={t("settings.workspace.logo")}>
           <div className="flex items-center gap-3">
             {activeWorkspace.logo_url ? (
-              <img src={activeWorkspace.logo_url} alt="" className="h-10 w-10 rounded-lg object-cover" />
+              <img
+                src={activeWorkspace.logo_url}
+                alt=""
+                className="h-10 w-10 rounded-lg object-cover"
+              />
             ) : (
               <div className="grid h-10 w-10 place-items-center rounded-lg bg-gradient-to-br from-[var(--primary)] to-[oklch(0.45_0.22_280)] text-sm font-bold text-white">
                 {(activeWorkspace.name?.[0] || "·").toUpperCase()}
               </div>
             )}
-            <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" className="hidden" onChange={onLogo} />
-            <button onClick={() => fileRef.current?.click()} className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs font-medium hover:bg-[var(--muted)]">{t("settings.workspace.upload")}</button>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp,image/svg+xml"
+              className="hidden"
+              onChange={onLogo}
+            />
+            <button
+              onClick={() => fileRef.current?.click()}
+              className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs font-medium hover:bg-[var(--muted)]"
+            >
+              {t("settings.workspace.upload")}
+            </button>
             {activeWorkspace.logo_url && (
-              <button onClick={removeLogo} className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs font-medium hover:bg-[var(--muted)]">{t("settings.workspace.removeLogo")}</button>
+              <button
+                onClick={removeLogo}
+                className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs font-medium hover:bg-[var(--muted)]"
+              >
+                {t("settings.workspace.removeLogo")}
+              </button>
             )}
           </div>
         </Row>
@@ -321,14 +524,27 @@ function MembersTab() {
 
   async function invite() {
     const e = email.trim().toLowerCase();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) { toast.error(t("toast.invalidEmail")); return; }
-    if (members.some((m) => m.email.toLowerCase() === e)) { toast.error(t("toast.alreadyMember")); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) {
+      toast.error(t("toast.invalidEmail"));
+      return;
+    }
+    if (members.some((m) => m.email.toLowerCase() === e)) {
+      toast.error(t("toast.alreadyMember"));
+      return;
+    }
     setBusy(true);
-    const name = e.split("@")[0].replace(/[._-]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-    const { error } = await supabase.from("workspace_members")
+    const name = e
+      .split("@")[0]
+      .replace(/[._-]/g, " ")
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+    const { error } = await supabase
+      .from("workspace_members")
       .insert({ workspace_id: activeWorkspace.id, email: e, name, role: "viewer" });
     setBusy(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     setEmail("");
     await refreshMembers();
     toast.success(t("toast.memberInvited"));
@@ -336,20 +552,29 @@ function MembersTab() {
 
   async function remove(id: string) {
     const { error } = await supabase.from("workspace_members").delete().eq("id", id);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     await refreshMembers();
     toast.success(t("toast.memberRemoved"));
   }
 
   async function updateRole(id: string, role: WsMember["role"]) {
     const { error } = await supabase.from("workspace_members").update({ role }).eq("id", id);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     await refreshMembers();
     toast.success(t("toast.roleUpdated"));
   }
 
   return (
-    <Card title={t("settings.members.title")} description={`${members.length} ${members.length === 1 ? "member" : "members"}`}>
+    <Card
+      title={t("settings.members.title")}
+      description={`${members.length} ${members.length === 1 ? "member" : "members"}`}
+    >
       {canManage && (
         <div className="flex items-center gap-2 pb-4">
           <input
@@ -359,7 +584,11 @@ function MembersTab() {
             placeholder={t("settings.members.invitePlaceholder")}
             className="h-9 flex-1 rounded-md border border-[var(--border)] bg-[var(--background)] px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/30"
           />
-          <button onClick={invite} disabled={busy} className="h-9 rounded-md bg-[var(--foreground)] px-3 text-xs font-medium text-[var(--background)] hover:opacity-90 disabled:opacity-50">
+          <button
+            onClick={invite}
+            disabled={busy}
+            className="h-9 rounded-md bg-[var(--foreground)] px-3 text-xs font-medium text-[var(--background)] hover:opacity-90 disabled:opacity-50"
+          >
             {t("settings.members.invite")}
           </button>
         </div>
@@ -368,11 +597,23 @@ function MembersTab() {
         {members.map((m) => (
           <li key={m.id} className="flex items-center gap-3 py-3">
             <div className="grid h-9 w-9 place-items-center rounded-full bg-[var(--muted)] text-xs font-semibold">
-              {(m.name || m.email).split(/\s+/).map((s) => s[0]).slice(0,2).join("").toUpperCase()}
+              {(m.name || m.email)
+                .split(/\s+/)
+                .map((s) => s[0])
+                .slice(0, 2)
+                .join("")
+                .toUpperCase()}
             </div>
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-medium">{m.name || m.email.split("@")[0]}</p>
-              <p className="truncate text-xs text-[var(--muted-foreground)]">{m.email} {!m.joined_at && <span className="ml-1 rounded bg-[var(--muted)] px-1 text-[10px]">{t("settings.members.pending")}</span>}</p>
+              <p className="truncate text-xs text-[var(--muted-foreground)]">
+                {m.email}{" "}
+                {!m.joined_at && (
+                  <span className="ml-1 rounded bg-[var(--muted)] px-1 text-[10px]">
+                    {t("settings.members.pending")}
+                  </span>
+                )}
+              </p>
             </div>
             {canManage && m.role !== "owner" && m.user_id !== user?.id ? (
               <select
@@ -381,7 +622,9 @@ function MembersTab() {
                 className="h-8 rounded-md border border-[var(--border)] bg-[var(--background)] px-2 text-xs"
               >
                 {ROLES.filter((r) => r !== "owner").map((r) => (
-                  <option key={r} value={r}>{t(`settings.members.role.${r}`)}</option>
+                  <option key={r} value={r}>
+                    {t(`settings.members.role.${r}`)}
+                  </option>
                 ))}
               </select>
             ) : (
@@ -390,7 +633,11 @@ function MembersTab() {
               </span>
             )}
             {canManage && m.role !== "owner" && (
-              <button onClick={() => remove(m.id)} className="grid h-8 w-8 place-items-center rounded-md text-[var(--muted-foreground)] hover:bg-[var(--muted)] hover:text-[var(--destructive)]" aria-label={t("settings.members.removeAria")}>
+              <button
+                onClick={() => remove(m.id)}
+                className="grid h-8 w-8 place-items-center rounded-md text-[var(--muted-foreground)] hover:bg-[var(--muted)] hover:text-[var(--destructive)]"
+                aria-label={t("settings.members.removeAria")}
+              >
                 <Trash2 className="h-3.5 w-3.5" />
               </button>
             )}
@@ -408,7 +655,11 @@ function LanguageTab() {
 
   // Apply profile language on mount if it differs
   useEffect(() => {
-    if (profile?.preferred_language && profile.preferred_language !== locale && (profile.preferred_language in localeLabels)) {
+    if (
+      profile?.preferred_language &&
+      profile.preferred_language !== locale &&
+      profile.preferred_language in localeLabels
+    ) {
       setLocale(profile.preferred_language as Locale);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -433,7 +684,9 @@ function LanguageTab() {
               key={l}
               onClick={() => choose(l)}
               className={`flex items-center justify-between rounded-xl border p-4 text-sm font-medium transition-colors ${
-                active ? "border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary)]" : "border-[var(--border)] hover:bg-[var(--muted)]"
+                active
+                  ? "border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary)]"
+                  : "border-[var(--border)] hover:bg-[var(--muted)]"
               }`}
             >
               {localeLabels[l]}
@@ -450,7 +703,9 @@ function LanguageTab() {
 type Theme = "Light" | "Dark" | "System";
 function applyTheme(theme: Theme) {
   if (typeof document === "undefined") return;
-  const wantDark = theme === "Dark" || (theme === "System" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+  const wantDark =
+    theme === "Dark" ||
+    (theme === "System" && window.matchMedia("(prefers-color-scheme: dark)").matches);
   document.documentElement.classList.toggle("dark", wantDark);
 }
 function AppearanceTab() {
@@ -458,7 +713,9 @@ function AppearanceTab() {
   const { profile, user, refreshProfile } = useWorkspace();
   const theme = (profile?.theme as Theme) || "Light";
 
-  useEffect(() => { applyTheme(theme); }, [theme]);
+  useEffect(() => {
+    applyTheme(theme);
+  }, [theme]);
   useEffect(() => {
     if (theme !== "System") return;
     const mq = window.matchMedia("(prefers-color-scheme: dark)");
@@ -490,7 +747,9 @@ function AppearanceTab() {
               key={opt}
               onClick={() => choose(opt)}
               className={`rounded-xl border p-4 text-sm font-medium transition-colors ${
-                active ? "border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary)]" : "border-[var(--border)] hover:bg-[var(--muted)]"
+                active
+                  ? "border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary)]"
+                  : "border-[var(--border)] hover:bg-[var(--muted)]"
               }`}
             >
               {labels[opt]}
@@ -505,11 +764,25 @@ function AppearanceTab() {
 // ------------------ NOTIFICATIONS (local prefs UI, not yet wired to delivery) ------------------
 function NotificationsTab() {
   const { t } = useI18n();
-  return <ComingSoonTab tag="security" customTitle={t("settings.tab.notifications")} customBody={t("common.comingSoon")} />;
+  return (
+    <ComingSoonTab
+      tag="security"
+      customTitle={t("settings.tab.notifications")}
+      customBody={t("common.comingSoon")}
+    />
+  );
 }
 
 // ------------------ COMING SOON ------------------
-function ComingSoonTab({ tag, customTitle, customBody }: { tag: "billing" | "security" | "apikeys" | "integrations"; customTitle?: string; customBody?: string }) {
+function ComingSoonTab({
+  tag,
+  customTitle,
+  customBody,
+}: {
+  tag: "billing" | "security" | "apikeys" | "integrations";
+  customTitle?: string;
+  customBody?: string;
+}) {
   const { t } = useI18n();
   const titleKey = `settings.tab.${tag === "apikeys" ? "apikeys" : tag}`;
   return (
@@ -517,7 +790,9 @@ function ComingSoonTab({ tag, customTitle, customBody }: { tag: "billing" | "sec
       <div className="mx-auto grid h-10 w-10 place-items-center rounded-full bg-[var(--primary-soft)] text-[var(--primary)]">
         <Sparkles className="h-5 w-5" />
       </div>
-      <div className="mt-3 text-sm font-medium">{customTitle ?? t(titleKey)} · {t("settings.comingSoon.title")}</div>
+      <div className="mt-3 text-sm font-medium">
+        {customTitle ?? t(titleKey)} · {t("settings.comingSoon.title")}
+      </div>
       <p className="mx-auto mt-1 max-w-sm text-xs text-[var(--muted-foreground)]">
         {customBody ?? t(`settings.comingSoon.${tag}`)}
       </p>

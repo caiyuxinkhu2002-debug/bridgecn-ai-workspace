@@ -10,7 +10,10 @@ import { useI18n } from "@/lib/i18n";
  * customers is "real numbers", and pretending the data is verified when it is
  * not would be a worse failure than a permanent banner.
  */
-export function DataIntegrityBanner({ verified = false, verifiedLabel }: { verified?: boolean; verifiedLabel?: string } = {}) {
+export function DataIntegrityBanner({
+  verified = false,
+  verifiedLabel,
+}: { verified?: boolean; verifiedLabel?: string } = {}) {
   const { t } = useI18n();
   if (verified) {
     return (
@@ -19,7 +22,8 @@ export function DataIntegrityBanner({ verified = false, verifiedLabel }: { verif
         <div className="flex-1">
           <p className="font-semibold">Verified data source connected</p>
           <p className="mt-0.5 opacity-90">
-            {verifiedLabel || "Live SEMrush data is grounding this page. KPIs marked Verified are measurements; remaining figures stay as AI inference based on category benchmarks."}
+            {verifiedLabel ||
+              "Live SEMrush data is grounding this page. KPIs marked Verified are measurements; remaining figures stay as AI inference based on category benchmarks."}
           </p>
         </div>
       </div>

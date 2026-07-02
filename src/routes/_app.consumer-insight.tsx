@@ -29,9 +29,12 @@ function ConsumerInsightPage() {
       {!hasData ? (
         <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--background)] p-10 text-center shadow-[var(--shadow-soft)]">
           <Sparkles className="mx-auto h-5 w-5 text-[var(--primary)]" />
-          <p className="mt-3 text-sm font-medium">No consumer data for {activeProject?.name || "this project"} yet.</p>
+          <p className="mt-3 text-sm font-medium">
+            No consumer data for {activeProject?.name || "this project"} yet.
+          </p>
           <p className="mt-1 text-xs text-[var(--muted-foreground)]">
-            Enrich the Project Knowledge Base with target audience, tone and keywords to generate consumer insight.
+            Enrich the Project Knowledge Base with target audience, tone and keywords to generate
+            consumer insight.
           </p>
           {activeProject?.id && (
             <Link
@@ -50,18 +53,34 @@ function ConsumerInsightPage() {
               <Sparkles className="h-4 w-4 text-[var(--primary)]" />
               <h3 className="text-sm font-semibold">Target audience</h3>
             </div>
-            {audience
-              ? <p className="whitespace-pre-line text-sm leading-relaxed text-[var(--foreground)]/85">{audience}</p>
-              : <p className="text-xs text-[var(--muted-foreground)]">Add a target audience description in the Knowledge Base.</p>}
+            {audience ? (
+              <p className="whitespace-pre-line text-sm leading-relaxed text-[var(--foreground)]/85">
+                {audience}
+              </p>
+            ) : (
+              <p className="text-xs text-[var(--muted-foreground)]">
+                Add a target audience description in the Knowledge Base.
+              </p>
+            )}
             {tone.length > 0 && (
               <div className="mt-4 flex flex-wrap gap-1.5">
-                {tone.map((tn) => <span key={tn} className="rounded-full bg-[var(--primary-soft)] px-2 py-0.5 text-[11px] font-medium text-[var(--primary)]">{tn}</span>)}
+                {tone.map((tn) => (
+                  <span
+                    key={tn}
+                    className="rounded-full bg-[var(--primary-soft)] px-2 py-0.5 text-[11px] font-medium text-[var(--primary)]"
+                  >
+                    {tn}
+                  </span>
+                ))}
               </div>
             )}
           </div>
           {keywords.length > 0 && (
             <div className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-6 shadow-[var(--shadow-soft)]">
-              <div className="mb-4 flex items-center gap-2"><Sparkles className="h-4 w-4 text-[var(--primary)]" /><h3 className="text-sm font-semibold">{t("consumer.signals")}</h3></div>
+              <div className="mb-4 flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-[var(--primary)]" />
+                <h3 className="text-sm font-semibold">{t("consumer.signals")}</h3>
+              </div>
               <ul className="divide-y divide-[var(--border)]">
                 {keywords.map((kw) => (
                   <li key={kw} className="flex items-center justify-between py-3">

@@ -26,8 +26,8 @@ export type SemrushCompetitor = {
 };
 
 export type SemrushSnapshot = {
-  market: string;            // database code used (us, cn, kr…)
-  fetchedAt: string;         // ISO
+  market: string; // database code used (us, cn, kr…)
+  fetchedAt: string; // ISO
   domain: string | null;
   domainOverview: {
     organicKeywords: number;
@@ -36,7 +36,7 @@ export type SemrushSnapshot = {
   } | null;
   keywords: SemrushKeyword[];
   competitors: SemrushCompetitor[];
-  errors: string[];          // non-fatal per-call errors (quota, missing data)
+  errors: string[]; // non-fatal per-call errors (quota, missing data)
 };
 
 // Map a free-text targetMarket like "China" / "中国" / "Korea" to a SEMrush
@@ -73,7 +73,12 @@ function normalizeDomain(url: string): string | null {
     const u = new URL(trimmed.startsWith("http") ? trimmed : `https://${trimmed}`);
     return u.hostname.replace(/^www\./, "");
   } catch {
-    return trimmed.replace(/^https?:\/\//, "").replace(/\/.*$/, "").replace(/^www\./, "") || null;
+    return (
+      trimmed
+        .replace(/^https?:\/\//, "")
+        .replace(/\/.*$/, "")
+        .replace(/^www\./, "") || null
+    );
   }
 }
 
@@ -129,9 +134,9 @@ function toNumber(s: string | undefined): number {
 }
 
 export type FetchSnapshotInput = {
-  domain: string;            // raw URL or hostname (KB website)
-  targetMarket: string;      // free-text market label
-  seedKeywords: string[];    // up to 3 keywords to deep-dive
+  domain: string; // raw URL or hostname (KB website)
+  targetMarket: string; // free-text market label
+  seedKeywords: string[]; // up to 3 keywords to deep-dive
 };
 
 export const fetchSemrushSnapshot = createServerFn({ method: "POST" })

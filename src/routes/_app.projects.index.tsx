@@ -15,7 +15,16 @@ export const Route = createFileRoute("/_app/projects/")({
 function ProjectsPage() {
   const { t } = useI18n();
   const router = useRouter();
-  const { projects, archivedProjects, setActiveProjectId, activeProjectId, duplicateProject, archiveProject, unarchiveProject, deleteProject } = useWorkspace();
+  const {
+    projects,
+    archivedProjects,
+    setActiveProjectId,
+    activeProjectId,
+    duplicateProject,
+    archiveProject,
+    unarchiveProject,
+    deleteProject,
+  } = useWorkspace();
   const [tab, setTab] = useState<"active" | "archived">("active");
   const [busyId, setBusyId] = useState<string | null>(null);
   const list = tab === "active" ? projects : archivedProjects;
@@ -25,27 +34,45 @@ function ProjectsPage() {
     try {
       const p = await duplicateProject(id);
       if (p) toast.success(t("pd.toast.duplicated"));
-    } catch { toast.error(t("pd.toast.duplicateFailed")); }
-    finally { setBusyId(null); }
+    } catch {
+      toast.error(t("pd.toast.duplicateFailed"));
+    } finally {
+      setBusyId(null);
+    }
   }
   async function onArchive(id: string) {
     setBusyId(id);
-    try { await archiveProject(id); toast.success(t("pd.toast.archived")); }
-    catch { toast.error(t("pd.toast.archiveFailed")); }
-    finally { setBusyId(null); }
+    try {
+      await archiveProject(id);
+      toast.success(t("pd.toast.archived"));
+    } catch {
+      toast.error(t("pd.toast.archiveFailed"));
+    } finally {
+      setBusyId(null);
+    }
   }
   async function onUnarchive(id: string) {
     setBusyId(id);
-    try { await unarchiveProject(id); toast.success(t("pd.toast.restored")); }
-    catch { toast.error(t("pd.toast.archiveFailed")); }
-    finally { setBusyId(null); }
+    try {
+      await unarchiveProject(id);
+      toast.success(t("pd.toast.restored"));
+    } catch {
+      toast.error(t("pd.toast.archiveFailed"));
+    } finally {
+      setBusyId(null);
+    }
   }
   async function onDelete(id: string, name: string) {
     if (!confirm(t("projects.delete.confirm", { v: name }))) return;
     setBusyId(id);
-    try { await deleteProject(id); toast.success(t("pd.toast.deleted")); }
-    catch { toast.error(t("pd.toast.deleteFailed")); }
-    finally { setBusyId(null); }
+    try {
+      await deleteProject(id);
+      toast.success(t("pd.toast.deleted"));
+    } catch {
+      toast.error(t("pd.toast.deleteFailed"));
+    } finally {
+      setBusyId(null);
+    }
   }
 
   return (
@@ -62,8 +89,18 @@ function ProjectsPage() {
       </div>
 
       <div className="mb-4 inline-flex rounded-md border border-[var(--border)] bg-[var(--background)] p-0.5 text-xs">
-        <button onClick={() => setTab("active")} className={`rounded px-3 py-1.5 font-medium ${tab === "active" ? "bg-[var(--muted)] text-[var(--foreground)]" : "text-[var(--muted-foreground)]"}`}>{t("projects.tab.active")} ({projects.length})</button>
-        <button onClick={() => setTab("archived")} className={`rounded px-3 py-1.5 font-medium ${tab === "archived" ? "bg-[var(--muted)] text-[var(--foreground)]" : "text-[var(--muted-foreground)]"}`}>{t("projects.tab.archived")} ({archivedProjects.length})</button>
+        <button
+          onClick={() => setTab("active")}
+          className={`rounded px-3 py-1.5 font-medium ${tab === "active" ? "bg-[var(--muted)] text-[var(--foreground)]" : "text-[var(--muted-foreground)]"}`}
+        >
+          {t("projects.tab.active")} ({projects.length})
+        </button>
+        <button
+          onClick={() => setTab("archived")}
+          className={`rounded px-3 py-1.5 font-medium ${tab === "archived" ? "bg-[var(--muted)] text-[var(--foreground)]" : "text-[var(--muted-foreground)]"}`}
+        >
+          {t("projects.tab.archived")} ({archivedProjects.length})
+        </button>
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--background)] shadow-[var(--shadow-soft)]">
@@ -76,7 +113,9 @@ function ProjectsPage() {
         </div>
         <ul className="divide-y divide-[var(--border)]">
           {list.length === 0 && (
-            <li className="px-5 py-10 text-center text-sm text-[var(--muted-foreground)]">{tab === "active" ? t("projects.empty.active") : t("projects.empty.archived")}</li>
+            <li className="px-5 py-10 text-center text-sm text-[var(--muted-foreground)]">
+              {tab === "active" ? t("projects.empty.active") : t("projects.empty.archived")}
+            </li>
           )}
           {list.map((p) => (
             <li
@@ -97,7 +136,9 @@ function ProjectsPage() {
                   >
                     {p.name}
                   </button>
-                  <div className="truncate text-xs text-[var(--muted-foreground)]">{p.industry} · {p.region}</div>
+                  <div className="truncate text-xs text-[var(--muted-foreground)]">
+                    {p.industry} · {p.region}
+                  </div>
                 </div>
                 {p.id === activeProjectId && (
                   <span className="ml-1 rounded-full bg-[var(--primary)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--primary-foreground)]">
@@ -111,16 +152,48 @@ function ProjectsPage() {
                   {t(stageLabelKey[p.stage])}
                 </span>
               </div>
-              <div className="hidden md:block text-sm text-[var(--muted-foreground)]">{p.owner}</div>
-              <div className="hidden md:block text-xs text-[var(--muted-foreground)]">{p.updated}</div>
+              <div className="hidden md:block text-sm text-[var(--muted-foreground)]">
+                {p.owner}
+              </div>
+              <div className="hidden md:block text-xs text-[var(--muted-foreground)]">
+                {p.updated}
+              </div>
               <div className="flex items-center gap-0.5">
-                <button onClick={() => onDuplicate(p.id)} disabled={busyId === p.id} title={t("projects.action.duplicate")} className="grid h-8 w-8 place-items-center rounded-md text-[var(--muted-foreground)] hover:bg-[var(--muted)] disabled:opacity-50"><Copy className="h-3.5 w-3.5" /></button>
+                <button
+                  onClick={() => onDuplicate(p.id)}
+                  disabled={busyId === p.id}
+                  title={t("projects.action.duplicate")}
+                  className="grid h-8 w-8 place-items-center rounded-md text-[var(--muted-foreground)] hover:bg-[var(--muted)] disabled:opacity-50"
+                >
+                  <Copy className="h-3.5 w-3.5" />
+                </button>
                 {tab === "active" ? (
-                  <button onClick={() => onArchive(p.id)} disabled={busyId === p.id} title={t("projects.action.archive")} className="grid h-8 w-8 place-items-center rounded-md text-[var(--muted-foreground)] hover:bg-[var(--muted)] disabled:opacity-50"><Archive className="h-3.5 w-3.5" /></button>
+                  <button
+                    onClick={() => onArchive(p.id)}
+                    disabled={busyId === p.id}
+                    title={t("projects.action.archive")}
+                    className="grid h-8 w-8 place-items-center rounded-md text-[var(--muted-foreground)] hover:bg-[var(--muted)] disabled:opacity-50"
+                  >
+                    <Archive className="h-3.5 w-3.5" />
+                  </button>
                 ) : (
-                  <button onClick={() => onUnarchive(p.id)} disabled={busyId === p.id} title={t("projects.action.restore")} className="grid h-8 w-8 place-items-center rounded-md text-[var(--muted-foreground)] hover:bg-[var(--muted)] disabled:opacity-50"><ArchiveRestore className="h-3.5 w-3.5" /></button>
+                  <button
+                    onClick={() => onUnarchive(p.id)}
+                    disabled={busyId === p.id}
+                    title={t("projects.action.restore")}
+                    className="grid h-8 w-8 place-items-center rounded-md text-[var(--muted-foreground)] hover:bg-[var(--muted)] disabled:opacity-50"
+                  >
+                    <ArchiveRestore className="h-3.5 w-3.5" />
+                  </button>
                 )}
-                <button onClick={() => onDelete(p.id, p.name)} disabled={busyId === p.id} title={t("projects.action.delete")} className="grid h-8 w-8 place-items-center rounded-md text-[var(--muted-foreground)] hover:bg-[var(--muted)] hover:text-red-600 disabled:opacity-50"><Trash2 className="h-3.5 w-3.5" /></button>
+                <button
+                  onClick={() => onDelete(p.id, p.name)}
+                  disabled={busyId === p.id}
+                  title={t("projects.action.delete")}
+                  className="grid h-8 w-8 place-items-center rounded-md text-[var(--muted-foreground)] hover:bg-[var(--muted)] hover:text-red-600 disabled:opacity-50"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
                 <Link
                   to="/projects/$projectId"
                   params={{ projectId: p.id }}
