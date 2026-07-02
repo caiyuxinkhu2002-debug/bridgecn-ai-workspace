@@ -1,6 +1,7 @@
 <div align="center">
 
 # 🌏 China Market Insight
+bridgecn-ai-workspace.lovable.app
 
 ### AI-powered market intelligence for cross-border brands entering Greater China
 ### 面向跨境品牌的中国市场 AI 情报平台
