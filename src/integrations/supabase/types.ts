@@ -394,19 +394,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      can_admin_workspace: {
-        Args: { _user: string; _workspace: string }
-        Returns: boolean
-      }
-      is_workspace_member: {
-        Args: { _user: string; _workspace: string }
-        Returns: boolean
-      }
       reap_stale_ai_jobs: { Args: never; Returns: number }
-      workspace_role_of: {
-        Args: { _user: string; _workspace: string }
-        Returns: Database["public"]["Enums"]["workspace_role"]
-      }
     }
     Enums: {
       ai_job_status: "queued" | "running" | "completed" | "failed" | "cancelled"
