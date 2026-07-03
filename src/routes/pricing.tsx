@@ -20,7 +20,48 @@ export const Route = createFileRoute("/pricing")({
           "Simple pricing for Korean and Japanese brands entering China. From $49/month.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://bridgecn-ai-workspace.lovable.app/pricing" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "BridgeCN AI — Pricing" },
+      {
+        name: "twitter:description",
+        content:
+          "Simple pricing for Korean and Japanese brands entering China. From $49/month.",
+      },
+    ],
+    links: [
+      { rel: "canonical", href: "https://bridgecn-ai-workspace.lovable.app/pricing" },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Product",
+          name: "BridgeCN AI Workspace",
+          description:
+            "AI market entry workspace for Korean and Japanese brands expanding into China.",
+          brand: { "@type": "Brand", name: "BridgeCN AI" },
+          offers: [
+            {
+              "@type": "Offer",
+              name: "Starter",
+              price: PLAN_PRICES.starter.monthlyUsd,
+              priceCurrency: "USD",
+              url: "https://bridgecn-ai-workspace.lovable.app/pricing",
+              category: "SaaS subscription",
+            },
+            {
+              "@type": "Offer",
+              name: "Pro",
+              price: PLAN_PRICES.pro.monthlyUsd,
+              priceCurrency: "USD",
+              url: "https://bridgecn-ai-workspace.lovable.app/pricing",
+              category: "SaaS subscription",
+            },
+          ],
+        }),
+      },
     ],
   }),
   component: PricingPage,
