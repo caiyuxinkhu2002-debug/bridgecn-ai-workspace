@@ -1,82 +1,76 @@
 ## 目标
 
-1. **端到端全流程实测**：用 Playwright 跑一遍 新建项目 → 市场洞察(SEMrush) → 消费者 → 本地化 → 清单 → 报告，每步截图核对数据真实性和 UI 正确性，把发现的问题列成一张表。
-2. **新增功能：竞品对比页 (Competitor Comparison)**——用 SEMrush 真实数据做 2-3 个域名的并排对比。
+在现有导航中新增一个 **Competitors / 竞品对比 / 경쟁사 비교** 页面，用 SEMrush 真实数据做 2–3 个域名的并排 SEO 对比。所有数据带 verified 徽章 + 时间戳，绝不虚构。
 
 ---
 
-## Part 1 · 端到端实测（先做）
+## 页面 UX
 
-跑一个 Playwright 脚本，扮演真实用户：
+路由 `/competitors`（新文件 `src/routes/_app.competitors.tsx`），侧边栏在「China Market Insight」下方加入口。
 
-1. 登录 → `/start` 用 AI 新建一个项目（品牌：某韩妆，目标市场：中国香港，含 website）
-2. 进项目详情 → 确认 KB 字段中文正确
-3. 进 `China Market Insight` → 点 **Refresh with SEMrush** → 等绿卡出现 → 截图
-4. 触发 AI Generate → 等完成 → 截图 → 核对：
-   - 顶部 banner 是绿色 verified 而不是橙色
-   - KPI 数字是否引用 SEMrush · HK
-   - Sources 里是否还有 QuestMobile / Euromonitor 等假源
-5. 进 `Consumer Insight` → 截图（已知无真数据，只查显示是否 OK）
-6. 进 `Localization Studio` → 截图
-7. 进 `Launch Checklist` → 勾选 2 项 → 刷新看是否持久化
-8. 进 `Reports` → Generate → 等完成 → 截图 → 核对 executive summary 是否引用 SEMrush
-
-产出：`/tmp/browser/e2e-2026-07-03/` 一组截图 + 一张问题清单（分 P0/P1/P2）。**发现的 bug 会在实测报告里列出，但本次不修**——留给你审批后单独立计划。
-
----
-
-## Part 2 · 新增「竞品对比」页 (Competitor Comparison)
-
-### 路由 & 入口
-
-- 新文件 `src/routes/_app.competitors.tsx`，URL `/competitors`
-- 侧边栏在市场洞察下方加一个新导航项「竞品对比 / Competitors / 경쟁사 비교」
-
-### 页面功能
-
-顶部输入区：
-- 你的域名（默认自动填当前项目的 website）
-- 竞品域名 1、2、3（可选，最多 3 个）
-- 数据库/市场（自动从 targetMarket 映射，可手动改）
+**顶部输入区**
+- 你的域名（默认从当前项目 `knowledgeBase.website` 自动填入）
+- 竞品域名 1、2（必填），竞品 3（可选）
+- 数据库（下拉：`us / uk / hk / cn / kr / jp`，从 `targetMarket` 自动映射，可手改）
 - 「拉取真实数据」按钮
+- 顶部复用 `DataIntegrityBanner`：有数据 → 绿色 `Verified · SEMrush · <db> · <timestamp>`；无 → 灰色引导
 
-数据区（点按钮后）：
-- **概览对比表**：每个域名一列，行 = Authority Score / 关键词数 / 月自然流量 / 反链数 / 引荐域名数
-- **Top 5 关键词交集/差异**：SEMrush `keyword gap` 逻辑——你没排名但对手排名的词（机会词）
-- **每家 Top 3 页面**：`domain_organic` 前 3
-- 顶部 verified banner（`Verified · SEMrush · <db> · <timestamp>`）
-- 数据 24h 缓存到 `data_snapshots` 表（如无则新建），避免刷爆免费额度
+**数据展示区**（三张卡）
+1. **概览对比表**：每个域名一列，行 = Authority Score / Organic Keywords / Est. Monthly Traffic / Backlinks / Referring Domains
+2. **各家 Top 5 关键词**：三列并排，每列一张小表（keyword、position、volume）
+3. **机会关键词 (Keyword Gap)**：对手排名前 20 但你没排名的词，Top 10 展示，标注是哪个对手贡献的
 
-### 技术实现
-
-新增服务端函数 `src/lib/data/semrush-compare.functions.ts`：
-- `fetchDomainOverview(domain, db)` → `domain_ranks`
-- `fetchTopKeywords(domain, db, n=10)` → `domain_organic`
-- `fetchTopPages(domain, db, n=3)`
-- `fetchKeywordGap(you, competitors, db)` → 用 `domain_organic` 差集
-- 统一走 gateway：`Authorization: Bearer ${LOVABLE_API_KEY}` + `X-Connection-Api-Key: ${SEMRUSH_API_KEY}`
-- 免费额度耗尽（`ERROR 134`）→ 返回结构化错误，UI 显示明确提示
-- 用 `requireSupabaseAuth` 中间件保护
-
-前端：
-- shadcn `Table` + `Card` 展示
-- 加载态用 skeleton
-- 无数据时显示引导 CTA
-- i18n 三语（zh-CN / zh-HK / en / ko）
-- 顶部诚实模式 banner 复用 `DataIntegrityBanner`
-
-### 不做的事（避免范围膨胀）
-
-- 不做导出 PDF（如你想要，之后单独立计划）
-- 不做历史趋势对比（SEMrush 历史数据要 Business 套餐）
-- 不动 Report 生成逻辑
+**加载态**用 shadcn Skeleton；错误态区分两种：
+- `ERROR 134 :: TOTAL LIMIT EXCEEDED` → 明确提示「SEMrush 免费额度已用完，请等 24h 或升级」
+- 其它错误 → 通用错误 + 重试按钮
 
 ---
 
-## 输出顺序
+## 技术实现
 
-1. 先跑 E2E 实测，把截图和问题清单交给你
-2. 你决定是否要先修 bug 再做竞品页，还是直接做竞品页
-3. 竞品页实现（新文件 3 个 + 侧边栏 1 处改动 + i18n keys）
+**新文件 `src/lib/data/semrush-compare.functions.ts`**（服务端函数，`requireSupabaseAuth` 保护）
+- `fetchCompareSnapshot({ you, competitors[], db })` 一个入口，内部并发调用：
+  - `domain_ranks`（每个域名一次）→ Authority Score / 关键词数 / 流量 / 反链
+  - `domain_organic`（每个域名一次，limit=5）→ Top 关键词
+  - Keyword gap：拉每家 `domain_organic` limit=20，做差集
+- 统一 gateway header：`Authorization: Bearer ${LOVABLE_API_KEY}` + `X-Connection-Api-Key: ${SEMRUSH_API_KEY}`
+- 检测 `ERROR 134` → 返回 `{ error: "quota_exceeded" }`
+- 结果结构化返回 DTO，24h 缓存到 `projects.competitor_snapshot` JSONB（避免刷爆额度）
 
-要我按这个计划开工吗？
+**Schema 变更**（单独一次 migration）
+- `ALTER TABLE public.projects ADD COLUMN competitor_snapshot jsonb`
+- 无新表，无新 GRANT / RLS 变更
+
+**新文件 `src/routes/_app.competitors.tsx`**
+- shadcn `Card / Table / Input / Button / Skeleton`
+- 复用 `useWorkspace()` 拿当前 project + `knowledgeBase.website`
+- 复用 `DataIntegrityBanner`
+
+**i18n**
+- 在 `src/lib/i18n.tsx` 加 `competitors.*` keys（英/中/韩三语）
+
+**导航入口**
+- `src/components/app-shell.tsx` 侧边栏加一项（如已在结构中）
+
+---
+
+## 不做的事
+
+- 不做 PDF 导出（另立计划）
+- 不做历史趋势（SEMrush 历史数据要 Business 套餐）
+- 不改 Reports / China Market Insight 现有逻辑
+- 不加新表、不改 RLS
+
+---
+
+## 交付清单
+
+| 文件 | 动作 |
+|---|---|
+| `src/lib/data/semrush-compare.functions.ts` | 新建 |
+| `src/routes/_app.competitors.tsx` | 新建 |
+| `src/components/app-shell.tsx` | 加导航项 |
+| `src/lib/i18n.tsx` | 加 `competitors.*` keys |
+| DB migration | `projects.competitor_snapshot jsonb` |
+
+完工后跑一次 `bun run lint` + typecheck，无误即可。
