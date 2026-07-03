@@ -283,6 +283,39 @@ function DashboardPage() {
           </div>
         </div>
       </section>
+
+      {/* Journey footer: always show a next-step CTA */}
+      <section className="flex flex-col items-stretch justify-between gap-3 rounded-2xl border border-[var(--border)] bg-[var(--background)] p-4 shadow-[var(--shadow-soft)] sm:flex-row sm:items-center">
+        <div className="flex items-center gap-2 text-xs text-[var(--muted-foreground)]">
+          <Sparkles className="h-3.5 w-3.5 text-[var(--primary)]" />
+          {projects.length === 0 ? t("dash.sub") : t("dash.continue.sub")}
+        </div>
+        <div className="flex items-center justify-end gap-2">
+          <Link
+            to="/projects"
+            className="inline-flex h-9 items-center gap-1.5 rounded-md border border-[var(--border)] px-3 text-xs font-medium hover:bg-[var(--muted)]"
+          >
+            {t("nav.projects")}
+          </Link>
+          {projects.length === 0 ? (
+            <Link
+              to="/start"
+              className="inline-flex h-9 items-center gap-1.5 rounded-md bg-[var(--foreground)] px-3 text-xs font-medium text-[var(--background)] hover:opacity-90"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              {t("projects.new")}
+            </Link>
+          ) : (
+            <button
+              onClick={() => router.navigate({ to: stageToPath[activeProject.stage] })}
+              className="inline-flex h-9 items-center gap-1.5 rounded-md bg-[var(--foreground)] px-3 text-xs font-medium text-[var(--background)] hover:opacity-90"
+            >
+              {t("dash.resume")} {t(stageLabelKey[activeProject.stage])}
+              <ArrowRight className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
+      </section>
     </div>
   );
 }
