@@ -609,6 +609,7 @@ function ProjectDetailPage() {
         </div>
 
         <div className="space-y-6">
+          <ProjectHealthCard project={project} />
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-6 shadow-[var(--shadow-soft)]">
             <h3 className="mb-4 text-sm font-semibold">{t("pd.kpis")}</h3>
             <dl className="space-y-3">
