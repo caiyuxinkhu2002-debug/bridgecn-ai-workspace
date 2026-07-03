@@ -9,9 +9,10 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 const MODEL = "google/gemini-3-flash-preview";
 
 type Locale = "en" | "ko" | "zh";
+type JsonValue = string | number | boolean | null | JsonValue[] | { [k: string]: JsonValue };
 
 export type TranslateOutputInput = {
-  payload: unknown;
+  payload: { [k: string]: JsonValue };
   targetLocale: Locale;
 };
 
@@ -24,7 +25,7 @@ function localeName(loc: Locale): string {
 export const translateJobOutput = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: TranslateOutputInput) => input)
-  .handler(async ({ data }): Promise<{ payload: unknown }> => {
+  .handler(async ({ data }): Promise<{ payload: { [k: string]: JsonValue } }> => {
     const { payload, targetLocale } = data;
     if (!payload || typeof payload !== "object") return { payload };
 
@@ -69,21 +70,21 @@ ABSOLUTE RULES:
     }
     const json = (await res.json()) as { choices?: { message?: { content?: string } }[] };
     const content = json.choices?.[0]?.message?.content || "{}";
-    let parsed: unknown = {};
+    let parsed: { [k: string]: JsonValue } = {};
     try {
-      parsed = JSON.parse(content);
+      parsed = JSON.parse(content) as { [k: string]: JsonValue };
     } catch {
       const m = content.match(/\{[\s\S]*\}/);
       if (m) {
         try {
-          parsed = JSON.parse(m[0]);
+          parsed = JSON.parse(m[0]) as { [k: string]: JsonValue };
         } catch {
           throw new Error("AI returned non-JSON content");
         }
       } else throw new Error("AI returned non-JSON content");
     }
     if (parsed && typeof parsed === "object") {
-      (parsed as Record<string, unknown>)._locale = targetLocale;
+      parsed._locale = targetLocale;
     }
     return { payload: parsed };
   });
