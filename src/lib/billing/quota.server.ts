@@ -70,7 +70,7 @@ export async function checkAndIncrement(opts: {
   const nextValue = currentUsed + by;
   const { error: updErr } = await supabaseAdmin
     .from("usage_counters")
-    .update({ [col]: nextValue })
+    .update({ [col]: nextValue } as never)
     .eq("workspace_id", opts.workspaceId)
     .eq("period_start", period);
   if (updErr) throw new Error(updErr.message);

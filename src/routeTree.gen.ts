@@ -27,6 +27,7 @@ import { Route as AppChinaMarketInsightRouteImport } from './routes/_app.china-m
 import { Route as AppAiWorkspaceRouteImport } from './routes/_app.ai-workspace'
 import { Route as AppProjectsIndexRouteImport } from './routes/_app.projects.index'
 import { Route as AppProjectsProjectIdRouteImport } from './routes/_app.projects.$projectId'
+import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
@@ -117,6 +118,12 @@ const AppProjectsProjectIdRoute = AppProjectsProjectIdRouteImport.update({
   path: '/projects/$projectId',
   getParentRoute: () => AppRoute,
 } as any)
+const ApiPublicPaymentsWebhookRoute =
+  ApiPublicPaymentsWebhookRouteImport.update({
+    id: '/api/public/payments/webhook',
+    path: '/api/public/payments/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
@@ -136,6 +143,7 @@ export interface FileRoutesByFullPath {
   '/start': typeof AppStartRoute
   '/projects/$projectId': typeof AppProjectsProjectIdRoute
   '/projects/': typeof AppProjectsIndexRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
@@ -155,6 +163,7 @@ export interface FileRoutesByTo {
   '/': typeof AppIndexRoute
   '/projects/$projectId': typeof AppProjectsProjectIdRoute
   '/projects': typeof AppProjectsIndexRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -176,6 +185,7 @@ export interface FileRoutesById {
   '/_app/': typeof AppIndexRoute
   '/_app/projects/$projectId': typeof AppProjectsProjectIdRoute
   '/_app/projects/': typeof AppProjectsIndexRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -197,6 +207,7 @@ export interface FileRouteTypes {
     | '/start'
     | '/projects/$projectId'
     | '/projects/'
+    | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/forgot-password'
@@ -216,6 +227,7 @@ export interface FileRouteTypes {
     | '/'
     | '/projects/$projectId'
     | '/projects'
+    | '/api/public/payments/webhook'
   id:
     | '__root__'
     | '/_app'
@@ -236,6 +248,7 @@ export interface FileRouteTypes {
     | '/_app/'
     | '/_app/projects/$projectId'
     | '/_app/projects/'
+    | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -243,6 +256,7 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
+  ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -373,6 +387,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProjectsProjectIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/api/public/payments/webhook': {
+      id: '/api/public/payments/webhook'
+      path: '/api/public/payments/webhook'
+      fullPath: '/api/public/payments/webhook'
+      preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -417,6 +438,7 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
+  ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
