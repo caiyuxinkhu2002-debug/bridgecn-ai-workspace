@@ -315,6 +315,106 @@ export type Database = {
           },
         ]
       }
+      subscriptions: {
+        Row: {
+          cancel_at_period_end: boolean | null
+          created_at: string
+          current_period_end: string | null
+          current_period_start: string | null
+          environment: string
+          id: string
+          paddle_customer_id: string
+          paddle_subscription_id: string
+          price_id: string
+          product_id: string
+          status: string
+          updated_at: string
+          user_id: string
+          workspace_id: string | null
+        }
+        Insert: {
+          cancel_at_period_end?: boolean | null
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          environment?: string
+          id?: string
+          paddle_customer_id: string
+          paddle_subscription_id: string
+          price_id: string
+          product_id: string
+          status?: string
+          updated_at?: string
+          user_id: string
+          workspace_id?: string | null
+        }
+        Update: {
+          cancel_at_period_end?: boolean | null
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          environment?: string
+          id?: string
+          paddle_customer_id?: string
+          paddle_subscription_id?: string
+          price_id?: string
+          product_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+          workspace_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      usage_counters: {
+        Row: {
+          ai_calls: number
+          created_at: string
+          id: string
+          period_start: string
+          projects_created: number
+          semrush_calls: number
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          ai_calls?: number
+          created_at?: string
+          id?: string
+          period_start: string
+          projects_created?: number
+          semrush_calls?: number
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          ai_calls?: number
+          created_at?: string
+          id?: string
+          period_start?: string
+          projects_created?: number
+          semrush_calls?: number
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "usage_counters_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workspace_members: {
         Row: {
           email: string
@@ -394,6 +494,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_active_plan: {
+        Args: { _env?: string; _user_id: string }
+        Returns: string
+      }
       reap_stale_ai_jobs: { Args: never; Returns: number }
     }
     Enums: {
