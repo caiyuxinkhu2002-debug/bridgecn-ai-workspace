@@ -207,6 +207,19 @@ function ProjectsPage() {
           ))}
         </ul>
       </div>
+
+      <div className="mt-8 flex flex-col items-stretch justify-between gap-3 rounded-2xl border border-[var(--border)] bg-[var(--background)] p-4 shadow-[var(--shadow-soft)] sm:flex-row sm:items-center">
+        <div className="text-xs text-[var(--muted-foreground)]">
+          {t("projects.sub")}
+        </div>
+        <Link
+          to="/start"
+          className="inline-flex h-9 items-center justify-center gap-1.5 rounded-md bg-[var(--foreground)] px-3 text-xs font-medium text-[var(--background)] hover:opacity-90"
+        >
+          <Plus className="h-3.5 w-3.5" />
+          {t("projects.new")}
+        </Link>
+      </div>
     </div>
   );
 }
