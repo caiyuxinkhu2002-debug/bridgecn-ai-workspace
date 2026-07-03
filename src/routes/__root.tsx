@@ -80,37 +80,28 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
+      { title: "BridgeCN AI — China Market Entry Workspace" },
       {
         name: "description",
         content:
           "BridgeCN AI is an AI workspace empowering Korean companies to enter the Chinese market.",
       },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
+      { name: "author", content: "BridgeCN AI" },
+      { property: "og:site_name", content: "BridgeCN AI" },
+      { property: "og:title", content: "BridgeCN AI — China Market Entry Workspace" },
       {
         property: "og:description",
         content:
           "BridgeCN AI is an AI workspace empowering Korean companies to enter the Chinese market.",
       },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
+      { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@Lovable" },
-      { name: "twitter:title", content: "Lovable App" },
+      { name: "twitter:title", content: "BridgeCN AI — China Market Entry Workspace" },
       {
         name: "twitter:description",
         content:
           "BridgeCN AI is an AI workspace empowering Korean companies to enter the Chinese market.",
-      },
-      {
-        property: "og:image",
-        content:
-          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/1d235f4b-8e47-45d2-9680-5b07f0c1c30b/id-preview-ec5e39b9--200e9013-5476-47c0-975b-a81bb489db9c.lovable.app-1782959042622.png",
-      },
-      {
-        name: "twitter:image",
-        content:
-          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/1d235f4b-8e47-45d2-9680-5b07f0c1c30b/id-preview-ec5e39b9--200e9013-5476-47c0-975b-a81bb489db9c.lovable.app-1782959042622.png",
       },
     ],
     links: [
@@ -123,6 +114,27 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap",
+      },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "Organization",
+              name: "BridgeCN AI",
+              url: "https://bridgecn-ai-workspace.lovable.app",
+              logo: "https://bridgecn-ai-workspace.lovable.app/favicon.ico",
+            },
+            {
+              "@type": "WebSite",
+              name: "BridgeCN AI",
+              url: "https://bridgecn-ai-workspace.lovable.app",
+            },
+          ],
+        }),
       },
     ],
   }),
