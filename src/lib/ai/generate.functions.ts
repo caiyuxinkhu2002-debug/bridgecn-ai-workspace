@@ -317,6 +317,9 @@ export const generateAIOutput = createServerFn({ method: "POST" })
 
     const raw = await callGateway(system, userPrompt);
     const parsed = scrubOutput(raw, hasSemrush, semrushMarket || "n/a");
+    // Stamp the language the AI generated in, so the client can auto-translate
+    // cached outputs when the user later switches UI language.
+    parsed._locale = (uiLocale ?? "en") as JsonValue;
 
     // Build a free-text summary that the existing UI streaming text uses.
     let summary = "";
