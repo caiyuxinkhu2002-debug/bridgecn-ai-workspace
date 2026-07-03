@@ -137,12 +137,21 @@ export type FetchSnapshotInput = {
   domain: string; // raw URL or hostname (KB website)
   targetMarket: string; // free-text market label
   seedKeywords: string[]; // up to 3 keywords to deep-dive
+  workspaceId?: string;
 };
 
 export const fetchSemrushSnapshot = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: FetchSnapshotInput) => input)
-  .handler(async ({ data }): Promise<SemrushSnapshot> => {
+  .handler(async ({ data, context }): Promise<SemrushSnapshot> => {
+    if (data.workspaceId) {
+      const { checkAndIncrement } = await import("@/lib/billing/quota.server");
+      await checkAndIncrement({
+        userId: context.userId,
+        workspaceId: data.workspaceId,
+        kind: "semrushCalls",
+      });
+    }
     const db = marketToDatabase(data.targetMarket);
     const domain = normalizeDomain(data.domain);
     const errors: string[] = [];
