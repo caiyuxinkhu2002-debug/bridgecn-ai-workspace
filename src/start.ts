@@ -3,15 +3,9 @@ import { createStart, createMiddleware } from "@tanstack/react-start";
 import { renderErrorPage } from "./lib/error-page";
 import { attachSupabaseAuth } from "@/integrations/supabase/auth-attacher";
 
-const errorMiddleware = createMiddleware().server(async ({ next }) => {
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const req: Request | undefined = (arguments as any)?.[0]?.request;
-    if (req && new URL(req.url).pathname.startsWith("/lovable/")) {
-      return await next();
-    }
-  } catch {
-    /* ignore */
+const errorMiddleware = createMiddleware().server(async ({ next, request }) => {
+  if (request && new URL(request.url).pathname.startsWith("/lovable/")) {
+    return next();
   }
   try {
     return await next();
