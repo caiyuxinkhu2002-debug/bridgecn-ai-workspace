@@ -21,15 +21,30 @@ function computeChecks(project: Project): Check[] {
     Array.isArray(v) ? v.length > 0 : typeof v === "string" ? v.trim().length > 0 : Boolean(v);
 
   return [
-    { id: "brand", labelKey: "health.check.brand", ok: has(kb.company) || has(project.name), weight: 1 },
-    { id: "industry", labelKey: "health.check.industry", ok: has(kb.industry) || has(project.industry), weight: 1 },
+    {
+      id: "brand",
+      labelKey: "health.check.brand",
+      ok: has(kb.company) || has(project.name),
+      weight: 1,
+    },
+    {
+      id: "industry",
+      labelKey: "health.check.industry",
+      ok: has(kb.industry) || has(project.industry),
+      weight: 1,
+    },
     { id: "products", labelKey: "health.check.products", ok: has(kb.products), weight: 1 },
     { id: "story", labelKey: "health.check.story", ok: has(kb.brandStory), weight: 1 },
     { id: "audience", labelKey: "health.check.audience", ok: has(kb.targetAudience), weight: 1 },
     { id: "keywords", labelKey: "health.check.keywords", ok: has(kb.keywords), weight: 1 },
     { id: "competitors", labelKey: "health.check.competitors", ok: has(kb.competitors), weight: 1 },
     { id: "market", labelKey: "health.check.market", ok: has(project.targetMarket), weight: 1 },
-    { id: "website", labelKey: "health.check.website", ok: has(kb.website) || has(project.website), weight: 1 },
+    {
+      id: "website",
+      labelKey: "health.check.website",
+      ok: has(kb.website) || has(project.website),
+      weight: 1,
+    },
     { id: "locale", labelKey: "health.check.locale", ok: has(kb._locale), weight: 1 },
     { id: "stage", labelKey: "health.check.stage", ok: stageIdx >= 2, weight: 2 },
   ];
@@ -76,7 +91,10 @@ export function ProjectHealthCard({ project }: { project: Project }) {
         <h3 className="text-sm font-semibold">{t("health.title")}</h3>
         <span
           className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold"
-          style={{ background: `color-mix(in oklch, ${tone.ring} 18%, transparent)`, color: tone.ring }}
+          style={{
+            background: `color-mix(in oklch, ${tone.ring} 18%, transparent)`,
+            color: tone.ring,
+          }}
         >
           <Icon className="h-3 w-3" />
           {t(tone.badgeKey)}
