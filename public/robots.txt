@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+
+Sitemap: https://bridgecn-ai-workspace.lovable.app/sitemap.xml
