@@ -6,7 +6,17 @@ import { AuthLayout, Divider, Field, SocialButtons } from "@/components/auth-lay
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/login")({
-  head: () => ({ meta: [{ title: "Sign in — BridgeCN AI" }] }),
+  head: () => ({
+    meta: [
+      { title: "Sign in — BridgeCN AI" },
+      { name: "description", content: "Sign in to your BridgeCN AI workspace to continue your China market entry plan." },
+      { property: "og:title", content: "Sign in — BridgeCN AI" },
+      { property: "og:description", content: "Sign in to your BridgeCN AI workspace." },
+      { property: "og:url", content: "https://bridgecn-ai-workspace.lovable.app/login" },
+      { name: "robots", content: "noindex,follow" },
+    ],
+    links: [{ rel: "canonical", href: "https://bridgecn-ai-workspace.lovable.app/login" }],
+  }),
   component: LoginPage,
 });
 
