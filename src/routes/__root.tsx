@@ -81,17 +81,37 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Lovable App" },
-      { name: "description", content: "BridgeCN AI is an AI workspace empowering Korean companies to enter the Chinese market." },
+      {
+        name: "description",
+        content:
+          "BridgeCN AI is an AI workspace empowering Korean companies to enter the Chinese market.",
+      },
       { name: "author", content: "Lovable" },
       { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "BridgeCN AI is an AI workspace empowering Korean companies to enter the Chinese market." },
+      {
+        property: "og:description",
+        content:
+          "BridgeCN AI is an AI workspace empowering Korean companies to enter the Chinese market.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
       { name: "twitter:title", content: "Lovable App" },
-      { name: "twitter:description", content: "BridgeCN AI is an AI workspace empowering Korean companies to enter the Chinese market." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/1d235f4b-8e47-45d2-9680-5b07f0c1c30b/id-preview-ec5e39b9--200e9013-5476-47c0-975b-a81bb489db9c.lovable.app-1782959042622.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/1d235f4b-8e47-45d2-9680-5b07f0c1c30b/id-preview-ec5e39b9--200e9013-5476-47c0-975b-a81bb489db9c.lovable.app-1782959042622.png" },
+      {
+        name: "twitter:description",
+        content:
+          "BridgeCN AI is an AI workspace empowering Korean companies to enter the Chinese market.",
+      },
+      {
+        property: "og:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/1d235f4b-8e47-45d2-9680-5b07f0c1c30b/id-preview-ec5e39b9--200e9013-5476-47c0-975b-a81bb489db9c.lovable.app-1782959042622.png",
+      },
+      {
+        name: "twitter:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/1d235f4b-8e47-45d2-9680-5b07f0c1c30b/id-preview-ec5e39b9--200e9013-5476-47c0-975b-a81bb489db9c.lovable.app-1782959042622.png",
+      },
     ],
     links: [
       {
