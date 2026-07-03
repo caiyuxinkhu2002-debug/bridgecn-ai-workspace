@@ -5,6 +5,15 @@ import { attachSupabaseAuth } from "@/integrations/supabase/auth-attacher";
 
 const errorMiddleware = createMiddleware().server(async ({ next }) => {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const req: Request | undefined = (arguments as any)?.[0]?.request;
+    if (req && new URL(req.url).pathname.startsWith("/lovable/")) {
+      return await next();
+    }
+  } catch {
+    /* ignore */
+  }
+  try {
     return await next();
   } catch (error) {
     if (error != null && typeof error === "object" && "statusCode" in error) {
