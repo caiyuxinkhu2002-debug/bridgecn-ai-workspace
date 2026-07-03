@@ -84,7 +84,7 @@ export function useAIJob() {
         userId: user.id,
         module: req.module,
         prompt: req.prompt,
-        input: { ...(req.input ?? {}), projectContext, uiLocale: locale },
+        input: { ...(req.input ?? {}), projectContext, uiLocale: locale, workspaceId: activeWorkspace.id },
       };
 
       let finalJob: AIJob | null = null;

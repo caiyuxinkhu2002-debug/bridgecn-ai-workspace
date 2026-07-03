@@ -195,12 +195,21 @@ export type CompareInput = {
   yourDomain: string;
   competitors: string[]; // 1-3
   targetMarket: string;
+  workspaceId?: string;
 };
 
 export const fetchCompareSnapshot = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: CompareInput) => input)
-  .handler(async ({ data }): Promise<CompareSnapshot> => {
+  .handler(async ({ data, context }): Promise<CompareSnapshot> => {
+    if (data.workspaceId) {
+      const { checkAndIncrement } = await import("@/lib/billing/quota.server");
+      await checkAndIncrement({
+        userId: context.userId,
+        workspaceId: data.workspaceId,
+        kind: "semrushCalls",
+      });
+    }
     const db = marketToDatabase(data.targetMarket);
     const you = normalizeDomain(data.yourDomain);
     const comps = (data.competitors || [])

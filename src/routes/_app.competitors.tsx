@@ -37,7 +37,7 @@ function fmt(n: number): string {
 
 function CompetitorsPage() {
   const { t } = useI18n();
-  const { activeProject } = useWorkspace();
+  const { activeProject, activeWorkspace } = useWorkspace();
   const kb = activeProject?.knowledgeBase || {};
 
   const [you, setYou] = useState("");
@@ -80,6 +80,7 @@ function CompetitorsPage() {
           yourDomain: you,
           competitors,
           targetMarket: db,
+          workspaceId: activeWorkspace?.id,
         },
       });
       setSnapshot(snap);

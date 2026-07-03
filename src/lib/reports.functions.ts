@@ -92,6 +92,7 @@ export const generateReportNow = createServerFn({ method: "POST" })
         module: "report",
         projectContext: data.projectContext,
         uiLocale: data.uiLocale,
+        workspaceId: data.workspaceId,
         extra: extra as unknown as Record<string, unknown>,
       },
     });
