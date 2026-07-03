@@ -9,6 +9,7 @@ import { useI18n } from "@/lib/i18n";
 import { useWorkspace } from "@/lib/workspace-context";
 import { listJobs } from "@/lib/ai/service";
 import type { AIJob } from "@/lib/ai/types";
+import { useLocalizedOutput } from "@/lib/ai/use-localized-output";
 import { getReport, type ReportRow } from "@/lib/reports.functions";
 import { generateReportNow } from "@/lib/reports.functions";
 import { buildProjectContext } from "@/lib/ai/project-context";
@@ -122,9 +123,11 @@ function ReportPage() {
     risks?: string[];
     recommendations?: string[];
   };
-  const data: ReportData = report
-    ? (report.payload as unknown as ReportData)
-    : ((job?.output_data ?? {}) as ReportData);
+  const rawData = (
+    report ? (report.payload as unknown) : (job?.output_data ?? null)
+  ) as ({ [k: string]: unknown } & { _locale?: string }) | null;
+  const localizedData = useLocalizedOutput(rawData);
+  const data: ReportData = (localizedData ?? rawData ?? {}) as ReportData;
   if (report && !data.summary && data.executiveSummary) data.summary = data.executiveSummary;
   const hasReport = Boolean(report || (job && (data.summary || (data.kpis?.length ?? 0) > 0)));
   const dateStr = report?.created_at || job?.completed_at || null;
