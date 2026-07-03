@@ -68,9 +68,7 @@ function MarketInsightPage() {
     (ai.data ?? null) as ({ [k: string]: unknown } & { _locale?: string }) | null,
   );
   const jobData = useLocalizedOutput(
-    (selectedJob?.output_data ?? null) as
-      | ({ [k: string]: unknown } & { _locale?: string })
-      | null,
+    (selectedJob?.output_data ?? null) as ({ [k: string]: unknown } & { _locale?: string }) | null,
   );
 
   const refreshHistory = useCallback(async () => {

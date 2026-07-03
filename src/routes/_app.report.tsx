@@ -123,9 +123,9 @@ function ReportPage() {
     risks?: string[];
     recommendations?: string[];
   };
-  const rawData = (
-    report ? (report.payload as unknown) : (job?.output_data ?? null)
-  ) as ({ [k: string]: unknown } & { _locale?: string }) | null;
+  const rawData = (report ? (report.payload as unknown) : (job?.output_data ?? null)) as
+    | ({ [k: string]: unknown } & { _locale?: string })
+    | null;
   const localizedData = useLocalizedOutput(rawData);
   const data: ReportData = (localizedData ?? rawData ?? {}) as ReportData;
   if (report && !data.summary && data.executiveSummary) data.summary = data.executiveSummary;
