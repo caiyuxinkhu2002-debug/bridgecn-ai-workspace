@@ -6,10 +6,7 @@ import { PageHeader } from "@/components/app-shell";
 import { DataIntegrityBanner } from "@/components/data-integrity-banner";
 import { useI18n } from "@/lib/i18n";
 import { useWorkspace } from "@/lib/workspace-context";
-import {
-  fetchCompareSnapshot,
-  type CompareSnapshot,
-} from "@/lib/data/semrush-compare.functions";
+import { fetchCompareSnapshot, type CompareSnapshot } from "@/lib/data/semrush-compare.functions";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/_app/competitors")({
@@ -54,7 +51,9 @@ function CompetitorsPage() {
   // Prefill from active project.
   useEffect(() => {
     setYou((prev) => prev || kb.website || activeProject?.website || "");
-    setDb((prev) => prev || marketDefault(activeProject?.targetMarket || activeProject?.region || ""));
+    setDb(
+      (prev) => prev || marketDefault(activeProject?.targetMarket || activeProject?.region || ""),
+    );
     const cs = kb.competitors || [];
     if (cs[0]) setC1((p) => p || cs[0]);
     if (cs[1]) setC2((p) => p || cs[1]);
@@ -134,10 +133,30 @@ function CompetitorsPage() {
       {/* Input card */}
       <div className="mb-6 rounded-2xl border border-[var(--border)] bg-[var(--background)] p-5 shadow-[var(--shadow-soft)]">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-          <Field label={t("competitors.input.you")} value={you} onChange={setYou} placeholder="yourbrand.com" />
-          <Field label={t("competitors.input.c1")} value={c1} onChange={setC1} placeholder="competitor1.com" />
-          <Field label={t("competitors.input.c2")} value={c2} onChange={setC2} placeholder="competitor2.com" />
-          <Field label={t("competitors.input.c3")} value={c3} onChange={setC3} placeholder="competitor3.com" />
+          <Field
+            label={t("competitors.input.you")}
+            value={you}
+            onChange={setYou}
+            placeholder="yourbrand.com"
+          />
+          <Field
+            label={t("competitors.input.c1")}
+            value={c1}
+            onChange={setC1}
+            placeholder="competitor1.com"
+          />
+          <Field
+            label={t("competitors.input.c2")}
+            value={c2}
+            onChange={setC2}
+            placeholder="competitor2.com"
+          />
+          <Field
+            label={t("competitors.input.c3")}
+            value={c3}
+            onChange={setC3}
+            placeholder="competitor3.com"
+          />
           <div>
             <label className="mb-1 block text-[11px] font-medium text-[var(--muted-foreground)]">
               {t("competitors.input.db")}
