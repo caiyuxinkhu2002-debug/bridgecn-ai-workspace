@@ -22,6 +22,7 @@ import { Route as AppNotificationsRouteImport } from './routes/_app.notification
 import { Route as AppLocalizationStudioRouteImport } from './routes/_app.localization-studio'
 import { Route as AppLaunchChecklistRouteImport } from './routes/_app.launch-checklist'
 import { Route as AppConsumerInsightRouteImport } from './routes/_app.consumer-insight'
+import { Route as AppCompetitorsRouteImport } from './routes/_app.competitors'
 import { Route as AppChinaMarketInsightRouteImport } from './routes/_app.china-market-insight'
 import { Route as AppAiWorkspaceRouteImport } from './routes/_app.ai-workspace'
 import { Route as AppProjectsIndexRouteImport } from './routes/_app.projects.index'
@@ -91,6 +92,11 @@ const AppConsumerInsightRoute = AppConsumerInsightRouteImport.update({
   path: '/consumer-insight',
   getParentRoute: () => AppRoute,
 } as any)
+const AppCompetitorsRoute = AppCompetitorsRouteImport.update({
+  id: '/competitors',
+  path: '/competitors',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppChinaMarketInsightRoute = AppChinaMarketInsightRouteImport.update({
   id: '/china-market-insight',
   path: '/china-market-insight',
@@ -119,6 +125,7 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/ai-workspace': typeof AppAiWorkspaceRoute
   '/china-market-insight': typeof AppChinaMarketInsightRoute
+  '/competitors': typeof AppCompetitorsRoute
   '/consumer-insight': typeof AppConsumerInsightRoute
   '/launch-checklist': typeof AppLaunchChecklistRoute
   '/localization-studio': typeof AppLocalizationStudioRoute
@@ -136,6 +143,7 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/ai-workspace': typeof AppAiWorkspaceRoute
   '/china-market-insight': typeof AppChinaMarketInsightRoute
+  '/competitors': typeof AppCompetitorsRoute
   '/consumer-insight': typeof AppConsumerInsightRoute
   '/launch-checklist': typeof AppLaunchChecklistRoute
   '/localization-studio': typeof AppLocalizationStudioRoute
@@ -156,6 +164,7 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/_app/ai-workspace': typeof AppAiWorkspaceRoute
   '/_app/china-market-insight': typeof AppChinaMarketInsightRoute
+  '/_app/competitors': typeof AppCompetitorsRoute
   '/_app/consumer-insight': typeof AppConsumerInsightRoute
   '/_app/launch-checklist': typeof AppLaunchChecklistRoute
   '/_app/localization-studio': typeof AppLocalizationStudioRoute
@@ -177,6 +186,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/ai-workspace'
     | '/china-market-insight'
+    | '/competitors'
     | '/consumer-insight'
     | '/launch-checklist'
     | '/localization-studio'
@@ -194,6 +204,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/ai-workspace'
     | '/china-market-insight'
+    | '/competitors'
     | '/consumer-insight'
     | '/launch-checklist'
     | '/localization-studio'
@@ -213,6 +224,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/_app/ai-workspace'
     | '/_app/china-market-insight'
+    | '/_app/competitors'
     | '/_app/consumer-insight'
     | '/_app/launch-checklist'
     | '/_app/localization-studio'
@@ -326,6 +338,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppConsumerInsightRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/competitors': {
+      id: '/_app/competitors'
+      path: '/competitors'
+      fullPath: '/competitors'
+      preLoaderRoute: typeof AppCompetitorsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/china-market-insight': {
       id: '/_app/china-market-insight'
       path: '/china-market-insight'
@@ -360,6 +379,7 @@ declare module '@tanstack/react-router' {
 interface AppRouteChildren {
   AppAiWorkspaceRoute: typeof AppAiWorkspaceRoute
   AppChinaMarketInsightRoute: typeof AppChinaMarketInsightRoute
+  AppCompetitorsRoute: typeof AppCompetitorsRoute
   AppConsumerInsightRoute: typeof AppConsumerInsightRoute
   AppLaunchChecklistRoute: typeof AppLaunchChecklistRoute
   AppLocalizationStudioRoute: typeof AppLocalizationStudioRoute
@@ -376,6 +396,7 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppAiWorkspaceRoute: AppAiWorkspaceRoute,
   AppChinaMarketInsightRoute: AppChinaMarketInsightRoute,
+  AppCompetitorsRoute: AppCompetitorsRoute,
   AppConsumerInsightRoute: AppConsumerInsightRoute,
   AppLaunchChecklistRoute: AppLaunchChecklistRoute,
   AppLocalizationStudioRoute: AppLocalizationStudioRoute,
