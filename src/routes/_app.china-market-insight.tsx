@@ -34,6 +34,7 @@ import {
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useWorkspace } from "@/lib/workspace-context";
 import { useAIJob } from "@/lib/ai/use-ai-job";
+import { useLocalizedOutput } from "@/lib/ai/use-localized-output";
 import { listJobs, deleteJob, getJob } from "@/lib/ai/service";
 import type { AIJob } from "@/lib/ai/types";
 import { toast } from "sonner";
@@ -60,6 +61,17 @@ function MarketInsightPage() {
   const [selectedJob, setSelectedJob] = useState<AIJob | null>(null);
   const [semrush, setSemrush] = useState<SemrushSnapshot | null>(null);
   const [semrushLoading, setSemrushLoading] = useState(false);
+
+  // Auto-translate cached AI output into the active UI locale when the
+  // stored `_locale` differs. Falls back to the original on failure.
+  const liveData = useLocalizedOutput(
+    (ai.data ?? null) as ({ [k: string]: unknown } & { _locale?: string }) | null,
+  );
+  const jobData = useLocalizedOutput(
+    (selectedJob?.output_data ?? null) as
+      | ({ [k: string]: unknown } & { _locale?: string })
+      | null,
+  );
 
   const refreshHistory = useCallback(async () => {
     if (!activeWorkspace?.id) return;
@@ -164,7 +176,7 @@ function MarketInsightPage() {
   const displayed = useMemo(() => {
     // While running, prefer live state
     if (ai.isRunning || (ai.status === "completed" && !selectedJob)) {
-      const d = ai.data || {};
+      const d = (liveData ?? ai.data ?? {}) as Record<string, unknown>;
       return {
         summary: ai.output || (d.summary as string | undefined) || "",
         confidence: (d.confidence as number | undefined) ?? null,
@@ -176,7 +188,7 @@ function MarketInsightPage() {
       };
     }
     if (selectedJob) {
-      const d = (selectedJob.output_data ?? {}) as Record<string, unknown>;
+      const d = (jobData ?? selectedJob.output_data ?? {}) as Record<string, unknown>;
       return {
         summary: selectedJob.output || (d.summary as string | undefined) || "",
         confidence: (d.confidence as number | undefined) ?? null,
@@ -196,13 +208,13 @@ function MarketInsightPage() {
       updatedAt: null,
       live: false as const,
     };
-  }, [ai.isRunning, ai.status, ai.output, ai.data, selectedJob]);
+  }, [ai.isRunning, ai.status, ai.output, ai.data, selectedJob, liveData, jobData]);
 
   const sources = displayed.sources;
   const keywords = displayed.keywords;
   const regions = displayed.regions;
-  const growth = ((ai.data?.growth as GrowthRow[] | undefined) ??
-    (selectedJob?.output_data as { growth?: GrowthRow[] } | undefined)?.growth ??
+  const growth = (((liveData ?? ai.data) as { growth?: GrowthRow[] } | undefined)?.growth ??
+    ((jobData ?? selectedJob?.output_data) as { growth?: GrowthRow[] } | undefined)?.growth ??
     []) as GrowthRow[];
   const confidence = displayed.confidence;
   const hasAnyData =
