@@ -294,6 +294,9 @@ function UserMenu() {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen((v) => !v)}
+        aria-label={t("menu.profile")}
+        aria-haspopup="menu"
+        aria-expanded={open}
         className="grid h-9 w-9 place-items-center rounded-full bg-gradient-to-br from-[var(--primary)] to-[oklch(0.45_0.22_280)] text-xs font-semibold text-white ring-2 ring-[var(--background)] hover:opacity-90"
       >
         {profile?.avatar_url ? (
