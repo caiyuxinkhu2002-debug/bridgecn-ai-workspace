@@ -16,6 +16,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppIndexRouteImport } from './routes/_app.index'
+import { Route as ResourcesChinaMarketEntryStrategyRouteImport } from './routes/resources.china-market-entry-strategy'
 import { Route as AppStartRouteImport } from './routes/_app.start'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
 import { Route as AppReportsRouteImport } from './routes/_app.reports'
@@ -68,6 +69,12 @@ const AppIndexRoute = AppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppRoute,
 } as any)
+const ResourcesChinaMarketEntryStrategyRoute =
+  ResourcesChinaMarketEntryStrategyRouteImport.update({
+    id: '/resources/china-market-entry-strategy',
+    path: '/resources/china-market-entry-strategy',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AppStartRoute = AppStartRouteImport.update({
   id: '/start',
   path: '/start',
@@ -174,6 +181,7 @@ export interface FileRoutesByFullPath {
   '/reports': typeof AppReportsRoute
   '/settings': typeof AppSettingsRoute
   '/start': typeof AppStartRoute
+  '/resources/china-market-entry-strategy': typeof ResourcesChinaMarketEntryStrategyRoute
   '/projects/$projectId': typeof AppProjectsProjectIdRoute
   '/projects/': typeof AppProjectsIndexRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -198,6 +206,7 @@ export interface FileRoutesByTo {
   '/reports': typeof AppReportsRoute
   '/settings': typeof AppSettingsRoute
   '/start': typeof AppStartRoute
+  '/resources/china-market-entry-strategy': typeof ResourcesChinaMarketEntryStrategyRoute
   '/': typeof AppIndexRoute
   '/projects/$projectId': typeof AppProjectsProjectIdRoute
   '/projects': typeof AppProjectsIndexRoute
@@ -225,6 +234,7 @@ export interface FileRoutesById {
   '/_app/reports': typeof AppReportsRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/start': typeof AppStartRoute
+  '/resources/china-market-entry-strategy': typeof ResourcesChinaMarketEntryStrategyRoute
   '/_app/': typeof AppIndexRoute
   '/_app/projects/$projectId': typeof AppProjectsProjectIdRoute
   '/_app/projects/': typeof AppProjectsIndexRoute
@@ -253,6 +263,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/settings'
     | '/start'
+    | '/resources/china-market-entry-strategy'
     | '/projects/$projectId'
     | '/projects/'
     | '/api/public/payments/webhook'
@@ -277,6 +288,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/settings'
     | '/start'
+    | '/resources/china-market-entry-strategy'
     | '/'
     | '/projects/$projectId'
     | '/projects'
@@ -303,6 +315,7 @@ export interface FileRouteTypes {
     | '/_app/reports'
     | '/_app/settings'
     | '/_app/start'
+    | '/resources/china-market-entry-strategy'
     | '/_app/'
     | '/_app/projects/$projectId'
     | '/_app/projects/'
@@ -319,6 +332,7 @@ export interface RootRouteChildren {
   PricingRoute: typeof PricingRoute
   RegisterRoute: typeof RegisterRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  ResourcesChinaMarketEntryStrategyRoute: typeof ResourcesChinaMarketEntryStrategyRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
@@ -375,6 +389,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/resources/china-market-entry-strategy': {
+      id: '/resources/china-market-entry-strategy'
+      path: '/resources/china-market-entry-strategy'
+      fullPath: '/resources/china-market-entry-strategy'
+      preLoaderRoute: typeof ResourcesChinaMarketEntryStrategyRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_app/start': {
       id: '/_app/start'
@@ -541,6 +562,8 @@ const rootRouteChildren: RootRouteChildren = {
   PricingRoute: PricingRoute,
   RegisterRoute: RegisterRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  ResourcesChinaMarketEntryStrategyRoute:
+    ResourcesChinaMarketEntryStrategyRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
