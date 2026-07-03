@@ -15,6 +15,7 @@ import {
 import { toast } from "sonner";
 import { PageHeader } from "@/components/app-shell";
 import { useI18n } from "@/lib/i18n";
+import { ProjectHealthCard } from "@/components/project-health-card";
 import { useWorkspace, type Project, type KnowledgeBase } from "@/lib/workspace-context";
 import { stageLabelKey, stageOrder, stageToPath, type Stage } from "@/lib/workflow";
 import { useServerFn } from "@tanstack/react-start";
