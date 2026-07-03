@@ -30,6 +30,7 @@ import {
   TrendingUp,
   FileText,
   Languages as LangIcon,
+  Swords,
 } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { localeLabels, useI18n, type Locale } from "@/lib/i18n";
@@ -53,6 +54,7 @@ const navSections: {
     labelKey: "nav.section.intelligence",
     items: [
       { to: "/china-market-insight", labelKey: "nav.market", icon: LineChart },
+      { to: "/competitors", labelKey: "nav.competitors", icon: Swords },
       { to: "/consumer-insight", labelKey: "nav.consumer", icon: Users },
       { to: "/localization-studio", labelKey: "nav.localization", icon: Languages },
       { to: "/launch-checklist", labelKey: "nav.launch", icon: ListChecks },
