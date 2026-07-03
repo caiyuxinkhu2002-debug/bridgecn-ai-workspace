@@ -146,6 +146,7 @@ function MarketInsightPage() {
           domain,
           targetMarket: p?.targetMarket || p?.region || "",
           seedKeywords: (kb.keywords || []).slice(0, 3),
+          workspaceId: activeWorkspace?.id,
         },
       });
       setSemrush(snap);
