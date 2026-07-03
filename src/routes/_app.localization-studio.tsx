@@ -23,6 +23,7 @@ import {
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useWorkspace } from "@/lib/workspace-context";
 import { useAIJob } from "@/lib/ai/use-ai-job";
+import { useLocalizedOutput } from "@/lib/ai/use-localized-output";
 import { listJobs, deleteJob, getJob } from "@/lib/ai/service";
 import type { AIJob, AIJobPhase } from "@/lib/ai/types";
 import { toast } from "sonner";
@@ -97,6 +98,13 @@ function LocalizationStudioPage() {
   const [history, setHistory] = useState<AIJob[]>([]);
   const [selectedJob, setSelectedJob] = useState<AIJob | null>(null);
   const [compareJob, setCompareJob] = useState<AIJob | null>(null);
+
+  const liveData = useLocalizedOutput(
+    (ai.data ?? null) as ({ [k: string]: unknown } & { _locale?: string }) | null,
+  );
+  const jobData = useLocalizedOutput(
+    (selectedJob?.output_data ?? null) as ({ [k: string]: unknown } & { _locale?: string }) | null,
+  );
 
   // Source content from active project
   const source = useMemo(() => {
@@ -192,7 +200,7 @@ function LocalizationStudioPage() {
   const displayed = useMemo(() => {
     const live = ai.isRunning || (ai.status === "completed" && !selectedJob);
     if (live) {
-      const d = (ai.data ?? {}) as Record<string, unknown>;
+      const d = (liveData ?? ai.data ?? {}) as Record<string, unknown>;
       return {
         items: (d.items as LocItem[] | undefined) ?? [],
         insights: ((d.insights as LocInsights | undefined) ?? {}) as LocInsights,
@@ -204,7 +212,7 @@ function LocalizationStudioPage() {
       };
     }
     if (selectedJob) {
-      const d = (selectedJob.output_data ?? {}) as Record<string, unknown>;
+      const d = (jobData ?? selectedJob.output_data ?? {}) as Record<string, unknown>;
       return {
         items: (d.items as LocItem[] | undefined) ?? [],
         insights: ((d.insights as LocInsights | undefined) ?? {}) as LocInsights,
@@ -224,7 +232,7 @@ function LocalizationStudioPage() {
       live: false as const,
       output: "",
     };
-  }, [ai.isRunning, ai.status, ai.data, ai.output, selectedJob]);
+  }, [ai.isRunning, ai.status, ai.data, ai.output, selectedJob, liveData, jobData]);
 
   // ── Export helpers ──
   const toMarkdown = useCallback(() => {
