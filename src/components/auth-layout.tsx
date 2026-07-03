@@ -31,14 +31,14 @@ export function AuthLayout({
           </div>
         </Link>
 
-        <div className="mx-auto my-auto w-full max-w-sm py-12">
+        <main className="mx-auto my-auto w-full max-w-sm py-12">
           <h1 className="text-3xl font-semibold tracking-[-0.02em]">{title}</h1>
           <p className="mt-2 text-sm text-[var(--muted-foreground)]">{subtitle}</p>
           <div className="mt-8 space-y-4">{children}</div>
           {footer && (
             <div className="mt-8 text-center text-sm text-[var(--muted-foreground)]">{footer}</div>
           )}
-        </div>
+        </main>
         <p className="text-center text-[11px] text-[var(--muted-foreground)]">
           © 2026 BridgeCN AI · Seoul · Shanghai · Shenzhen
         </p>

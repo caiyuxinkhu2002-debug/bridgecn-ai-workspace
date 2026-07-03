@@ -1,0 +1,15 @@
+# BridgeCN AI
+
+> AI workspace that helps Korean and Japanese brands enter the Chinese market — market insight, competitor analysis, localization, and launch checklists.
+
+BridgeCN AI combines SEMrush data, AI-generated market reports, and localization tooling in one workspace focused on China market entry across Xiaohongshu, Douyin, Tmall, and JD.
+
+## Pages
+
+- [Home](/): Overview of the BridgeCN AI workspace.
+- [Pricing](/pricing): Free, Starter, and Pro plans with monthly and annual billing.
+
+## Optional
+
+- [Sign in](/login): Existing customers sign in to their workspace.
+- [Create account](/register): Start a new workspace.
