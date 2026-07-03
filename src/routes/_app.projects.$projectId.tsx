@@ -15,6 +15,7 @@ import {
 import { toast } from "sonner";
 import { PageHeader } from "@/components/app-shell";
 import { useI18n } from "@/lib/i18n";
+import { ProjectHealthCard } from "@/components/project-health-card";
 import { useWorkspace, type Project, type KnowledgeBase } from "@/lib/workspace-context";
 import { stageLabelKey, stageOrder, stageToPath, type Stage } from "@/lib/workflow";
 import { useServerFn } from "@tanstack/react-start";
@@ -608,6 +609,7 @@ function ProjectDetailPage() {
         </div>
 
         <div className="space-y-6">
+          <ProjectHealthCard project={project} />
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-6 shadow-[var(--shadow-soft)]">
             <h3 className="mb-4 text-sm font-semibold">{t("pd.kpis")}</h3>
             <dl className="space-y-3">
