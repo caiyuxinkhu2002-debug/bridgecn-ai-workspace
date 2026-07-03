@@ -20,6 +20,7 @@ import { PageHeader } from "@/components/app-shell";
 import { useI18n, localeLabels, type Locale } from "@/lib/i18n";
 import { useWorkspace, type WsMember } from "@/lib/workspace-context";
 import { supabase } from "@/integrations/supabase/client";
+import { BillingTab } from "@/components/billing/BillingTab";
 
 export const Route = createFileRoute("/_app/settings")({
   head: () => ({ meta: [{ title: "Settings — BridgeCN AI" }] }),
@@ -133,7 +134,7 @@ function renderTab(tab: TabKey) {
     case "notifications":
       return <NotificationsTab />;
     case "billing":
-      return <ComingSoonTab tag="billing" />;
+      return <BillingTab />;
     case "security":
       return <ComingSoonTab tag="security" />;
     case "integrations":
