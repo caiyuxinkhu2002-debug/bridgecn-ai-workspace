@@ -49,6 +49,7 @@ export const lovableProvider: AIProvider = {
     const ctx = (input?.projectContext ?? {}) as ProjectContext;
     const sub = MODULE_TO_SUB[module] ?? "market";
     const uiLocale = input?.uiLocale as "en" | "ko" | "zh" | undefined;
+    const workspaceId = input?.workspaceId as string | undefined;
 
     // Phases for visual feedback while the real call is in flight.
     const callPromise = generateAIOutput({
@@ -56,6 +57,7 @@ export const lovableProvider: AIProvider = {
         module: sub,
         projectContext: ctx,
         uiLocale,
+        workspaceId,
         extra: input?.extra as Record<string, unknown> | undefined,
       },
     });

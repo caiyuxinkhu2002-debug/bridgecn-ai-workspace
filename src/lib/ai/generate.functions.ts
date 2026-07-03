@@ -13,6 +13,8 @@ export type GenerateInput = {
   projectContext: ProjectContext;
   /** UI language for free-text fields. JSON keys stay English. */
   uiLocale?: "en" | "ko" | "zh";
+  /** Workspace to meter against. Required for plan-quota enforcement. */
+  workspaceId?: string;
   // Module-specific extras (e.g. existing job outputs feeding the report)
   extra?: Record<string, unknown>;
 };
@@ -279,7 +281,16 @@ async function callGateway(system: string, user: string): Promise<{ [k: string]:
 export const generateAIOutput = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: GenerateInput) => input)
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
+    // Plan quota check — meter AI calls per workspace per calendar month.
+    if (data.workspaceId) {
+      const { checkAndIncrement } = await import("@/lib/billing/quota.server");
+      await checkAndIncrement({
+        userId: context.userId,
+        workspaceId: data.workspaceId,
+        kind: "aiCalls",
+      });
+    }
     const { module, projectContext, extra, uiLocale } = data;
     const { system, user: userTpl } = schemaFor(module, uiLocale);
     const ctxLines = contextBrief(projectContext);
