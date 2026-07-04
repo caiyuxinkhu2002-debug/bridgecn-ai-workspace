@@ -298,9 +298,16 @@ function LocalizationStudioPage() {
   }, [toMarkdown, activeProject?.name]);
 
   const onExportPdf = useCallback(() => {
-    const html = `<html><head><title>Localization · ${activeProject?.name ?? ""}</title>
+    const escapeHtml = (s: string) =>
+      s.replace(
+        /[<>&"']/g,
+        (c) =>
+          ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;", "'": "&#39;" })[c] as string,
+      );
+    const safeName = escapeHtml(activeProject?.name ?? "");
+    const html = `<html><head><title>Localization · ${safeName}</title>
       <style>body{font-family:ui-sans-serif,system-ui,-apple-system;padding:32px;color:#111;}h1{font-size:20px;}h2{font-size:14px;margin-top:24px}h3{font-size:12px;margin-top:16px}p,li{font-size:12px;line-height:1.6}pre{white-space:pre-wrap;font:inherit}</style>
-      </head><body><pre>${toMarkdown().replace(/[<>&]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;" })[c] as string)}</pre>
+      </head><body><pre>${escapeHtml(toMarkdown())}</pre>
       <script>window.onload=()=>window.print()</script></body></html>`;
     const w = window.open("", "_blank");
     if (!w) return toast.error(t("loc.toast.popupBlocked"));
