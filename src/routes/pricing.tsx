@@ -254,6 +254,20 @@ function PricingPage() {
           &nbsp;about a custom plan.
         </div>
       </main>
+
+      <footer className="border-t border-[var(--border)] mt-8">
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-6 py-6 text-xs text-[var(--muted-foreground)] sm:flex-row">
+          <div>© {new Date().getFullYear()} no · BridgeCN AI</div>
+          <nav className="flex items-center gap-4">
+            <Link to="/terms" className="hover:text-[var(--foreground)]">Terms</Link>
+            <Link to="/privacy" className="hover:text-[var(--foreground)]">Privacy</Link>
+            <Link to="/refunds" className="hover:text-[var(--foreground)]">Refunds</Link>
+          </nav>
+          <div>
+            Payments by <a href="https://www.paddle.com" target="_blank" rel="noreferrer" className="underline">Paddle</a> (Merchant of Record)
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
