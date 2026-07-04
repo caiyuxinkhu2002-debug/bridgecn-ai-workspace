@@ -1,5 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { promises as dns } from "node:dns";
+import net from "node:net";
 
 // Server function: fetch a brand website and extract a Knowledge Base
 // using Lovable AI Gateway (structured JSON output). No real LLM is
@@ -38,6 +40,60 @@ function normalizeUrl(input: string): string {
   if (!trimmed) return "";
   if (/^https?:\/\//i.test(trimmed)) return trimmed;
   return `https://${trimmed.replace(/^\/\//, "")}`;
+}
+
+function isPrivateIPv4(ip: string): boolean {
+  const parts = ip.split(".").map(Number);
+  if (parts.length !== 4 || parts.some((p) => Number.isNaN(p))) return true;
+  const [a, b] = parts;
+  if (a === 10) return true;
+  if (a === 127) return true;
+  if (a === 0) return true;
+  if (a === 169 && b === 254) return true; // link-local (incl. cloud metadata)
+  if (a === 172 && b >= 16 && b <= 31) return true;
+  if (a === 192 && b === 168) return true;
+  if (a === 100 && b >= 64 && b <= 127) return true; // CGNAT
+  if (a >= 224) return true; // multicast / reserved
+  return false;
+}
+
+function isPrivateIPv6(ip: string): boolean {
+  const lower = ip.toLowerCase();
+  if (lower === "::1" || lower === "::") return true;
+  if (lower.startsWith("fe80:") || lower.startsWith("fc") || lower.startsWith("fd")) return true;
+  // IPv4-mapped
+  const mapped = lower.match(/^::ffff:([0-9.]+)$/);
+  if (mapped) return isPrivateIPv4(mapped[1]);
+  return false;
+}
+
+async function isUrlSafeToFetch(url: string): Promise<boolean> {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return false;
+  }
+  if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return false;
+  const host = parsed.hostname.replace(/^\[|\]$/g, "");
+  if (!host) return false;
+  // Direct IP literal
+  if (net.isIP(host)) {
+    return net.isIP(host) === 6 ? !isPrivateIPv6(host) : !isPrivateIPv4(host);
+  }
+  if (host === "localhost" || host.endsWith(".localhost") || host.endsWith(".internal")) {
+    return false;
+  }
+  try {
+    const records = await dns.lookup(host, { all: true });
+    if (!records.length) return false;
+    for (const r of records) {
+      if (r.family === 6 ? isPrivateIPv6(r.address) : isPrivateIPv4(r.address)) return false;
+    }
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function originOf(url: string): string {
@@ -115,6 +171,7 @@ function stripHtml(html: string): {
 }
 
 async function tryFetch(url: string, timeoutMs = 8000): Promise<string> {
+  if (!(await isUrlSafeToFetch(url))) return "";
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
@@ -124,12 +181,30 @@ async function tryFetch(url: string, timeoutMs = 8000): Promise<string> {
         "user-agent": "Mozilla/5.0 (compatible; BridgeCN-Builder/1.0; +https://bridgecn.ai)",
         accept: "text/html,application/xhtml+xml",
       },
-      redirect: "follow",
+      redirect: "manual",
     });
-    if (!res.ok) return "";
-    const ct = res.headers.get("content-type") || "";
+    // Handle up to 3 redirects manually, re-validating each hop.
+    let current = res;
+    let hops = 0;
+    while (current.status >= 300 && current.status < 400 && hops < 3) {
+      const loc = current.headers.get("location");
+      if (!loc) break;
+      const next = new URL(loc, url).toString();
+      if (!(await isUrlSafeToFetch(next))) return "";
+      current = await fetch(next, {
+        signal: ctrl.signal,
+        headers: {
+          "user-agent": "Mozilla/5.0 (compatible; BridgeCN-Builder/1.0; +https://bridgecn.ai)",
+          accept: "text/html,application/xhtml+xml",
+        },
+        redirect: "manual",
+      });
+      hops++;
+    }
+    if (!current.ok) return "";
+    const ct = current.headers.get("content-type") || "";
     if (!/text\/html|application\/xhtml/i.test(ct)) return "";
-    const text = await res.text();
+    const text = await current.text();
     return text.slice(0, 400_000);
   } catch {
     return "";
