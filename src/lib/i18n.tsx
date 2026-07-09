@@ -1148,8 +1148,9 @@ const ko: Dict = {
   "projectBar.stage": "단계",
   "projectBar.progress": "진행률",
   "dash.title": "워크스페이스",
-  "dash.welcome": "다시 오신 것을 환영해요, Sora님.",
-  "dash.sub": "오늘 중국 진출 프로젝트의 진행 상황입니다.",
+  "dash.welcome": "한국 → 중국, 성장 OS",
+  "dash.sub":
+    "중국 진출을 준비하는 한국 브랜드를 위한 AI 시장 인텔리전스 워크벤치 (Side Project · Prototype)",
   "dash.continue": "이어서 작업하기",
   "dash.continue.sub": "중단한 지점부터 다시 시작하세요",
   "dash.resume": "이어하기",
@@ -1211,7 +1212,8 @@ const ko: Dict = {
   "pd.kpis": "핵심 지표",
   "pd.openStage": "열기",
   "market.title": "중국 시장 인사이트",
-  "market.sub": "실시간 시장 규모, 지역별 수요 및 경쟁 신호.",
+  "market.sub":
+    "SEMrush · 바이두 지수 · 티몰 지수 등 외부 데이터와 자체 리서치를 한 화면에서 교차 검토할 수 있도록 설계했습니다. LLM이 요약·분류한 인사이트 카드를 통해 중국 시장 키워드·트렌드·리스크를 빠르게 훑어보는 것을 목표로 합니다.",
   "market.kpi.tam": "도달 가능 시장",
   "market.kpi.yoy": "YoY 성장",
   "market.kpi.tier1": "1선 도시",
@@ -1235,7 +1237,8 @@ const ko: Dict = {
   "loc.tone.playful": "유쾌함",
   "loc.tone.concise": "간결함",
   "launch.title": "런칭 체크리스트",
-  "launch.sub": "전략을 실제 중국 런칭으로 옮기는 단계별 플랜.",
+  "launch.sub":
+    "런칭 체크리스트 모듈은 세관 신고, NMPA 등록, PIPL 등 주요 컴플라이언스 항목을 한 화면에서 확인하고, 준비 상태를 리포트로 정리하는 것을 목표로 하는 프로토타입입니다.",
   "launch.complete": "완료",
   "reports.title": "리포트",
   "reports.sub": "모든 조사, 현지화, 전략 문서를 한 곳에.",

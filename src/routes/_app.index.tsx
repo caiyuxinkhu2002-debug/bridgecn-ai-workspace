@@ -44,10 +44,7 @@ function DashboardPage() {
 
   return (
     <div className="space-y-8">
-      <PageHeader
-        title={`${t("dash.welcome")} — BridgeCN AI Workspace`}
-        description={t("dash.sub")}
-      />
+      <PageHeader title={t("dash.welcome")} description={t("dash.sub")} />
 
       {/* Continue working */}
       <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-gradient-to-br from-[var(--background)] via-[var(--background)] to-[var(--primary-soft)]/40 p-6 shadow-[var(--shadow-soft)]">
