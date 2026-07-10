@@ -36,6 +36,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { localeLabels, useI18n, type Locale } from "@/lib/i18n";
 import { useWorkspace } from "@/lib/workspace-context";
 import { stageLabelKey } from "@/lib/workflow";
+import bridgecnLogo from "@/assets/bridgecn-logo.png.asset.json";
 
 const navSections: {
   labelKey: string;
@@ -486,13 +487,11 @@ export function AppShell({ children }: { children?: ReactNode }) {
       {/* Sidebar */}
       <aside className="hidden md:flex w-60 shrink-0 flex-col border-r border-[var(--sidebar-border)] bg-[var(--sidebar)] px-3 py-4">
         <Link to="/" className="flex items-center gap-2 px-2 pb-5">
-          <div className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-[var(--primary)] to-[oklch(0.45_0.22_280)] text-white shadow-sm">
-            <Sparkles className="h-4 w-4" />
-          </div>
-          <div className="leading-tight">
-            <div className="text-sm font-semibold tracking-tight">BridgeCN AI</div>
-            <div className="text-[11px] text-[var(--muted-foreground)]">{t("brand.tag")}</div>
-          </div>
+          <img
+            src={bridgecnLogo.url}
+            alt="BridgeCN AI"
+            className="h-9 w-auto object-contain"
+          />
         </Link>
 
         <nav className="flex flex-1 flex-col gap-5 overflow-y-auto">
