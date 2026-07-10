@@ -115,6 +115,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap",
       },
+      { rel: "icon", type: "image/png", href: "/favicon-bridgecn.png" },
+      { rel: "apple-touch-icon", href: "/favicon-bridgecn.png" },
     ],
     scripts: [
       {
@@ -126,7 +128,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
               "@type": "Organization",
               name: "BridgeCN AI",
               url: "https://bridgecn-ai-workspace.lovable.app",
-              logo: "https://bridgecn-ai-workspace.lovable.app/favicon.ico",
+              logo: "https://bridgecn-ai-workspace.lovable.app/favicon-bridgecn.png",
             },
             {
               "@type": "WebSite",
