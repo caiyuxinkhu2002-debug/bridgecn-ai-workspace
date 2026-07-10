@@ -32,8 +32,7 @@ export const Route = createFileRoute("/_app/")({
 function DashboardPage() {
   const { t } = useI18n();
   const router = useRouter();
-  const { activeProject, projects, reports, setActiveProjectId } = useWorkspace();
-  const { profile, user } = useWorkspace();
+  const { activeProject, projects, reports, setActiveProjectId, profile, user } = useWorkspace();
   const greetingName =
     profile?.name?.split(/\s+/)[0] ||
     (user?.email ? user.email.split("@")[0] : "");
