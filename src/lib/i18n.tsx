@@ -1592,7 +1592,7 @@ const zh: Dict = {
   "projectBar.stage": "阶段",
   "projectBar.progress": "进度",
   "dash.title": "工作区",
-  "dash.welcome": "欢迎回来,Sora。",
+  "dash.welcome": "欢迎回来,{v}。",
   "dash.sub": "以下是你今天中国市场拓展项目的最新进展。",
   "dash.continue": "继续工作",
   "dash.continue.sub": "从上次离开的地方继续",
