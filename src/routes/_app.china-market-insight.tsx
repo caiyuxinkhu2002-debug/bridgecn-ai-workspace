@@ -39,6 +39,11 @@ import { listJobs, deleteJob, getJob } from "@/lib/ai/service";
 import type { AIJob } from "@/lib/ai/types";
 import { toast } from "sonner";
 import { fetchSemrushSnapshot, type SemrushSnapshot } from "@/lib/data/semrush.functions";
+import {
+  saveVerifiedSnapshot,
+  clearVerifiedSnapshot,
+  snapshotHasRealData,
+} from "@/lib/data/verified-snapshot";
 import { Database as DatabaseIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -149,13 +154,21 @@ function MarketInsightPage() {
           workspaceId: activeWorkspace?.id,
         },
       });
-      setSemrush(snap);
-      if (snap.errors.length && !snap.domainOverview && snap.keywords.length === 0) {
-        toast.error(`SEMrush: ${snap.errors[0]}`);
+      const hasReal = snapshotHasRealData(snap);
+      if (!hasReal) {
+        // Quota exhausted or every call failed — don't fake a "verified"
+        // banner, don't leave prior verified state in place.
+        setSemrush(null);
+        clearVerifiedSnapshot(p?.id);
+        toast.error(
+          "SEMrush 데이터를 가져오지 못했습니다 (일일 할당량 초과 가능). 잠시 후 다시 시도해 주세요.",
+        );
         return;
       }
+      setSemrush(snap);
+      saveVerifiedSnapshot(p?.id, snap);
       if (snap.errors.length) {
-        toast.message(`SEMrush partial data (${snap.errors.length} warnings)`);
+        toast.message(`SEMrush 부분 데이터 · ${snap.market.toUpperCase()}`);
       } else {
         toast.success(`SEMrush data fetched · ${snap.market}`);
       }
@@ -371,7 +384,8 @@ function MarketInsightPage() {
           </div>
           {semrush.errors.length > 0 ? (
             <p className="mt-2 text-[10px] text-[var(--muted-foreground)]">
-              Warnings: {semrush.errors.join(" · ")}
+              일부 SEMrush 지표는 오늘 할당량 초과로 표시되지 않았습니다. 표시된 카드는 실측
+              데이터입니다.
             </p>
           ) : null}
         </div>
