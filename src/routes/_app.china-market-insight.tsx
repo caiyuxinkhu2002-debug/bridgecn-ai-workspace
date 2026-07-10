@@ -384,7 +384,8 @@ function MarketInsightPage() {
           </div>
           {semrush.errors.length > 0 ? (
             <p className="mt-2 text-[10px] text-[var(--muted-foreground)]">
-              Warnings: {semrush.errors.join(" · ")}
+              일부 SEMrush 지표는 오늘 할당량 초과로 표시되지 않았습니다. 표시된 카드는 실측
+              데이터입니다.
             </p>
           ) : null}
         </div>
