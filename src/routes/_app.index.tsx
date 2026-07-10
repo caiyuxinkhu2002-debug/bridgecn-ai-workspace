@@ -33,6 +33,10 @@ function DashboardPage() {
   const { t } = useI18n();
   const router = useRouter();
   const { activeProject, projects, reports, setActiveProjectId } = useWorkspace();
+  const { profile, user } = useWorkspace();
+  const greetingName =
+    profile?.name?.split(/\s+/)[0] ||
+    (user?.email ? user.email.split("@")[0] : "");
 
   // Sprint 9: removed hardcoded suggestions/trends/activity/tasks. These
   // surfaces now render KB-driven content; empty arrays trigger empty
@@ -44,7 +48,7 @@ function DashboardPage() {
 
   return (
     <div className="space-y-8">
-      <PageHeader title={t("dash.welcome")} description={t("dash.sub")} />
+      <PageHeader title={t("dash.welcome", { v: greetingName })} description={t("dash.sub")} />
 
       {/* Continue working */}
       <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-gradient-to-br from-[var(--background)] via-[var(--background)] to-[var(--primary-soft)]/40 p-6 shadow-[var(--shadow-soft)]">
