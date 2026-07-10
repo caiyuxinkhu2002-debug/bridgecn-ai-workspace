@@ -36,6 +36,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { localeLabels, useI18n, type Locale } from "@/lib/i18n";
 import { useWorkspace } from "@/lib/workspace-context";
 import { stageLabelKey } from "@/lib/workflow";
+import bridgecnLogo from "@/assets/bridgecn-logo.png.asset.json";
 
 const navSections: {
   labelKey: string;
