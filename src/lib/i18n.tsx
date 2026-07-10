@@ -212,7 +212,7 @@ const en: Dict = {
   "projectBar.progress": "Progress",
   // Dashboard
   "dash.title": "Workspace",
-  "dash.welcome": "Welcome back, Sora.",
+  "dash.welcome": "Welcome back, {v}.",
   "dash.sub": "Here's what's moving across your China expansion projects today.",
   "dash.continue": "Continue working",
   "dash.continue.sub": "Pick up where you left off",
