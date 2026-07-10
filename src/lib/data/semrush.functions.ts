@@ -144,17 +144,31 @@ export const fetchSemrushSnapshot = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: FetchSnapshotInput) => input)
   .handler(async ({ data, context }): Promise<SemrushSnapshot> => {
-    if (data.workspaceId) {
-      const { checkAndIncrement } = await import("@/lib/billing/quota.server");
-      await checkAndIncrement({
-        userId: context.userId,
-        workspaceId: data.workspaceId,
-        kind: "semrushCalls",
-      });
-    }
     const db = marketToDatabase(data.targetMarket);
     const domain = normalizeDomain(data.domain);
     const errors: string[] = [];
+    if (data.workspaceId) {
+      try {
+        const { checkAndIncrement } = await import("@/lib/billing/quota.server");
+        await checkAndIncrement({
+          userId: context.userId,
+          workspaceId: data.workspaceId,
+          kind: "semrushCalls",
+        });
+      } catch (e) {
+        // Return a soft-failed snapshot so the UI can show a toast instead
+        // of crashing into the error boundary with a blank screen.
+        return {
+          market: db,
+          fetchedAt: new Date().toISOString(),
+          domain,
+          domainOverview: null,
+          keywords: [],
+          competitors: [],
+          errors: [(e as Error).message || "Quota exceeded"],
+        };
+      }
+    }
     console.log("[semrush.snapshot]", { targetMarket: data.targetMarket, mappedDb: db, domain });
 
     const snapshot: SemrushSnapshot = {
