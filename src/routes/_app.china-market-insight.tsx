@@ -46,6 +46,8 @@ import {
 } from "@/lib/data/verified-snapshot";
 import { Database as DatabaseIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { SemrushQuotaBadge } from "@/components/semrush-quota-badge";
+import { DataSourcePill } from "@/components/data-source-pill";
 
 export const Route = createFileRoute("/_app/china-market-insight")({
   head: () => ({ meta: [{ title: "China Market Insight — BridgeCN AI" }] }),
@@ -66,6 +68,8 @@ function MarketInsightPage() {
   const [selectedJob, setSelectedJob] = useState<AIJob | null>(null);
   const [semrush, setSemrush] = useState<SemrushSnapshot | null>(null);
   const [semrushLoading, setSemrushLoading] = useState(false);
+  const [quotaBump, setQuotaBump] = useState(0);
+  const [lastSemrushError, setLastSemrushError] = useState<string | null>(null);
 
   // Auto-translate cached AI output into the active UI locale when the
   // stored `_locale` differs. Falls back to the original on failure.
@@ -160,12 +164,17 @@ function MarketInsightPage() {
         // banner, don't leave prior verified state in place.
         setSemrush(null);
         clearVerifiedSnapshot(p?.id);
+        setLastSemrushError(
+          (snap.errors && snap.errors[0]) ||
+            "SEMrush 데이터를 가져오지 못했습니다. 잠시 후 다시 시도해 주세요.",
+        );
         toast.error(
           "SEMrush 데이터를 가져오지 못했습니다 (일일 할당량 초과 가능). 잠시 후 다시 시도해 주세요.",
         );
         return;
       }
       setSemrush(snap);
+      setLastSemrushError(null);
       saveVerifiedSnapshot(p?.id, snap);
       if (snap.errors.length) {
         toast.message(`SEMrush 부분 데이터 · ${snap.market.toUpperCase()}`);
@@ -178,9 +187,11 @@ function MarketInsightPage() {
         input: { extra: { semrush: snap, fetchedAt: snap.fetchedAt, market: snap.market } },
       });
     } catch (e) {
+      setLastSemrushError((e as Error).message || "SEMrush fetch failed");
       toast.error((e as Error).message || "SEMrush fetch failed");
     } finally {
       setSemrushLoading(false);
+      setQuotaBump((n) => n + 1);
     }
   }, [activeProject, ai, buildPrompt]);
 
@@ -260,10 +271,22 @@ function MarketInsightPage() {
         verified={!!semrush}
         verifiedLabel={
           semrush
-            ? `Live SEMrush data (${semrush.market.toUpperCase()}) fetched at ${new Date(semrush.fetchedAt).toLocaleString()} is grounding the green Verified card below. The next AI regeneration will use this snapshot; other KPIs remain AI inference based on category benchmarks.`
+            ? `SEMrush 실측 데이터 (${semrush.market.toUpperCase()} · ${new Date(semrush.fetchedAt).toLocaleString()})가 아래 초록색 카드의 지표를 실제 측정값으로 채우고 있습니다. 그 외 KPI·페르소나·카피는 이 스냅샷과 프로젝트 지식베이스를 기반으로 한 AI 추정입니다.`
             : undefined
         }
       />
+      {lastSemrushError && !semrush ? (
+        <div className="mb-4 flex items-start gap-3 rounded-xl border border-[oklch(0.85_0.15_60)]/50 bg-[oklch(0.98_0.04_85)] p-3 text-xs leading-relaxed text-[oklch(0.4_0.12_50)]">
+          <DatabaseIcon className="mt-0.5 h-4 w-4 shrink-0" />
+          <div className="flex-1">
+            <p className="font-semibold">SEMrush 실측 데이터를 불러오지 못했습니다</p>
+            <p className="mt-0.5 opacity-90">
+              사유: {lastSemrushError}. 이 페이지의 숫자는 모두 AI 추정입니다. SEMrush 호출 한도가
+              초기화된 뒤 다시 시도해 주세요.
+            </p>
+          </div>
+        </div>
+      ) : null}
       {/* AI Action Bar */}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[var(--border)] bg-[var(--background)] p-3 shadow-[var(--shadow-soft)]">
         <div className="flex items-center gap-2 text-xs text-[var(--muted-foreground)]">
@@ -294,6 +317,7 @@ function MarketInsightPage() {
           </span>
         </div>
         <div className="flex items-center gap-2">
+          <SemrushQuotaBadge refreshKey={quotaBump} />
           {ai.isRunning ? (
             <button
               onClick={ai.cancel}
