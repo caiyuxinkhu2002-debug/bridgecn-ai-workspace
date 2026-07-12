@@ -1,68 +1,58 @@
-
-# 인터뷰 제출용 (1-2주) 실전 투입 준비 계획
-
-가장 큰 걱정이 "데이터가 진짜인가"이고, 타임라인이 인터뷰 전 1-2주이므로 **결제/법적/실사용자 지원은 이번 스코프에서 빼고**, 심사관이 로그인해서 클릭해봤을 때 "이건 진짜 도구다"라고 느끼게 만드는 데 집중합니다. 결제·법적 문서·이메일 도메인 검증·라이브 Paddle은 인터뷰 후 소프트 런칭 시점(2단계)으로 미룹니다.
-
-## 지금 상태 요약 (문제 진단)
-
-| 영역 | 현재 상태 | 심사관이 볼 때 문제 |
-|---|---|---|
-| SEMrush 실측 | 무료 5회/일 쿼터, 소진 시 조용히 빈 데이터 | "데이터가 왜 안 나오지?" → 데모 실패 |
-| Consumer/Localization/Launch 단계 | market insight에서 verified되면 뱃지 이어짐 | 근데 각 페이지의 **숫자 자체**는 여전히 AI 추정 |
-| 계정 이름 | Supabase profile 이름 사용하도록 최근 수정 | Google 로그인은 아직 검증 필요 |
-| SEMrush 쿼터 표시 | 사용자에게 몇 회 남았는지 안 보임 | 어떻게 아끼며 써야 할지 모름 |
-| 프로젝트 진입 온보딩 | 없음 | 심사관이 어디부터 눌러야 할지 모름 |
-| 데모 데이터 | 심사관 계정에 프로젝트가 비어있음 | 빈 대시보드부터 봄 |
-
-## 이번 스코프에서 뺄 것 (인터뷰 후로)
-
-- Paddle 라이브 전환 및 결제 실사용
-- 법적 문서(Privacy/Terms/Refunds)의 실제 사업자명 확정
-- 이메일 도메인 DNS 검증
-- Google Search Console 커넥터 최종 승인
-- 실사용자 지원 채널 / 인시던트 대응
-
-## 이번 1-2주에 할 것 (마일스톤 3개)
-
-### M1 · 데이터 진짜성 UX 정직화 (3-4일) — **최우선**
-
-목표: "verified인 것과 아닌 것"이 심사관 눈에 명확하게 구분되도록.
-
-- **SEMrush 쿼터 배지**: 상단에 "SEMrush 실측 호출: 3/5 남음 · 매일 초기화" 표시. 0회 남으면 refresh 버튼 disabled + 툴팁으로 사유 안내.
-- **KPI 단위 verified 표시**: `data-integrity-banner` 페이지 전체 뱃지 대신, **각 숫자 옆에** "실측 · SEMrush KR · 2일 전" / "AI 추정 · 카테고리 벤치마크" 라벨을 붙임 (small pill).
-- **Consumer/Localization/Launch의 정직화**: market insight에서 스냅샷이 있으면 그 스냅샷의 실측 키워드/도메인 지표만 "실측"으로 표시하고, 그 외 페이지의 페르소나/카피/체크리스트는 "AI 생성 · 실측 스냅샷 기반" 이라고 명확히 라벨링.
-- **소프트 실패 로그**: 지금 소프트 실패 스냅샷을 반환하지만 UI가 그걸 티내지 않음. 실패 시 상단에 얇은 노란 줄 "SEMrush 쿼터 소진 — 이 페이지의 실측 지표는 마지막 스냅샷 기준" 표시.
-
-### M2 · 심사관 데모 준비 (2-3일)
-
-목표: 심사관이 로그인 → 5분 안에 "제대로 된 결과물"을 보게 하기.
-
-- **데모 프로젝트 시딩**: 실측 데이터 1회 뽑아서(예: 특정 K뷰티 브랜드 도메인 + 3개 시드 키워드) 스냅샷을 **파일로 보관** → 앱 첫 진입 시 "샘플 프로젝트 불러오기" 버튼 하나로 그 스냅샷과 파생 페이지들을 seed. SEMrush 쿼터 안 씀.
-- **온보딩 오버레이**: 첫 로그인 시 4-스텝 코치마크 (1) 프로젝트 만들기 (2) SEMrush 새로고침 (3) 소비자/현지화 확인 (4) 리포트 다운로드.
-- **리포트 페이지 폴리싱**: 다운로드되는 PDF 리포트가 인터뷰 evidence로 쓰이므로 표지·목차·데이터 출처 표기 정리.
-- **한국어 카피 정리**: 아직 남아있는 영어 UI 문구 훑기 (사이드바 툴팁, 에러 메시지, 빈 상태).
-
-### M3 · 인증·계정 안정화 (1-2일)
-
-목표: 심사관이 Google로 로그인해서 이름·아바타·프로필이 정상 표시.
-
-- **Google 로그인 실제 테스트**: 프리뷰에서 lovable.auth 브로커로 로그인 → profile 테이블에 이름/아바타 저장되는지 확인.
-- **로그아웃 & 세션 만료 정리**: 로그아웃 후 뒤로가기로 대시보드 접근 안 되도록.
-- **비밀번호 재설정 라우트**: `/forgot-password`는 이미 있지만 실제 이메일 발송 링크가 도착하는지 확인 (이메일 도메인 미검증 상태에서는 Supabase 기본 발신자로 fallback되는지).
-- **프로필 페이지 최소 형태**: Settings에서 이름/아바타 수정 가능하게.
-
-## 인터뷰 후 (참고, 이번 스코프 아님)
-
-- **소프트 런칭 (인터뷰 후 2-4주)**: Paddle live 승격, 사업자명·환불정책 확정, 이메일 도메인 완료, 프로젝트 quota 실제 강제, transaction.payment_failed 웹훅
-- **정식 런칭 (2-3개월)**: 에러 모니터링(Sentry 등), 사용자 지원 채널, SEMrush 유료 플랜 또는 사용자별 SEMrush 연결
-
-## 기술 노트
-
-- SEMrush 쿼터 배지는 서버에서 `usage_counters` 테이블(이미 존재)의 이번 달 semrush_calls를 읽어 표시. 새 서버 함수 `getSemrushQuotaStatus` 추가.
-- 데모 시딩은 `src/lib/demo-seed.functions.ts`에 스냅샷 JSON을 상수로 두고 새 프로젝트 생성 시 verified-snapshot localStorage에 심음(실측 API 소비 없음).
-- Verified 라벨은 `<KpiValue verified={true|false} source="..." />` 형태 공용 컴포넌트로 통일.
-- Google OAuth는 `lovable.auth.signInWithOAuth("google", ...)` 이미 세팅 — 실제 검증만.
+## 목표
+현재 프리뷰는 **테스트 모드**로만 결제가 열립니다. 실제로 사용자에게 카드/은행 결제를 받으려면 Publish → Verification → Paddle 승인이 필요합니다. 승인까지 보통 2–5 영업일 걸리므로, 그 대기 기간 동안 UX가 깨지지 않게 프론트를 먼저 보강한 뒤, 프리뷰에서 결제 플로우를 다시 검증하고, 마지막으로 Publish & Verification 절차를 안내합니다.
 
 ---
 
-이 계획으로 진행할까요? 특히 **M1이 "데이터 진짜성" 걱정을 직접 해결하는 부분**이라 여기부터 시작하는 걸 권장합니다. 조정하고 싶은 부분(우선순위 재정렬, 항목 추가/제거) 있으면 말씀해주세요.
+## Step 1 — 라이브 승인 대기 중 UX 보강 (코드 변경)
+
+목적: Verification/Domain review가 끝나기 전에 실사용자가 Pricing에서 "Get started"를 눌러도 500 에러/체크아웃 창 오류를 보지 않게 합니다.
+
+편집 파일:
+- `src/lib/paddle.ts` — 라이브 승인 상태를 프론트에서 판단할 수 있게 `isLivePaymentsReady()` 헬퍼 추가 (라이브 토큰 + `VITE_PAYMENTS_LIVE_READY==='true'` 플래그 체크). 기본값 `false`로 안전 실패.
+- `src/components/PaymentTestModeBanner.tsx` — 3가지 상태 배너로 확장:
+  - test 토큰 → 기존 "Test mode" 배너
+  - live 토큰 + 승인 대기 → 노란 "Live checkout coming soon — accepting waitlist" 배너
+  - live 토큰 + 승인 완료 → 배너 숨김
+- `src/routes/pricing.tsx` — 승인 전이면 CTA를 "Join waitlist"로 스왑, 클릭 시 이메일 수집 모달 (`waitlist_signups` 테이블에 저장). 승인 후에는 정상 checkout.
+- `src/hooks/usePaddleCheckout.ts` — `openCheckout` 진입에서 `isLivePaymentsReady()` 체크, 미준비면 Toast로 안내 후 return.
+
+DB 마이그레이션:
+- `waitlist_signups` 테이블 (id, email, plan, created_at, workspace_id nullable) + RLS (authenticated INSERT, service_role ALL) + `GRANT` 블록.
+
+## Step 2 — 프리뷰에서 결제 플로우 재검증 (사용자 절차 안내, 코드 변경 없음)
+
+사용자에게 채팅으로 아래 절차를 안내합니다:
+
+1. 프리뷰에서 로그인 → `/pricing` → **Starter Monthly** "Get started" 클릭
+2. Paddle 체크아웃 오버레이에서 아래 테스트 카드 입력:
+   - 카드번호: `4242 4242 4242 4242`
+   - 만료: 아무 미래 날짜 (예: `12/28`)
+   - CVC: `123`
+   - 이름/우편번호: 아무 값
+3. 결제 성공 후 `/settings?tab=billing`로 자동 이동 → 플랜이 "Starter"로 표시되는지 확인
+4. Settings → Billing → "Manage subscription"으로 Paddle 고객 포털이 열리는지 확인
+5. 실패 시나리오도 1건 테스트: `4000 0000 0000 0002` (항상 거절) → 에러 UI 노출 확인
+
+이 단계는 라이브 승인 전에 **결제 파이프라인 자체가 정상**임을 마지막으로 검증하는 목적입니다.
+
+## Step 3 — Publish & Verification 안내 (사용자 액션)
+
+Readiness Check는 이미 통과했습니다. 남은 절차:
+
+1. **Publish** — 우측 상단 Publish 버튼으로 앱을 `bridgecn-ai-workspace.lovable.app`에 배포. Publish 전에는 Verification 단계가 잠겨 있어 진행 불가.
+2. **Verification 폼 작성** — Payments 대시보드에서:
+   - 사업자 등록 여부 결정: 한국 개인사업자(간이/일반) 또는 개인 자격 모두 가능. 매출 예상 규모 · 결제 통화 · 은행 계좌(정산 수령용) 정보 필요.
+   - "no"로 등록된 seller name을 실제 법인/개인명(예: `YUXIN CAI`)으로 교체 필요. Terms/Privacy/Refunds 3개 legal 페이지 seller name도 같은 값으로 통일.
+3. **Domain review** — Paddle이 라이브 도메인에서 legal 페이지 3개 + 실제 상품 페이지가 공개 접근되는지 확인.
+4. **Business + Identity verification** — 사업자등록증 or 신분증 업로드, 은행 계좌 검증.
+5. **Final review** — Paddle 최종 승인. 승인 완료 후 사용자에게 `VITE_PAYMENTS_LIVE_READY=true` 설정 안내 → 배너와 CTA가 자동으로 라이브 모드로 전환.
+
+## Technical Details (선택 참고)
+
+- 라이브 승인 전 라이브 결제 시도는 Paddle이 `checkout_disabled` 에러를 반환하므로, Step 1의 클라이언트 가드는 UX 방어일 뿐 실제 보안은 Paddle이 담당합니다.
+- Sandbox와 Live는 별도 계정(현 sandbox_id: 83300, live_id: 371602) — 프리뷰의 테스트 결제 이력은 라이브로 이전되지 않습니다.
+- Publish 후 라이브 웹훅(`?env=live`)이 자동 등록됩니다. 별도 조치 불필요.
+
+---
+
+승인하시면 Step 1 코드 변경부터 시작하고, 완료되면 Step 2/3 안내를 채팅으로 드리겠습니다.
