@@ -13,6 +13,18 @@ export function getPaddleEnvironment(): "sandbox" | "live" {
   return clientToken?.startsWith("test_") ? "sandbox" : "live";
 }
 
+/**
+ * Whether the currently-configured payments environment is ready to accept
+ * real customer charges. Test mode is always "ready" (safe to open checkout).
+ * Live mode requires Paddle account verification + domain approval to be
+ * complete; until then, opening checkout returns an error. Gate with the
+ * `VITE_PAYMENTS_LIVE_READY` flag (set to "true" after Paddle final review).
+ */
+export function isLivePaymentsReady(): boolean {
+  if (getPaddleEnvironment() === "sandbox") return true;
+  return (import.meta.env.VITE_PAYMENTS_LIVE_READY as string | undefined) === "true";
+}
+
 let paddleInitialized = false;
 
 export async function initializePaddle(): Promise<void> {
