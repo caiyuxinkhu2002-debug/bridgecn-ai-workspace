@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { initializePaddle, getPaddlePriceId } from "@/lib/paddle";
+import { toast } from "sonner";
+import { initializePaddle, getPaddlePriceId, isLivePaymentsReady } from "@/lib/paddle";
 
 export function usePaddleCheckout() {
   const [loading, setLoading] = useState(false);
@@ -13,6 +14,12 @@ export function usePaddleCheckout() {
   }) => {
     setLoading(true);
     try {
+      if (!isLivePaymentsReady()) {
+        toast.error(
+          "결제 시스템 최종 승인 대기 중입니다. 승인 완료 후 다시 시도해 주세요.",
+        );
+        return;
+      }
       await initializePaddle();
       const paddlePriceId = await getPaddlePriceId(options.priceId);
 
