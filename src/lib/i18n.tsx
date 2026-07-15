@@ -23,6 +23,7 @@ const en: Dict = {
   "nav.market": "China Market Insight",
   "nav.consumer": "Consumer Insight",
   "nav.localization": "Localization Studio",
+ "nav.kol": "KOL Discovery",
   "nav.launch": "Launch Checklist",
   "nav.reports": "Reports",
   "nav.settings": "Settings",
