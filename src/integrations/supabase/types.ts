@@ -179,6 +179,184 @@ export type Database = {
         }
         Relationships: []
       }
+      kol_project_shortlist: {
+        Row: {
+          added_at: string
+          added_by: string | null
+          id: string
+          kol_id: string
+          match_breakdown: Json | null
+          match_score: number | null
+          notes: string | null
+          project_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          added_at?: string
+          added_by?: string | null
+          id?: string
+          kol_id: string
+          match_breakdown?: Json | null
+          match_score?: number | null
+          notes?: string | null
+          project_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          added_at?: string
+          added_by?: string | null
+          id?: string
+          kol_id?: string
+          match_breakdown?: Json | null
+          match_score?: number | null
+          notes?: string | null
+          project_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kol_project_shortlist_kol_id_fkey"
+            columns: ["kol_id"]
+            isOneToOne: false
+            referencedRelation: "kols"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kol_project_shortlist_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kol_snapshots: {
+        Row: {
+          ai_confidence: Json | null
+          fetched_at: string
+          id: string
+          kol_id: string
+          raw_json: Json | null
+          raw_markdown: string | null
+        }
+        Insert: {
+          ai_confidence?: Json | null
+          fetched_at?: string
+          id?: string
+          kol_id: string
+          raw_json?: Json | null
+          raw_markdown?: string | null
+        }
+        Update: {
+          ai_confidence?: Json | null
+          fetched_at?: string
+          id?: string
+          kol_id?: string
+          raw_json?: Json | null
+          raw_markdown?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kol_snapshots_kol_id_fkey"
+            columns: ["kol_id"]
+            isOneToOne: false
+            referencedRelation: "kols"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kols: {
+        Row: {
+          ai_confidence: Json
+          audience_profile: Json
+          avatar_url: string | null
+          bio: string | null
+          contact_note: string | null
+          contact_public_email: string | null
+          content_types: string[]
+          created_at: string
+          created_by: string | null
+          display_name: string | null
+          embedding: string | null
+          followers: number | null
+          handle: string
+          id: string
+          last_crawled_at: string | null
+          mentioned_brands: string[]
+          platform: string
+          price_band: Json | null
+          primary_categories: string[]
+          profile_url: string
+          tone: string[]
+          updated_at: string
+          verified_source: string
+          workspace_id: string
+        }
+        Insert: {
+          ai_confidence?: Json
+          audience_profile?: Json
+          avatar_url?: string | null
+          bio?: string | null
+          contact_note?: string | null
+          contact_public_email?: string | null
+          content_types?: string[]
+          created_at?: string
+          created_by?: string | null
+          display_name?: string | null
+          embedding?: string | null
+          followers?: number | null
+          handle: string
+          id?: string
+          last_crawled_at?: string | null
+          mentioned_brands?: string[]
+          platform: string
+          price_band?: Json | null
+          primary_categories?: string[]
+          profile_url: string
+          tone?: string[]
+          updated_at?: string
+          verified_source?: string
+          workspace_id: string
+        }
+        Update: {
+          ai_confidence?: Json
+          audience_profile?: Json
+          avatar_url?: string | null
+          bio?: string | null
+          contact_note?: string | null
+          contact_public_email?: string | null
+          content_types?: string[]
+          created_at?: string
+          created_by?: string | null
+          display_name?: string | null
+          embedding?: string | null
+          followers?: number | null
+          handle?: string
+          id?: string
+          last_crawled_at?: string | null
+          mentioned_brands?: string[]
+          platform?: string
+          price_band?: Json | null
+          primary_categories?: string[]
+          profile_url?: string
+          tone?: string[]
+          updated_at?: string
+          verified_source?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kols_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -490,6 +668,7 @@ export type Database = {
           ai_calls: number
           created_at: string
           id: string
+          kol_crawls: number
           period_start: string
           projects_created: number
           semrush_calls: number
@@ -500,6 +679,7 @@ export type Database = {
           ai_calls?: number
           created_at?: string
           id?: string
+          kol_crawls?: number
           period_start: string
           projects_created?: number
           semrush_calls?: number
@@ -510,6 +690,7 @@ export type Database = {
           ai_calls?: number
           created_at?: string
           id?: string
+          kol_crawls?: number
           period_start?: string
           projects_created?: number
           semrush_calls?: number
