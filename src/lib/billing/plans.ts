@@ -4,15 +4,16 @@ export type Quotas = {
   projects: number;
   aiCalls: number;
   semrushCalls: number;
+  kolCrawls: number;
   seats: number;
   watermark: boolean;
   whiteLabel: boolean;
 };
 
 export const PLAN_QUOTAS: Record<PlanKey, Quotas> = {
-  free: { projects: 1, aiCalls: 10, semrushCalls: 5, seats: 1, watermark: true, whiteLabel: false },
-  starter: { projects: 5, aiCalls: 100, semrushCalls: 50, seats: 1, watermark: false, whiteLabel: false },
-  pro: { projects: 20, aiCalls: 500, semrushCalls: 300, seats: 3, watermark: false, whiteLabel: true },
+  free: { projects: 1, aiCalls: 10, semrushCalls: 5, kolCrawls: 5, seats: 1, watermark: true, whiteLabel: false },
+  starter: { projects: 5, aiCalls: 100, semrushCalls: 50, kolCrawls: 50, seats: 1, watermark: false, whiteLabel: false },
+  pro: { projects: 20, aiCalls: 500, semrushCalls: 300, kolCrawls: 500, seats: 3, watermark: false, whiteLabel: true },
 };
 
 export function planFromProductId(productId: string | null | undefined): PlanKey {

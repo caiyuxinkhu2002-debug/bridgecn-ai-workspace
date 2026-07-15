@@ -1,6 +1,6 @@
 import { PLAN_QUOTAS, type PlanKey } from "./plans";
 
-export type QuotaKind = "aiCalls" | "semrushCalls" | "projects";
+export type QuotaKind = "aiCalls" | "semrushCalls" | "projects" | "kolCrawls";
 
 export class QuotaExceededError extends Error {
   constructor(
@@ -17,6 +17,7 @@ export class QuotaExceededError extends Error {
 export function quotaColumn(kind: QuotaKind): string {
   if (kind === "aiCalls") return "ai_calls";
   if (kind === "semrushCalls") return "semrush_calls";
+  if (kind === "kolCrawls") return "kol_crawls";
   return "projects_created";
 }
 
@@ -24,6 +25,7 @@ export function quotaLimit(plan: PlanKey, kind: QuotaKind): number {
   const q = PLAN_QUOTAS[plan];
   if (kind === "aiCalls") return q.aiCalls;
   if (kind === "semrushCalls") return q.semrushCalls;
+  if (kind === "kolCrawls") return q.kolCrawls;
   return q.projects;
 }
 

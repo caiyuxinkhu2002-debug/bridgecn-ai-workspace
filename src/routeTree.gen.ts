@@ -32,7 +32,9 @@ import { Route as AppCompetitorsRouteImport } from './routes/_app.competitors'
 import { Route as AppChinaMarketInsightRouteImport } from './routes/_app.china-market-insight'
 import { Route as AppAiWorkspaceRouteImport } from './routes/_app.ai-workspace'
 import { Route as AppProjectsIndexRouteImport } from './routes/_app.projects.index'
+import { Route as AppKolDiscoveryIndexRouteImport } from './routes/_app.kol-discovery.index'
 import { Route as AppProjectsProjectIdRouteImport } from './routes/_app.projects.$projectId'
+import { Route as AppKolDiscoveryKolIdRouteImport } from './routes/_app.kol-discovery.$kolId'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
@@ -153,9 +155,19 @@ const AppProjectsIndexRoute = AppProjectsIndexRouteImport.update({
   path: '/projects/',
   getParentRoute: () => AppRoute,
 } as any)
+const AppKolDiscoveryIndexRoute = AppKolDiscoveryIndexRouteImport.update({
+  id: '/kol-discovery/',
+  path: '/kol-discovery/',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppProjectsProjectIdRoute = AppProjectsProjectIdRouteImport.update({
   id: '/projects/$projectId',
   path: '/projects/$projectId',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppKolDiscoveryKolIdRoute = AppKolDiscoveryKolIdRouteImport.update({
+  id: '/kol-discovery/$kolId',
+  path: '/kol-discovery/$kolId',
   getParentRoute: () => AppRoute,
 } as any)
 const LovableEmailQueueProcessRoute =
@@ -203,7 +215,9 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AppSettingsRoute
   '/start': typeof AppStartRoute
   '/resources/china-market-entry-strategy': typeof ResourcesChinaMarketEntryStrategyRoute
+  '/kol-discovery/$kolId': typeof AppKolDiscoveryKolIdRoute
   '/projects/$projectId': typeof AppProjectsProjectIdRoute
+  '/kol-discovery/': typeof AppKolDiscoveryIndexRoute
   '/projects/': typeof AppProjectsIndexRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -232,7 +246,9 @@ export interface FileRoutesByTo {
   '/start': typeof AppStartRoute
   '/resources/china-market-entry-strategy': typeof ResourcesChinaMarketEntryStrategyRoute
   '/': typeof AppIndexRoute
+  '/kol-discovery/$kolId': typeof AppKolDiscoveryKolIdRoute
   '/projects/$projectId': typeof AppProjectsProjectIdRoute
+  '/kol-discovery': typeof AppKolDiscoveryIndexRoute
   '/projects': typeof AppProjectsIndexRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -263,7 +279,9 @@ export interface FileRoutesById {
   '/_app/start': typeof AppStartRoute
   '/resources/china-market-entry-strategy': typeof ResourcesChinaMarketEntryStrategyRoute
   '/_app/': typeof AppIndexRoute
+  '/_app/kol-discovery/$kolId': typeof AppKolDiscoveryKolIdRoute
   '/_app/projects/$projectId': typeof AppProjectsProjectIdRoute
+  '/_app/kol-discovery/': typeof AppKolDiscoveryIndexRoute
   '/_app/projects/': typeof AppProjectsIndexRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -294,7 +312,9 @@ export interface FileRouteTypes {
     | '/settings'
     | '/start'
     | '/resources/china-market-entry-strategy'
+    | '/kol-discovery/$kolId'
     | '/projects/$projectId'
+    | '/kol-discovery/'
     | '/projects/'
     | '/api/public/payments/webhook'
     | '/lovable/email/auth/preview'
@@ -323,7 +343,9 @@ export interface FileRouteTypes {
     | '/start'
     | '/resources/china-market-entry-strategy'
     | '/'
+    | '/kol-discovery/$kolId'
     | '/projects/$projectId'
+    | '/kol-discovery'
     | '/projects'
     | '/api/public/payments/webhook'
     | '/lovable/email/auth/preview'
@@ -353,7 +375,9 @@ export interface FileRouteTypes {
     | '/_app/start'
     | '/resources/china-market-entry-strategy'
     | '/_app/'
+    | '/_app/kol-discovery/$kolId'
     | '/_app/projects/$projectId'
+    | '/_app/kol-discovery/'
     | '/_app/projects/'
     | '/api/public/payments/webhook'
     | '/lovable/email/auth/preview'
@@ -541,11 +565,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProjectsIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/kol-discovery/': {
+      id: '/_app/kol-discovery/'
+      path: '/kol-discovery'
+      fullPath: '/kol-discovery/'
+      preLoaderRoute: typeof AppKolDiscoveryIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/projects/$projectId': {
       id: '/_app/projects/$projectId'
       path: '/projects/$projectId'
       fullPath: '/projects/$projectId'
       preLoaderRoute: typeof AppProjectsProjectIdRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/kol-discovery/$kolId': {
+      id: '/_app/kol-discovery/$kolId'
+      path: '/kol-discovery/$kolId'
+      fullPath: '/kol-discovery/$kolId'
+      preLoaderRoute: typeof AppKolDiscoveryKolIdRouteImport
       parentRoute: typeof AppRoute
     }
     '/lovable/email/queue/process': {
@@ -592,7 +630,9 @@ interface AppRouteChildren {
   AppSettingsRoute: typeof AppSettingsRoute
   AppStartRoute: typeof AppStartRoute
   AppIndexRoute: typeof AppIndexRoute
+  AppKolDiscoveryKolIdRoute: typeof AppKolDiscoveryKolIdRoute
   AppProjectsProjectIdRoute: typeof AppProjectsProjectIdRoute
+  AppKolDiscoveryIndexRoute: typeof AppKolDiscoveryIndexRoute
   AppProjectsIndexRoute: typeof AppProjectsIndexRoute
 }
 
@@ -609,7 +649,9 @@ const AppRouteChildren: AppRouteChildren = {
   AppSettingsRoute: AppSettingsRoute,
   AppStartRoute: AppStartRoute,
   AppIndexRoute: AppIndexRoute,
+  AppKolDiscoveryKolIdRoute: AppKolDiscoveryKolIdRoute,
   AppProjectsProjectIdRoute: AppProjectsProjectIdRoute,
+  AppKolDiscoveryIndexRoute: AppKolDiscoveryIndexRoute,
   AppProjectsIndexRoute: AppProjectsIndexRoute,
 }
 

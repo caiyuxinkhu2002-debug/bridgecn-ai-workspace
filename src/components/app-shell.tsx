@@ -58,6 +58,7 @@ const navSections: {
       { to: "/competitors", labelKey: "nav.competitors", icon: Swords },
       { to: "/consumer-insight", labelKey: "nav.consumer", icon: Users },
       { to: "/localization-studio", labelKey: "nav.localization", icon: Languages },
+      { to: "/kol-discovery", labelKey: "nav.kol", icon: Megaphone },
       { to: "/launch-checklist", labelKey: "nav.launch", icon: ListChecks },
     ],
   },
