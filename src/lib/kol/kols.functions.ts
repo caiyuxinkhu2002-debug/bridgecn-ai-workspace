@@ -13,7 +13,7 @@ export type KolRow = {
   primary_categories: string[];
   content_types: string[];
   tone: string[];
-  audience_profile: Record<string, unknown>;
+  audience_profile: Record<string, string | number | string[] | null>;
   mentioned_brands: string[];
   contact_public_email: string | null;
   contact_note: string | null;
