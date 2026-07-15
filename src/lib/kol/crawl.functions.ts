@@ -254,8 +254,8 @@ export const crawlKol = createServerFn({ method: "POST" })
       contact_public_email: structured.contact_public_email || null,
       contact_note: structured.contact_note || null,
       price_band: structured.price_band || null,
-      ai_confidence: structured._confidence || {},
-      embedding: vector ? (`[${vector.join(",")}]` as unknown as number[]) : null,
+      ai_confidence: (structured._confidence || {}) as unknown as Record<string, string>,
+      embedding: vector ? `[${vector.join(",")}]` : null,
       last_crawled_at: new Date().toISOString(),
       created_by: context.userId,
       verified_source: "crawl" as const,
@@ -271,8 +271,10 @@ export const crawlKol = createServerFn({ method: "POST" })
     await supabaseAdmin.from("kol_snapshots").insert({
       kol_id: upserted.id,
       raw_markdown: scrape.markdown.slice(0, 200_000),
-      raw_json: (structured as unknown as Record<string, unknown>) ?? null,
-      ai_confidence: structured._confidence || null,
+      raw_json: JSON.parse(JSON.stringify(structured ?? {})),
+      ai_confidence: structured._confidence
+        ? JSON.parse(JSON.stringify(structured._confidence))
+        : null,
     });
 
     return { ok: true, kolId: upserted.id, platform };
