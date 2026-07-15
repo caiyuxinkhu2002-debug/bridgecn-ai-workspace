@@ -61,12 +61,8 @@ function KolDiscoveryPage() {
   });
 
   const targetCategories = useMemo(() => {
-    const kb = activeProject?.kb;
-    return [
-      kb?.category,
-      kb?.industry,
-      ...(kb?.keywords || []),
-    ].filter(Boolean) as string[];
+    const kb = activeProject?.knowledgeBase;
+    return [kb?.category, kb?.industry, ...(kb?.keywords || [])].filter(Boolean) as string[];
   }, [activeProject]);
 
   const matchQuery = useQuery({
@@ -76,7 +72,7 @@ function KolDiscoveryPage() {
         data: {
           workspaceId,
           targetCategories,
-          targetAudience: activeProject?.kb?.targetAudience,
+          targetAudience: activeProject?.knowledgeBase?.targetAudience,
           platforms: selectedPlatforms.length
             ? (selectedPlatforms as ("xiaohongshu" | "douyin" | "bilibili" | "wechat")[])
             : undefined,
@@ -144,8 +140,7 @@ function KolDiscoveryPage() {
     <div className="space-y-6">
       <PageHeader
         title="KOL 정밀 매칭"
-        subtitle="小红书 / 抖音 / B站 / 微信 공개 프로필에서 실측 크롤 → AI 정규화 → 브랜드 매칭. 실측(ShieldCheck)과 AI 추정(Sparkles)을 필드 단위로 정직하게 구분합니다."
-        icon={<Megaphone className="h-5 w-5" />}
+        description="小红书 / 抖音 / B站 / 微信 공개 프로필에서 실측 크롤 → AI 정규화 → 브랜드 매칭. 실측과 AI 추정을 필드 단위로 정직하게 구분합니다."
       />
 
       {/* Add-by-URL crawl bar */}
