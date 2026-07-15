@@ -50,6 +50,7 @@ export async function checkAndIncrement(opts: {
         ai_calls: 0,
         semrush_calls: 0,
         projects_created: 0,
+        kol_crawls: 0,
       },
       { onConflict: "workspace_id,period_start", ignoreDuplicates: true },
     );
