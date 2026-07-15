@@ -32,6 +32,7 @@ import { Route as AppCompetitorsRouteImport } from './routes/_app.competitors'
 import { Route as AppChinaMarketInsightRouteImport } from './routes/_app.china-market-insight'
 import { Route as AppAiWorkspaceRouteImport } from './routes/_app.ai-workspace'
 import { Route as AppProjectsIndexRouteImport } from './routes/_app.projects.index'
+import { Route as AppKolDiscoveryIndexRouteImport } from './routes/_app.kol-discovery.index'
 import { Route as AppProjectsProjectIdRouteImport } from './routes/_app.projects.$projectId'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
@@ -153,6 +154,11 @@ const AppProjectsIndexRoute = AppProjectsIndexRouteImport.update({
   path: '/projects/',
   getParentRoute: () => AppRoute,
 } as any)
+const AppKolDiscoveryIndexRoute = AppKolDiscoveryIndexRouteImport.update({
+  id: '/kol-discovery/',
+  path: '/kol-discovery/',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppProjectsProjectIdRoute = AppProjectsProjectIdRouteImport.update({
   id: '/projects/$projectId',
   path: '/projects/$projectId',
@@ -204,6 +210,7 @@ export interface FileRoutesByFullPath {
   '/start': typeof AppStartRoute
   '/resources/china-market-entry-strategy': typeof ResourcesChinaMarketEntryStrategyRoute
   '/projects/$projectId': typeof AppProjectsProjectIdRoute
+  '/kol-discovery/': typeof AppKolDiscoveryIndexRoute
   '/projects/': typeof AppProjectsIndexRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -233,6 +240,7 @@ export interface FileRoutesByTo {
   '/resources/china-market-entry-strategy': typeof ResourcesChinaMarketEntryStrategyRoute
   '/': typeof AppIndexRoute
   '/projects/$projectId': typeof AppProjectsProjectIdRoute
+  '/kol-discovery': typeof AppKolDiscoveryIndexRoute
   '/projects': typeof AppProjectsIndexRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -264,6 +272,7 @@ export interface FileRoutesById {
   '/resources/china-market-entry-strategy': typeof ResourcesChinaMarketEntryStrategyRoute
   '/_app/': typeof AppIndexRoute
   '/_app/projects/$projectId': typeof AppProjectsProjectIdRoute
+  '/_app/kol-discovery/': typeof AppKolDiscoveryIndexRoute
   '/_app/projects/': typeof AppProjectsIndexRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -295,6 +304,7 @@ export interface FileRouteTypes {
     | '/start'
     | '/resources/china-market-entry-strategy'
     | '/projects/$projectId'
+    | '/kol-discovery/'
     | '/projects/'
     | '/api/public/payments/webhook'
     | '/lovable/email/auth/preview'
@@ -324,6 +334,7 @@ export interface FileRouteTypes {
     | '/resources/china-market-entry-strategy'
     | '/'
     | '/projects/$projectId'
+    | '/kol-discovery'
     | '/projects'
     | '/api/public/payments/webhook'
     | '/lovable/email/auth/preview'
@@ -354,6 +365,7 @@ export interface FileRouteTypes {
     | '/resources/china-market-entry-strategy'
     | '/_app/'
     | '/_app/projects/$projectId'
+    | '/_app/kol-discovery/'
     | '/_app/projects/'
     | '/api/public/payments/webhook'
     | '/lovable/email/auth/preview'
@@ -541,6 +553,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProjectsIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/kol-discovery/': {
+      id: '/_app/kol-discovery/'
+      path: '/kol-discovery'
+      fullPath: '/kol-discovery/'
+      preLoaderRoute: typeof AppKolDiscoveryIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/projects/$projectId': {
       id: '/_app/projects/$projectId'
       path: '/projects/$projectId'
@@ -593,6 +612,7 @@ interface AppRouteChildren {
   AppStartRoute: typeof AppStartRoute
   AppIndexRoute: typeof AppIndexRoute
   AppProjectsProjectIdRoute: typeof AppProjectsProjectIdRoute
+  AppKolDiscoveryIndexRoute: typeof AppKolDiscoveryIndexRoute
   AppProjectsIndexRoute: typeof AppProjectsIndexRoute
 }
 
@@ -610,6 +630,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppStartRoute: AppStartRoute,
   AppIndexRoute: AppIndexRoute,
   AppProjectsProjectIdRoute: AppProjectsProjectIdRoute,
+  AppKolDiscoveryIndexRoute: AppKolDiscoveryIndexRoute,
   AppProjectsIndexRoute: AppProjectsIndexRoute,
 }
 
