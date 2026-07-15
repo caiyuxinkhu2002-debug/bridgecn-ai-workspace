@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Megaphone, Loader2, Plus, Search, ShieldCheck } from "lucide-react";
+import { Loader2, Plus, Search, ShieldCheck } from "lucide-react";
 import { PageHeader } from "@/components/app-shell";
 import { useWorkspace } from "@/lib/workspace-context";
 import { listKols, addToShortlist, listShortlist } from "@/lib/kol/kols.functions";
