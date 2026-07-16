@@ -302,7 +302,11 @@ function KolDiscoveryPage() {
         </div>
       ) : (kolsQuery.data?.length || 0) === 0 ? (
         <div className="rounded-lg border border-dashed border-[var(--border)] p-8 text-center text-sm text-[var(--muted-foreground)]">
-          아직 크롤된 KOL이 없습니다. 위 입력창에 공개 프로필 URL을 붙여넣어 첫 번째 KOL을 추가하세요.
+          아직 등록된 KOL이 없습니다. 위 입력창에 공개 프로필 URL을 붙여넣어 첫 번째 KOL을 추가하세요.
+        </div>
+      ) : displayList.length === 0 ? (
+        <div className="rounded-lg border border-dashed border-[var(--border)] p-8 text-center text-sm text-[var(--muted-foreground)]">
+          현재 필터에 맞는 KOL이 없습니다. 카테고리·플랫폼·예산 조건을 조정해 보세요.
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
