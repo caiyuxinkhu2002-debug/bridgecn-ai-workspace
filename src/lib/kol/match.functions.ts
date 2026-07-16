@@ -57,9 +57,9 @@ export const matchKols = createServerFn({ method: "POST" })
     let q = context.supabase
       .from("kols")
       .select(
-        "id,platform,handle,display_name,profile_url,avatar_url,followers,bio,primary_categories,content_types,tone,audience_profile,mentioned_brands,contact_public_email,contact_note,price_band,ai_confidence,verified_source,last_crawled_at,updated_at",
+        "id,platform,handle,display_name,profile_url,avatar_url,followers,bio,primary_categories,content_types,tone,audience_profile,mentioned_brands,contact_public_email,contact_note,price_band,ai_confidence,verified_source,last_crawled_at,updated_at,data_source,popularity_score",
       )
-      .eq("workspace_id", data.workspaceId);
+      .or(`workspace_id.is.null,workspace_id.eq.${data.workspaceId}`);
     if (data.platforms?.length) q = q.in("platform", data.platforms);
     if (data.minFollowers) q = q.gte("followers", data.minFollowers);
     if (data.maxFollowers) q = q.lte("followers", data.maxFollowers);
