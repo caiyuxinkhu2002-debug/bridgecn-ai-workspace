@@ -279,6 +279,7 @@ export type Database = {
           content_types: string[]
           created_at: string
           created_by: string | null
+          data_source: string
           display_name: string | null
           embedding: string | null
           followers: number | null
@@ -287,13 +288,14 @@ export type Database = {
           last_crawled_at: string | null
           mentioned_brands: string[]
           platform: string
+          popularity_score: number | null
           price_band: Json | null
           primary_categories: string[]
           profile_url: string
           tone: string[]
           updated_at: string
           verified_source: string
-          workspace_id: string
+          workspace_id: string | null
         }
         Insert: {
           ai_confidence?: Json
@@ -305,6 +307,7 @@ export type Database = {
           content_types?: string[]
           created_at?: string
           created_by?: string | null
+          data_source?: string
           display_name?: string | null
           embedding?: string | null
           followers?: number | null
@@ -313,13 +316,14 @@ export type Database = {
           last_crawled_at?: string | null
           mentioned_brands?: string[]
           platform: string
+          popularity_score?: number | null
           price_band?: Json | null
           primary_categories?: string[]
           profile_url: string
           tone?: string[]
           updated_at?: string
           verified_source?: string
-          workspace_id: string
+          workspace_id?: string | null
         }
         Update: {
           ai_confidence?: Json
@@ -331,6 +335,7 @@ export type Database = {
           content_types?: string[]
           created_at?: string
           created_by?: string | null
+          data_source?: string
           display_name?: string | null
           embedding?: string | null
           followers?: number | null
@@ -339,13 +344,14 @@ export type Database = {
           last_crawled_at?: string | null
           mentioned_brands?: string[]
           platform?: string
+          popularity_score?: number | null
           price_band?: Json | null
           primary_categories?: string[]
           profile_url?: string
           tone?: string[]
           updated_at?: string
           verified_source?: string
-          workspace_id?: string
+          workspace_id?: string | null
         }
         Relationships: [
           {

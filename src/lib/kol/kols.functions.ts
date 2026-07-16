@@ -22,7 +22,12 @@ export type KolRow = {
   verified_source: "crawl" | "manual";
   last_crawled_at: string | null;
   updated_at: string;
+  data_source?: "crawl" | "seed" | "api" | string;
+  popularity_score?: number | null;
 };
+
+const SELECT_COLS =
+  "id,platform,handle,display_name,profile_url,avatar_url,followers,bio,primary_categories,content_types,tone,audience_profile,mentioned_brands,contact_public_email,contact_note,price_band,ai_confidence,verified_source,last_crawled_at,updated_at,data_source,popularity_score,workspace_id";
 
 export const listKols = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -30,11 +35,10 @@ export const listKols = createServerFn({ method: "POST" })
   .handler(async ({ data, context }): Promise<KolRow[]> => {
     const { data: rows, error } = await context.supabase
       .from("kols")
-      .select(
-        "id,platform,handle,display_name,profile_url,avatar_url,followers,bio,primary_categories,content_types,tone,audience_profile,mentioned_brands,contact_public_email,contact_note,price_band,ai_confidence,verified_source,last_crawled_at,updated_at",
-      )
-      .eq("workspace_id", data.workspaceId)
-      .order("updated_at", { ascending: false });
+      .select(SELECT_COLS)
+      // Include the shared/global catalog (workspace_id IS NULL) plus this workspace's own rows.
+      .or(`workspace_id.is.null,workspace_id.eq.${data.workspaceId}`)
+      .order("popularity_score", { ascending: false, nullsFirst: false });
     if (error) throw new Error(error.message);
     return (rows || []) as unknown as KolRow[];
   });
@@ -45,9 +49,7 @@ export const getKol = createServerFn({ method: "POST" })
   .handler(async ({ data, context }): Promise<KolRow | null> => {
     const { data: row } = await context.supabase
       .from("kols")
-      .select(
-        "id,platform,handle,display_name,profile_url,avatar_url,followers,bio,primary_categories,content_types,tone,audience_profile,mentioned_brands,contact_public_email,contact_note,price_band,ai_confidence,verified_source,last_crawled_at,updated_at",
-      )
+      .select(SELECT_COLS)
       .eq("id", data.kolId)
       .maybeSingle();
     return (row as unknown as KolRow) || null;
