@@ -33,6 +33,17 @@ const PLATFORMS: { key: "xiaohongshu" | "douyin" | "bilibili" | "wechat"; label:
   { key: "wechat", label: "微信" },
 ];
 
+const CATEGORY_CHIPS: { key: string; label: string; match: string[] }[] = [
+  { key: "beauty", label: "뷰티 · 스킨케어", match: ["뷰티", "스킨케어", "메이크업"] },
+  { key: "fashion", label: "패션", match: ["패션", "럭셔리", "K-스타일"] },
+  { key: "food", label: "식품 · 음료", match: ["식품", "먹방", "커피", "베이커리"] },
+  { key: "lifestyle", label: "라이프스타일 · 홈", match: ["라이프스타일", "홈", "인테리어", "캠핑"] },
+  { key: "parenting", label: "육아 · 키즈", match: ["육아", "키즈", "이유식", "신생아"] },
+  { key: "health", label: "헬스 · 피트니스", match: ["헬스", "홈트", "요가", "피트니스"] },
+];
+
+type SortKey = "match" | "popularity" | "price_asc" | "price_desc";
+
 function KolDiscoveryPage() {
   const { workspaceId, activeProject } = useWorkspace();
   const qc = useQueryClient();
@@ -45,6 +56,8 @@ function KolDiscoveryPage() {
   const [addUrl, setAddUrl] = useState("");
   const [crawling, setCrawling] = useState(false);
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [sortKey, setSortKey] = useState<SortKey>("popularity");
   const [query, setQuery] = useState("");
   const [budget, setBudget] = useState<number | undefined>(undefined);
 
@@ -126,15 +139,37 @@ function KolDiscoveryPage() {
 
   const displayList: Scored[] = useMemo(() => {
     const src = matchQuery.data || [];
-    if (!query) return src;
-    const q = query.toLowerCase();
-    return src.filter(
-      (k) =>
-        (k.display_name || "").toLowerCase().includes(q) ||
-        k.handle.toLowerCase().includes(q) ||
-        (k.primary_categories || []).some((c) => c.toLowerCase().includes(q)),
-    );
-  }, [matchQuery.data, query]);
+    let out = src;
+    if (selectedCategory) {
+      const chip = CATEGORY_CHIPS.find((c) => c.key === selectedCategory);
+      if (chip) {
+        out = out.filter((k) =>
+          (k.primary_categories || []).some((c) =>
+            chip.match.some((m) => c.toLowerCase().includes(m.toLowerCase())),
+          ),
+        );
+      }
+    }
+    if (query) {
+      const q = query.toLowerCase();
+      out = out.filter(
+        (k) =>
+          (k.display_name || "").toLowerCase().includes(q) ||
+          k.handle.toLowerCase().includes(q) ||
+          (k.primary_categories || []).some((c) => c.toLowerCase().includes(q)),
+      );
+    }
+    const sorted = [...out];
+    if (sortKey === "popularity") {
+      sorted.sort((a, b) => (b.followers || 0) - (a.followers || 0));
+    } else if (sortKey === "price_asc") {
+      sorted.sort((a, b) => (a.price_band?.max ?? 1e12) - (b.price_band?.max ?? 1e12));
+    } else if (sortKey === "price_desc") {
+      sorted.sort((a, b) => (b.price_band?.max ?? 0) - (a.price_band?.max ?? 0));
+    }
+    // sortKey === "match" keeps the server-side match ordering.
+    return sorted;
+  }, [matchQuery.data, query, selectedCategory, sortKey]);
 
   return (
     <div className="space-y-6">
@@ -173,6 +208,36 @@ function KolDiscoveryPage() {
       {/* Filters */}
       <div className="rounded-lg border border-[var(--border)] bg-[var(--card)] p-4 space-y-3">
         <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => setSelectedCategory(null)}
+            className={`text-xs rounded-full px-3 py-1 border ${
+              !selectedCategory
+                ? "bg-[oklch(0.55_0.18_260)] text-white border-transparent"
+                : "border-[var(--border)]"
+            }`}
+          >
+            전체 카테고리
+          </button>
+          {CATEGORY_CHIPS.map((c) => {
+            const active = selectedCategory === c.key;
+            return (
+              <button
+                key={c.key}
+                type="button"
+                onClick={() => setSelectedCategory(active ? null : c.key)}
+                className={`text-xs rounded-full px-3 py-1 border ${
+                  active
+                    ? "bg-[oklch(0.55_0.18_260)] text-white border-transparent"
+                    : "border-[var(--border)]"
+                }`}
+              >
+                {c.label}
+              </button>
+            );
+          })}
+        </div>
+        <div className="flex flex-wrap gap-2">
           {PLATFORMS.map((p) => {
             const active = selectedPlatforms.includes(p.key);
             return (
@@ -195,7 +260,7 @@ function KolDiscoveryPage() {
             );
           })}
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
           <div className="relative">
             <Search className="absolute left-2 top-2.5 h-3.5 w-3.5 text-[var(--muted-foreground)]" />
             <input
@@ -212,8 +277,18 @@ function KolDiscoveryPage() {
             placeholder="최대 예산 (¥, 1건당)"
             className="rounded-md border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm"
           />
+          <select
+            value={sortKey}
+            onChange={(e) => setSortKey(e.target.value as SortKey)}
+            className="rounded-md border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm"
+          >
+            <option value="popularity">정렬: 인기순 (팔로워)</option>
+            <option value="match">정렬: 매칭 점수</option>
+            <option value="price_asc">정렬: 단가 낮은순</option>
+            <option value="price_desc">정렬: 단가 높은순</option>
+          </select>
           <div className="text-xs text-[var(--muted-foreground)] self-center">
-            매칭 기준: {targetCategories.slice(0, 4).join(", ") || "프로젝트 KB가 비어있습니다"}
+            매칭 기준: {targetCategories.slice(0, 3).join(", ") || "프로젝트 미선택"}
           </div>
         </div>
       </div>
