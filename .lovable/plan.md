@@ -1,104 +1,78 @@
-# KOL 매칭 모듈 계획
+## 목표
+KOL 발굴 페이지를 "URL 붙여넣기 도구"에서 **바로 탐색 가능한 KOL 디렉토리**로 재설계. 페이지 열자마자 카테고리 칩으로 필터링, 인기순/가격순/팔로워순 정렬 가능한 카드 리스트가 보입니다.
 
-## 데이터 소스에 대한 정직한 현실 (중요)
+## 데이터 전략 (사용자 확정)
+- **1단계 (지금)**: 4개 플랫폼 × 6개 카테고리(뷰티·패션·식품·라이프스타일·육아·헬스) × ~10명 = **60-80명 시드**
+- 시드 소스: 각 KOL의 공개 프로필 URL 큐레이션 → Firecrawl 실측 크롤 (이름·핸들·팔로워·공개 이메일·아바타)
+- AI(Gemini) 정규화: 카테고리 태그·톤·오디언스·단가 추정 (라벨 명시)
+- **2단계 (후속)**: 유료 MCN API 연동 자리만 확보 (`kols.data_source` 필드로 시드/크롤/api 구분)
 
-小红书 / 抖音 / B站 / 视频号는 **공개 KOL 검색 API가 없습니다**. 진짜 연락처(경기 이메일·미신·보상)는 유료 MCN DB(新榜/蝉妈妈/卡思/Parklu)만 가지고 있고, 공개 크롤링으로는 얻을 수 없습니다.
-
-"가짜 데이터로 앱을 채우지 않는다"는 원칙을 지키기 위해 **3계층 하이브리드**로 갑니다:
-
-```text
-Layer 1  실측 (Verified)   → Firecrawl로 공개 프로필 크롤 + 사용자가 검증한 큐레이션 시드
-Layer 2  구조화 (Structured) → Gemini로 카테고리/톤/타겟층 분류 (원문 인용 근거 표시)
-Layer 3  AI 추정 (Estimated) → 팬 픽쳐 · 예상 단가 (근거 카테고리 벤치마크, 명시적 라벨)
-```
-
-앱 어디에도 "가짜 연락처"는 안 넣습니다. 실제 연락처는 **플랫폼 내 DM 링크 + 공개 경기 이메일(있을 때만)** 만 표시하고, 없으면 "미공개 — 플랫폼 DM 사용"이라고 정직하게 씁니다.
-
----
-
-## 스코프 (M1 — 이번 마일스톤)
-
-**목표**: 파일럿 브랜드가 20-50명의 검증된 KOL을 카테고리·플랫폼·팬 픽쳐로 필터링하고, 프로젝트에 저장/추천서 생성까지.
-
-### 페이지
-- `/kol-discovery` — 필터·검색·매칭 스코어 뷰
-- `/kol-discovery/$kolId` — 상세 프로필 (실측·AI 라벨 명시)
-- `/settings/kol-sources` — (관리자만) 시드 URL 추가·재크롤 트리거
-
-### 데이터 파이프라인
-
-1. **시드 등록**: 관리자가 KOL의 공개 프로필 URL 붙여넣기 (小红书/抖音/B站/视频号 페이지)
-2. **Firecrawl 스크랩**: `firecrawl.scrape` + `formats: ['markdown', 'json', 'links']` — 이름, 팔로워, 최근 3-5개 포스트, 자기소개, 태그, 공개 이메일 추출
-3. **AI 구조화** (`google/gemini-3-flash-preview`):
-   - `primary_categories[]` (뷰티/스킨케어/육아/3C 등)
-   - `content_types[]` (튜토리얼/리뷰/브이로그/직관)
-   - `tone[]`, `audience_profile{ gender, age_band, tier_city }`
-   - `mentioned_brands[]` (역사 협업 근거)
-   - `estimated_price_band{ min, max, currency, confidence }` — 팔로워+카테고리 벤치마크
-4. **저장**: `public.kols` + `public.kol_snapshots` 스냅샷 이력
-5. **매칭**: 프로젝트의 카테고리/타겟 시장/예산과 코사인 유사도 (임베딩) + 필터 규칙
-
-### DB 스키마 (마이그레이션 1개)
+## 새 UI 구조
 
 ```text
-public.kols
-  id, platform (xiaohongshu|douyin|bilibili|wechat), handle, display_name,
-  profile_url, avatar_url, followers, verified_source (crawl|manual),
-  primary_categories text[], content_types text[], tone text[],
-  audience_profile jsonb, mentioned_brands text[],
-  contact_public_email, contact_note, price_band jsonb,
-  last_crawled_at, embedding vector(768),
-  created_by, workspace_id, created_at, updated_at
+┌─ KOL 정밀 매칭 ────────────────────────────────┐
+│  [내 프로젝트 자동 매칭] 배지 (있을 때만)      │
+├───────────────────────────────────────────────┤
+│  카테고리:  [전체] [뷰티] [패션] [식품] ...   │  ← 클릭 토글
+│  플랫폼:    [小红书] [抖音] [B站] [微信]      │
+│  정렬:      [매칭점수▾] [팔로워] [가격] [최신]│
+│  검색:      [이름/핸들 검색_______]           │
+├───────────────────────────────────────────────┤
+│  ┌──────┐ ┌──────┐ ┌──────┐                   │
+│  │ 카드 │ │ 카드 │ │ 카드 │  ← 그리드         │
+│  └──────┘ └──────┘ └──────┘                   │
+└───────────────────────────────────────────────┘
 
-public.kol_snapshots  -- 크롤 원본 이력 (감사 · 재분석용)
-  id, kol_id, raw_markdown, raw_json, ai_confidence jsonb, fetched_at
-
-public.kol_project_shortlist  -- 프로젝트별 저장/코멘트
-  id, project_id, kol_id, status (saved|contacted|rejected),
-  match_score, notes, added_by, added_at
++ 우측 상단 작은 링크: "새 KOL 추가 (URL 크롤)" → 모달로 이동
 ```
 
-모든 테이블에 GRANT + RLS (`workspace_members` 통해 스코프).
+카드에 표시: 아바타 · 플랫폼 뱃지 · 이름/핸들 · 카테고리 태그 · **팔로워** · **단가 밴드(¥)** · **연락 방식**(공개 이메일 또는 DM) · 실측/AI 라벨 · 매칭 점수(프로젝트 있을 때).
 
-### 매칭 스코어 (투명하게)
+## 구현 단계
 
-```text
-score = 0.35 * category_overlap
-      + 0.25 * audience_overlap (성별/연령/도시선)
-      + 0.20 * platform_fit
-      + 0.20 * price_fit
-```
-각 항목을 상세 페이지에 progress bar로 표시 → "블랙박스 AI 스코어" 안 됨.
+### 1. 시드 데이터 파이프라인 (관리자 전용)
+- `src/lib/kol/seed.server.ts`: 큐레이션된 URL 리스트(카테고리별)를 순회하며 Firecrawl 크롤 → Gemini 정규화 → `kols` upsert
+- `src/routes/api/public/kol/seed.ts`: 서명된 관리자 토큰으로만 호출되는 시딩 엔드포인트 (한 번 실행)
+- 시드 대상 KOL 리스트는 코드에 큐레이션 (뷰티 20, 패션 15, 식품 15, 라이프스타일 10, 육아 10, 헬스 10)
+- **글로벌 카탈로그로 저장**: 시드 데이터는 `workspace_id = NULL`로 저장해 모든 사용자에게 공유
 
-### UI 원칙 (기존 DataSourcePill 재사용)
+### 2. DB 스키마 확장 (마이그레이션)
+- `kols.workspace_id`을 nullable로 변경 + `data_source enum('seed','crawl','api')` 컬럼 추가
+- `kols`의 select 정책 수정: `workspace_id IS NULL OR workspace_id IN (내 워크스페이스)`
+- `kols`에 `popularity_score` (팔로워 + engagement 기반) 인덱스 추가
 
-각 필드 옆에 라벨:
-- 팔로워 · 최근 포스트 · 공개 이메일 → **실측** (링크로 원문 이동)
-- 카테고리 · 톤 · 타겟층 → **AI 분류** (근거 인용 tooltip)
-- 예상 단가 → **AI 추정** (`카테고리 벤치마크 · 신뢰도 medium`)
+### 3. 쿼리 서버 함수 재작성
+- `matchKols` → **`browseKols`** (또는 옵션 확장): 카테고리 배열·플랫폼·정렬키·페이지네이션 받음
+- 프로젝트 활성 시: 매칭 점수 함께 계산해 반환
+- 프로젝트 없을 때도 전체 카탈로그 브라우징 가능
 
-## 기술 세부
+### 4. UI 재작성 (`_app.kol-discovery.index.tsx`)
+- 큰 URL 입력 바 제거 → 우상단 "새 KOL 추가" 버튼 (다이얼로그)
+- 카테고리 칩 (6개 + 전체) — 다중 선택
+- 플랫폼 필터 · 정렬 드롭다운 (매칭/팔로워/가격 오름·내림/최신) · 검색
+- 검색·정렬을 **URL search params**로 관리 (공유 가능한 링크)
 
-- **Firecrawl**: 이미 `firecrawl` 커넥터로 링크. 서버 함수 `src/lib/kol/crawl.functions.ts`가 `FIRECRAWL_API_KEY` 사용, `requireSupabaseAuth` 미들웨어.
-- **임베딩**: `google/gemini-embedding-001` → `pgvector` extension enable.
-- **쿼터**: 새 quota kind `kolCrawls` 추가, Starter=50/월, Pro=500/월.
-- **비용**: Firecrawl scrape 1-2 credit/KOL, Gemini 분류 ~200 tokens.
+### 5. 카드 개선 (`kol-card.tsx`)
+- 아바타(있을 때) · 카테고리 컬러 태그 · 인기 지표(팔로워 큰 글씨)
+- 연락처: 공개 이메일 있으면 클릭 복사, 없으면 "플랫폼 DM 안내" 툴팁
 
-## 미포함 (명시적 out-of-scope)
+### 6. 사이드바 라벨
+`nav.kol` → "KOL 카탈로그"로 살짝 변경 (매칭 뉘앙스는 브라우징 안에 흡수)
 
-- 실제 私信/微信 자동 발송 (플랫폼 ToS 위반)
-- MCN DB 유료 API 연동 (예산 결정 후 M2)
-- 실시간 팔로워/GMV 트래킹 대시보드 (M2)
-- 위조/水军 감지 알고리즘 (M3)
+## 브라우징 vs 매칭 관계
+- **활성 프로젝트가 있을 때**: 카드에 매칭 점수 표시 + 기본 정렬 = 매칭점수 내림차순
+- **없을 때 / "전체" 탭**: 매칭 점수 숨김 + 기본 정렬 = 팔로워 내림차순
+- 사용자가 "그냥 둘러보기"와 "내 브랜드에 맞는 사람 찾기"를 같은 화면에서 오갈 수 있음
 
-## 테스트 흐름
+## 정직성 유지
+- 시드된 팔로워/아바타/공개 이메일 = **실측** (녹색 뱃지)
+- 단가 밴드·오디언스 프로필 = **AI 추정** (황색 뱃지, 카테고리 벤치마크 근거)
+- 카드에 "마지막 실측: YYYY-MM-DD" 명시
 
-1. `/settings/kol-sources`에서 小红书 URL 3-5개 붙여넣고 "Crawl now"
-2. 30초 내 `/kol-discovery`에 카드 표시, 각 카드에 실측/AI 라벨 표시
-3. 프로젝트 열고 "Recommend KOLs" → 매칭 스코어 정렬된 리스트
-4. KOL 상세 → 스코어 breakdown + 원본 프로필 링크 확인
-5. "Add to shortlist" → 프로젝트 shortlist에 저장
-
-## 결정 필요
-
-이 하이브리드 방식 (공개 크롤 + AI 라벨 명시 + 수동 시드)로 진행할까요? 아니면 예산을 들여 유료 MCN API (新榜 등)를 조사해서 M1을 그쪽으로 갈까요? 유료 API는 월 $500-2000 정도이고 대신 진짜 연락처+GMV까지 옵니다.
+## 테스트 방법
+1. 마이그레이션 승인 후 관리자 시딩 엔드포인트 1회 호출 → 60-80명 카탈로그 채워짐
+2. `/kol-discovery` 열면 즉시 카드 그리드 표시
+3. "뷰티" 칩 클릭 → 뷰티 KOL만 필터
+4. 정렬 "팔로워↓"로 바꾸기 → 순서 변경 확인
+5. 프로젝트 활성 상태에서 접속 → 매칭 점수 뱃지가 카드에 나타남
+6. "새 KOL 추가" 버튼 → 기존 URL 크롤 다이얼로그 동작 확인
