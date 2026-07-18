@@ -6,6 +6,9 @@ import { AuthLayout, Divider, Field, SocialButtons } from "@/components/auth-lay
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/register")({
+  validateSearch: (s: Record<string, unknown>) => ({
+    next: typeof s.next === "string" && s.next.startsWith("/") && !s.next.startsWith("//") ? s.next : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Create account — BridgeCN AI" },
@@ -22,6 +25,8 @@ export const Route = createFileRoute("/register")({
 function RegisterPage() {
   const t = useT();
   const router = useRouter();
+  const { next } = Route.useSearch();
+  const dest = next || "/";
   const [name, setName] = useState("");
   const [company, setCompany] = useState("");
   const [email, setEmail] = useState("");
@@ -39,7 +44,7 @@ function RegisterPage() {
       email,
       password,
       options: {
-        emailRedirectTo: window.location.origin,
+        emailRedirectTo: window.location.origin + dest,
         data: { name, company },
       },
     });
@@ -54,7 +59,7 @@ function RegisterPage() {
     }
     setBusy(false);
     toast.success(t("toast.accountCreated"));
-    router.navigate({ to: "/" });
+    window.location.href = dest;
   }
 
   return (
@@ -64,7 +69,11 @@ function RegisterPage() {
       footer={
         <span>
           {t("auth.hasAccount")}{" "}
-          <Link to="/login" className="font-medium text-[var(--foreground)] hover:underline">
+          <Link
+            to="/login"
+            search={next ? { next } : undefined}
+            className="font-medium text-[var(--foreground)] hover:underline"
+          >
             {t("auth.signin")}
           </Link>
         </span>

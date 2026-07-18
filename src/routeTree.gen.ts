@@ -39,6 +39,7 @@ import { Route as AppKolDiscoveryIndexRouteImport } from './routes/_app.kol-disc
 import { Route as AppProjectsProjectIdRouteImport } from './routes/_app.projects.$projectId'
 import { Route as AppKolDiscoveryKolIdRouteImport } from './routes/_app.kol-discovery.$kolId'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
+import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
@@ -197,6 +198,11 @@ const Char91DotmcpChar93InvokeToolToolRoute =
     path: '/.mcp/invoke-tool/$tool',
     getParentRoute: () => rootRouteImport,
   } as any)
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LovableEmailQueueProcessRoute =
   LovableEmailQueueProcessRouteImport.update({
     id: '/lovable/email/queue/process',
@@ -245,6 +251,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AppSettingsRoute
   '/start': typeof AppStartRoute
   '/resources/china-market-entry-strategy': typeof ResourcesChinaMarketEntryStrategyRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/kol-discovery/$kolId': typeof AppKolDiscoveryKolIdRoute
   '/projects/$projectId': typeof AppProjectsProjectIdRoute
@@ -280,6 +287,7 @@ export interface FileRoutesByTo {
   '/start': typeof AppStartRoute
   '/resources/china-market-entry-strategy': typeof ResourcesChinaMarketEntryStrategyRoute
   '/': typeof AppIndexRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/kol-discovery/$kolId': typeof AppKolDiscoveryKolIdRoute
   '/projects/$projectId': typeof AppProjectsProjectIdRoute
@@ -317,6 +325,7 @@ export interface FileRoutesById {
   '/_app/start': typeof AppStartRoute
   '/resources/china-market-entry-strategy': typeof ResourcesChinaMarketEntryStrategyRoute
   '/_app/': typeof AppIndexRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/_app/kol-discovery/$kolId': typeof AppKolDiscoveryKolIdRoute
   '/_app/projects/$projectId': typeof AppProjectsProjectIdRoute
@@ -354,6 +363,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/start'
     | '/resources/china-market-entry-strategy'
+    | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/kol-discovery/$kolId'
     | '/projects/$projectId'
@@ -389,6 +399,7 @@ export interface FileRouteTypes {
     | '/start'
     | '/resources/china-market-entry-strategy'
     | '/'
+    | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/kol-discovery/$kolId'
     | '/projects/$projectId'
@@ -425,6 +436,7 @@ export interface FileRouteTypes {
     | '/_app/start'
     | '/resources/china-market-entry-strategy'
     | '/_app/'
+    | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/_app/kol-discovery/$kolId'
     | '/_app/projects/$projectId'
@@ -450,6 +462,7 @@ export interface RootRouteChildren {
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   ResourcesChinaMarketEntryStrategyRoute: typeof ResourcesChinaMarketEntryStrategyRoute
+  DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
@@ -669,6 +682,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/.lovable/oauth/consent': {
+      id: '/.lovable/oauth/consent'
+      path: '/.lovable/oauth/consent'
+      fullPath: '/.lovable/oauth/consent'
+      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lovable/email/queue/process': {
       id: '/lovable/email/queue/process'
       path: '/lovable/email/queue/process'
@@ -756,6 +776,7 @@ const rootRouteChildren: RootRouteChildren = {
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
   ResourcesChinaMarketEntryStrategyRoute:
     ResourcesChinaMarketEntryStrategyRoute,
+  DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
