@@ -6,6 +6,9 @@ import { AuthLayout, Divider, Field, SocialButtons } from "@/components/auth-lay
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/login")({
+  validateSearch: (s: Record<string, unknown>) => ({
+    next: typeof s.next === "string" && s.next.startsWith("/") && !s.next.startsWith("//") ? s.next : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Sign in — BridgeCN AI" },
@@ -23,15 +26,17 @@ export const Route = createFileRoute("/login")({
 function LoginPage() {
   const t = useT();
   const router = useRouter();
+  const { next } = Route.useSearch();
+  const dest = next || "/";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
-      if (data.user) router.navigate({ to: "/" });
+      if (data.user) window.location.href = dest;
     });
-  }, [router]);
+  }, [router, dest]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -43,7 +48,7 @@ function LoginPage() {
       return;
     }
     toast.success(t("toast.signedIn"));
-    router.navigate({ to: "/" });
+    window.location.href = dest;
   }
 
   return (
@@ -53,7 +58,11 @@ function LoginPage() {
       footer={
         <span>
           {t("auth.noAccount")}{" "}
-          <Link to="/register" className="font-medium text-[var(--foreground)] hover:underline">
+          <Link
+            to="/register"
+            search={next ? { next } : undefined}
+            className="font-medium text-[var(--foreground)] hover:underline"
+          >
             {t("auth.signup")}
           </Link>
         </span>

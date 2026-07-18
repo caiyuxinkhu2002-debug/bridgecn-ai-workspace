@@ -1,0 +1,199 @@
+{
+  "version": 1,
+  "sdk_version": "0.23.0",
+  "path": "/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://rdioxsqcwfxhqosxsgee.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "bridgecn-ai-mcp",
+      "version": "0.1.0",
+      "title": "BridgeCN AI"
+    },
+    "tools": [
+      {
+        "name": "list_projects",
+        "title": "List my projects",
+        "description": "List the signed-in user's BridgeCN AI projects (China market-entry brand plans). Returns project id, name, brand, category, target regions, and stage.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_project",
+        "title": "Get project detail",
+        "description": "Get one BridgeCN AI project including its knowledge base (brand positioning, target audience, categories, and price band) for the signed-in user.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "projectId": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Project UUID from list_projects."
+            }
+          },
+          "required": [
+            "projectId"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_kols",
+        "title": "Browse China KOL catalog",
+        "description": "Browse the shared BridgeCN AI KOL catalog for the Chinese market (小红书, 抖音, B站, 微信). Filter by platform and category, sort by popularity or price. Follower counts and price bands may be AI-estimated — see ai_confidence per row.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "platform": {
+              "type": "string",
+              "enum": [
+                "xiaohongshu",
+                "douyin",
+                "bilibili",
+                "wechat"
+              ],
+              "description": "Restrict to one platform."
+            },
+            "category": {
+              "type": "string",
+              "description": "Match a primary category, e.g. beauty, fashion, food, lifestyle, parenting, health."
+            },
+            "sortBy": {
+              "type": "string",
+              "enum": [
+                "popularity",
+                "price_low",
+                "price_high"
+              ],
+              "description": "Sort order. Defaults to popularity."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "description": "Max rows to return. Default 20."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_kol",
+        "title": "Get KOL detail",
+        "description": "Get full detail for one KOL from the BridgeCN AI catalog, including audience profile, mentioned brands, contact info, and per-field AI confidence.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "kolId": {
+              "type": "string",
+              "format": "uuid",
+              "description": "KOL UUID from list_kols."
+            }
+          },
+          "required": [
+            "kolId"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_shortlist",
+        "title": "List KOL shortlist for a project",
+        "description": "List KOLs the user has shortlisted for one project, with status and match score.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "projectId": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Project UUID from list_projects."
+            }
+          },
+          "required": [
+            "projectId"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "add_kol_to_shortlist",
+        "title": "Add KOL to project shortlist",
+        "description": "Add a KOL to the project's shortlist (status = saved). Upserts on (project, kol) so re-adding is safe.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "projectId": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Project UUID from list_projects."
+            },
+            "kolId": {
+              "type": "string",
+              "format": "uuid",
+              "description": "KOL UUID from list_kols."
+            },
+            "matchScore": {
+              "type": "number",
+              "description": "Optional match score 0–100."
+            }
+          },
+          "required": [
+            "projectId",
+            "kolId"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}

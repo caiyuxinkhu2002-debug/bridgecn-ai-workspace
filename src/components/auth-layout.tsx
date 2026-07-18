@@ -102,6 +102,14 @@ export function AuthLayout({
 export function SocialButtons() {
   const t = useT();
   const [loading, setLoading] = useState<string | null>(null);
+  // Preserve OAuth consent handoff: if the caller landed here with ?next=/…
+  // (same-origin relative path), return the user there after Google sign-in.
+  const nextPath = (() => {
+    if (typeof window === "undefined") return "/";
+    const raw = new URLSearchParams(window.location.search).get("next");
+    if (raw && raw.startsWith("/") && !raw.startsWith("//")) return raw;
+    return "/";
+  })();
   const btn =
     "flex h-10 w-full items-center justify-center gap-2 rounded-md border border-[var(--border)] bg-[var(--background)] text-sm font-medium hover:bg-[var(--muted)] transition-colors disabled:opacity-50";
 
@@ -109,7 +117,7 @@ export function SocialButtons() {
     try {
       setLoading("google");
       const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
+        redirect_uri: window.location.origin + nextPath,
       });
       if (result.error) {
         toast.error(t("toast.googleFailed"));
@@ -117,7 +125,7 @@ export function SocialButtons() {
         return;
       }
       if (result.redirected) return;
-      window.location.href = "/";
+      window.location.href = nextPath;
     } catch {
       toast.error(t("toast.googleFailed"));
       setLoading(null);
