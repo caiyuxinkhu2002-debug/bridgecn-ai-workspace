@@ -7,6 +7,7 @@
 import path from "node:path";
 import { loadEnv } from "vite";
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import { mcpPlugin } from "@lovable.dev/mcp-js/stacks/tanstack/vite";
 
 // Load ALL env vars (no prefix) into process.env so server routes can read
 // SUPABASE_SERVICE_ROLE_KEY, LOVABLE_API_KEY, etc. VITE_ vars are still
@@ -21,6 +22,7 @@ export default defineConfig({
     server: { entry: "server" },
   },
   vite: {
+    plugins: [mcpPlugin()],
     resolve: {
       alias: {
         "entities/lib/decode.js": path.resolve(__dirname, "node_modules/entities/lib/decode.js"),

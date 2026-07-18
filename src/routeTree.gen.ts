@@ -15,6 +15,7 @@ import { Route as RegisterRouteImport } from './routes/register'
 import { Route as RefundsRouteImport } from './routes/refunds'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as McpRouteImport } from './routes/mcp'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AppRouteImport } from './routes/_app'
@@ -31,10 +32,13 @@ import { Route as AppConsumerInsightRouteImport } from './routes/_app.consumer-i
 import { Route as AppCompetitorsRouteImport } from './routes/_app.competitors'
 import { Route as AppChinaMarketInsightRouteImport } from './routes/_app.china-market-insight'
 import { Route as AppAiWorkspaceRouteImport } from './routes/_app.ai-workspace'
+import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
+import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as AppProjectsIndexRouteImport } from './routes/_app.projects.index'
 import { Route as AppKolDiscoveryIndexRouteImport } from './routes/_app.kol-discovery.index'
 import { Route as AppProjectsProjectIdRouteImport } from './routes/_app.projects.$projectId'
 import { Route as AppKolDiscoveryKolIdRouteImport } from './routes/_app.kol-discovery.$kolId'
+import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
@@ -68,6 +72,11 @@ const PrivacyRoute = PrivacyRouteImport.update({
 const PricingRoute = PricingRouteImport.update({
   id: '/pricing',
   path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -150,6 +159,18 @@ const AppAiWorkspaceRoute = AppAiWorkspaceRouteImport.update({
   path: '/ai-workspace',
   getParentRoute: () => AppRoute,
 } as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const Char91DotmcpChar93ListToolsRoute =
+  Char91DotmcpChar93ListToolsRouteImport.update({
+    id: '/.mcp/list-tools',
+    path: '/.mcp/list-tools',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AppProjectsIndexRoute = AppProjectsIndexRouteImport.update({
   id: '/projects/',
   path: '/projects/',
@@ -170,6 +191,12 @@ const AppKolDiscoveryKolIdRoute = AppKolDiscoveryKolIdRouteImport.update({
   path: '/kol-discovery/$kolId',
   getParentRoute: () => AppRoute,
 } as any)
+const Char91DotmcpChar93InvokeToolToolRoute =
+  Char91DotmcpChar93InvokeToolToolRouteImport.update({
+    id: '/.mcp/invoke-tool/$tool',
+    path: '/.mcp/invoke-tool/$tool',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const LovableEmailQueueProcessRoute =
   LovableEmailQueueProcessRouteImport.update({
     id: '/lovable/email/queue/process',
@@ -197,12 +224,15 @@ export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
+  '/mcp': typeof McpRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/refunds': typeof RefundsRoute
   '/register': typeof RegisterRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/ai-workspace': typeof AppAiWorkspaceRoute
   '/china-market-insight': typeof AppChinaMarketInsightRoute
   '/competitors': typeof AppCompetitorsRoute
@@ -215,6 +245,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AppSettingsRoute
   '/start': typeof AppStartRoute
   '/resources/china-market-entry-strategy': typeof ResourcesChinaMarketEntryStrategyRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/kol-discovery/$kolId': typeof AppKolDiscoveryKolIdRoute
   '/projects/$projectId': typeof AppProjectsProjectIdRoute
   '/kol-discovery/': typeof AppKolDiscoveryIndexRoute
@@ -227,12 +258,15 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
+  '/mcp': typeof McpRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/refunds': typeof RefundsRoute
   '/register': typeof RegisterRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/ai-workspace': typeof AppAiWorkspaceRoute
   '/china-market-insight': typeof AppChinaMarketInsightRoute
   '/competitors': typeof AppCompetitorsRoute
@@ -246,6 +280,7 @@ export interface FileRoutesByTo {
   '/start': typeof AppStartRoute
   '/resources/china-market-entry-strategy': typeof ResourcesChinaMarketEntryStrategyRoute
   '/': typeof AppIndexRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/kol-discovery/$kolId': typeof AppKolDiscoveryKolIdRoute
   '/projects/$projectId': typeof AppProjectsProjectIdRoute
   '/kol-discovery': typeof AppKolDiscoveryIndexRoute
@@ -260,12 +295,15 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
+  '/mcp': typeof McpRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/refunds': typeof RefundsRoute
   '/register': typeof RegisterRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/_app/ai-workspace': typeof AppAiWorkspaceRoute
   '/_app/china-market-insight': typeof AppChinaMarketInsightRoute
   '/_app/competitors': typeof AppCompetitorsRoute
@@ -279,6 +317,7 @@ export interface FileRoutesById {
   '/_app/start': typeof AppStartRoute
   '/resources/china-market-entry-strategy': typeof ResourcesChinaMarketEntryStrategyRoute
   '/_app/': typeof AppIndexRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/_app/kol-discovery/$kolId': typeof AppKolDiscoveryKolIdRoute
   '/_app/projects/$projectId': typeof AppProjectsProjectIdRoute
   '/_app/kol-discovery/': typeof AppKolDiscoveryIndexRoute
@@ -294,12 +333,15 @@ export interface FileRouteTypes {
     | '/'
     | '/forgot-password'
     | '/login'
+    | '/mcp'
     | '/pricing'
     | '/privacy'
     | '/refunds'
     | '/register'
     | '/sitemap.xml'
     | '/terms'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/ai-workspace'
     | '/china-market-insight'
     | '/competitors'
@@ -312,6 +354,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/start'
     | '/resources/china-market-entry-strategy'
+    | '/.mcp/invoke-tool/$tool'
     | '/kol-discovery/$kolId'
     | '/projects/$projectId'
     | '/kol-discovery/'
@@ -324,12 +367,15 @@ export interface FileRouteTypes {
   to:
     | '/forgot-password'
     | '/login'
+    | '/mcp'
     | '/pricing'
     | '/privacy'
     | '/refunds'
     | '/register'
     | '/sitemap.xml'
     | '/terms'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/ai-workspace'
     | '/china-market-insight'
     | '/competitors'
@@ -343,6 +389,7 @@ export interface FileRouteTypes {
     | '/start'
     | '/resources/china-market-entry-strategy'
     | '/'
+    | '/.mcp/invoke-tool/$tool'
     | '/kol-discovery/$kolId'
     | '/projects/$projectId'
     | '/kol-discovery'
@@ -356,12 +403,15 @@ export interface FileRouteTypes {
     | '/_app'
     | '/forgot-password'
     | '/login'
+    | '/mcp'
     | '/pricing'
     | '/privacy'
     | '/refunds'
     | '/register'
     | '/sitemap.xml'
     | '/terms'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/_app/ai-workspace'
     | '/_app/china-market-insight'
     | '/_app/competitors'
@@ -375,6 +425,7 @@ export interface FileRouteTypes {
     | '/_app/start'
     | '/resources/china-market-entry-strategy'
     | '/_app/'
+    | '/.mcp/invoke-tool/$tool'
     | '/_app/kol-discovery/$kolId'
     | '/_app/projects/$projectId'
     | '/_app/kol-discovery/'
@@ -389,13 +440,17 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
+  McpRoute: typeof McpRoute
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
   RefundsRoute: typeof RefundsRoute
   RegisterRoute: typeof RegisterRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
+  Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
+  Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   ResourcesChinaMarketEntryStrategyRoute: typeof ResourcesChinaMarketEntryStrategyRoute
+  Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
@@ -444,6 +499,13 @@ declare module '@tanstack/react-router' {
       path: '/pricing'
       fullPath: '/pricing'
       preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -558,6 +620,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAiWorkspaceRouteImport
       parentRoute: typeof AppRoute
     }
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.mcp/list-tools': {
+      id: '/.mcp/list-tools'
+      path: '/.mcp/list-tools'
+      fullPath: '/.mcp/list-tools'
+      preLoaderRoute: typeof Char91DotmcpChar93ListToolsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_app/projects/': {
       id: '/_app/projects/'
       path: '/projects'
@@ -585,6 +661,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/kol-discovery/$kolId'
       preLoaderRoute: typeof AppKolDiscoveryKolIdRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/.mcp/invoke-tool/$tool': {
+      id: '/.mcp/invoke-tool/$tool'
+      path: '/.mcp/invoke-tool/$tool'
+      fullPath: '/.mcp/invoke-tool/$tool'
+      preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/lovable/email/queue/process': {
       id: '/lovable/email/queue/process'
@@ -661,14 +744,19 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
+  McpRoute: McpRoute,
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
   RefundsRoute: RefundsRoute,
   RegisterRoute: RegisterRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
+  Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
+  Char91DotwellKnownChar93OauthProtectedResourceRoute:
+    Char91DotwellKnownChar93OauthProtectedResourceRoute,
   ResourcesChinaMarketEntryStrategyRoute:
     ResourcesChinaMarketEntryStrategyRoute,
+  Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
