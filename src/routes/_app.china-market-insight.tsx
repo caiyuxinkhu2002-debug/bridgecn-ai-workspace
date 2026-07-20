@@ -48,6 +48,7 @@ import { Database as DatabaseIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { SemrushQuotaBadge } from "@/components/semrush-quota-badge";
 import { DataSourcePill } from "@/components/data-source-pill";
+import { PlatformSnapshotCard } from "@/components/platform-snapshot-card";
 
 export const Route = createFileRoute("/_app/china-market-insight")({
   head: () => ({ meta: [{ title: "China Market Insight — BridgeCN AI" }] }),
@@ -416,6 +417,9 @@ function MarketInsightPage() {
       ) : null}
 
       <div className="space-y-8">
+        {/* 小红书 · 抖음 measured snapshots — always visible, refreshed via Firecrawl */}
+        <PlatformSnapshotCard />
+
         {/* AI Market Summary */}
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-6 shadow-[var(--shadow-soft)]">
           <div className="flex flex-wrap items-center justify-between gap-3">
