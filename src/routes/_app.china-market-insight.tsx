@@ -418,7 +418,7 @@ function MarketInsightPage() {
 
       <div className="space-y-8">
         {/* 小红书 · 抖음 measured snapshots — always visible, refreshed via Firecrawl */}
-        <PlatformSnapshotCard category={activeProject?.category ?? undefined} />
+        <PlatformSnapshotCard />
 
         {/* AI Market Summary */}
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-6 shadow-[var(--shadow-soft)]">
