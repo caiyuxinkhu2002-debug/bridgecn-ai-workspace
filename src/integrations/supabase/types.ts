@@ -363,6 +363,42 @@ export type Database = {
           },
         ]
       }
+      platform_snapshots: {
+        Row: {
+          captured_at: string
+          category: string
+          created_at: string
+          id: string
+          metrics: Json
+          platform: string
+          query: string
+          raw_excerpt: string | null
+          source_url: string
+        }
+        Insert: {
+          captured_at?: string
+          category: string
+          created_at?: string
+          id?: string
+          metrics?: Json
+          platform: string
+          query: string
+          raw_excerpt?: string | null
+          source_url: string
+        }
+        Update: {
+          captured_at?: string
+          category?: string
+          created_at?: string
+          id?: string
+          metrics?: Json
+          platform?: string
+          query?: string
+          raw_excerpt?: string | null
+          source_url?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
