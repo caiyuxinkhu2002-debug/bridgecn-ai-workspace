@@ -44,6 +44,7 @@ import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/e
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
+import { Route as ApiPublicHooksRefreshPlatformSnapshotsRouteImport } from './routes/api/public/hooks/refresh-platform-snapshots'
 
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
@@ -225,6 +226,12 @@ const ApiPublicPaymentsWebhookRoute =
     path: '/api/public/payments/webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksRefreshPlatformSnapshotsRoute =
+  ApiPublicHooksRefreshPlatformSnapshotsRouteImport.update({
+    id: '/api/public/hooks/refresh-platform-snapshots',
+    path: '/api/public/hooks/refresh-platform-snapshots',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
@@ -257,6 +264,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId': typeof AppProjectsProjectIdRoute
   '/kol-discovery/': typeof AppKolDiscoveryIndexRoute
   '/projects/': typeof AppProjectsIndexRoute
+  '/api/public/hooks/refresh-platform-snapshots': typeof ApiPublicHooksRefreshPlatformSnapshotsRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -293,6 +301,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId': typeof AppProjectsProjectIdRoute
   '/kol-discovery': typeof AppKolDiscoveryIndexRoute
   '/projects': typeof AppProjectsIndexRoute
+  '/api/public/hooks/refresh-platform-snapshots': typeof ApiPublicHooksRefreshPlatformSnapshotsRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -331,6 +340,7 @@ export interface FileRoutesById {
   '/_app/projects/$projectId': typeof AppProjectsProjectIdRoute
   '/_app/kol-discovery/': typeof AppKolDiscoveryIndexRoute
   '/_app/projects/': typeof AppProjectsIndexRoute
+  '/api/public/hooks/refresh-platform-snapshots': typeof ApiPublicHooksRefreshPlatformSnapshotsRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -369,6 +379,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId'
     | '/kol-discovery/'
     | '/projects/'
+    | '/api/public/hooks/refresh-platform-snapshots'
     | '/api/public/payments/webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -405,6 +416,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId'
     | '/kol-discovery'
     | '/projects'
+    | '/api/public/hooks/refresh-platform-snapshots'
     | '/api/public/payments/webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -442,6 +454,7 @@ export interface FileRouteTypes {
     | '/_app/projects/$projectId'
     | '/_app/kol-discovery/'
     | '/_app/projects/'
+    | '/api/public/hooks/refresh-platform-snapshots'
     | '/api/public/payments/webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -464,6 +477,7 @@ export interface RootRouteChildren {
   ResourcesChinaMarketEntryStrategyRoute: typeof ResourcesChinaMarketEntryStrategyRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
+  ApiPublicHooksRefreshPlatformSnapshotsRoute: typeof ApiPublicHooksRefreshPlatformSnapshotsRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
@@ -717,6 +731,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/refresh-platform-snapshots': {
+      id: '/api/public/hooks/refresh-platform-snapshots'
+      path: '/api/public/hooks/refresh-platform-snapshots'
+      fullPath: '/api/public/hooks/refresh-platform-snapshots'
+      preLoaderRoute: typeof ApiPublicHooksRefreshPlatformSnapshotsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -778,6 +799,8 @@ const rootRouteChildren: RootRouteChildren = {
     ResourcesChinaMarketEntryStrategyRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
+  ApiPublicHooksRefreshPlatformSnapshotsRoute:
+    ApiPublicHooksRefreshPlatformSnapshotsRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
