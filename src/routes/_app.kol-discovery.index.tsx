@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Loader2, Plus, Search, ShieldCheck } from "lucide-react";
 import { PageHeader } from "@/components/app-shell";
+import { ProjectSummaryStrip } from "@/components/project-summary-strip";
 import { useWorkspace } from "@/lib/workspace-context";
 import { listKols, addToShortlist, listShortlist } from "@/lib/kol/kols.functions";
 import { crawlKol } from "@/lib/kol/crawl.functions";
@@ -44,8 +45,22 @@ const CATEGORY_CHIPS: { key: string; label: string; match: string[] }[] = [
 
 type SortKey = "match" | "popularity" | "price_asc" | "price_desc";
 
+/** Map the active project's category/industry/keywords onto a catalog chip. */
+function chipFromProject(haystack: string): string | null {
+  const h = haystack.toLowerCase();
+  const RULES: { key: string; re: RegExp }[] = [
+    { key: "beauty", re: /(뷰티|스킨케어|메이크업|beauty|skincare|cosmetic|derma|美妆|护肤)/ },
+    { key: "fashion", re: /(패션|의류|럭셔리|fashion|apparel|clothing|luxury|时尚|服饰)/ },
+    { key: "food", re: /(식품|음료|먹방|커피|베이커리|food|beverage|drink|coffee|snack|水|食品)/ },
+    { key: "lifestyle", re: /(라이프스타일|홈|인테리어|캠핑|lifestyle|home|interior|living|家居)/ },
+    { key: "parenting", re: /(육아|키즈|이유식|신생아|parenting|kids|baby|母婴)/ },
+    { key: "health", re: /(헬스|피트니스|요가|건강|health|fitness|wellness|supplement|健康)/ },
+  ];
+  return RULES.find((r) => r.re.test(h))?.key ?? null;
+}
+
 function KolDiscoveryPage() {
-  const { workspaceId, activeProject } = useWorkspace();
+  const { workspaceId, activeProject, projects } = useWorkspace();
   const qc = useQueryClient();
   const listFn = useServerFn(listKols);
   const matchFn = useServerFn(matchKols);
@@ -77,6 +92,20 @@ function KolDiscoveryPage() {
     const kb = activeProject?.knowledgeBase;
     return [kb?.category, kb?.industry, ...(kb?.keywords || [])].filter(Boolean) as string[];
   }, [activeProject]);
+
+  // Auto-apply the active project's category to the catalog filter so the
+  // user does not re-pick what they already declared during onboarding.
+  const suggestedChip = useMemo(
+    () => chipFromProject([...targetCategories, activeProject?.industry || ""].join(" ")),
+    [targetCategories, activeProject],
+  );
+  const [chipAutoApplied, setChipAutoApplied] = useState<string | null>(null);
+  useEffect(() => {
+    if (!suggestedChip) return;
+    if (chipAutoApplied === activeProject?.id) return;
+    setSelectedCategory(suggestedChip);
+    setChipAutoApplied(activeProject?.id ?? null);
+  }, [suggestedChip, activeProject?.id, chipAutoApplied]);
 
   const matchQuery = useQuery({
     queryKey: ["kol-match", workspaceId, targetCategories.join(","), selectedPlatforms.join(","), budget],
@@ -177,6 +206,23 @@ function KolDiscoveryPage() {
         title="KOL 정밀 매칭"
         description="小红书 / 抖音 / B站 / 微信 공개 프로필에서 실측 크롤 → AI 정규화 → 브랜드 매칭. 실측과 AI 추정을 필드 단위로 정직하게 구분합니다."
       />
+
+      <ProjectSummaryStrip compact />
+
+      {projects.length > 0 && suggestedChip && selectedCategory === suggestedChip && (
+        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--primary-soft)]/40 px-3 py-2 text-xs">
+          <span className="font-medium">
+            프로젝트 「{activeProject?.name}」 카테고리로 자동 필터링됨
+          </span>
+          <button
+            type="button"
+            onClick={() => setSelectedCategory(null)}
+            className="rounded-md border border-[var(--border)] px-2 py-0.5 text-[11px] font-medium hover:bg-[var(--muted)]"
+          >
+            필터 해제 · 전체 보기
+          </button>
+        </div>
+      )}
 
       {/* Add-by-URL crawl bar */}
       <div className="rounded-lg border border-[var(--border)] bg-[var(--card)] p-4">

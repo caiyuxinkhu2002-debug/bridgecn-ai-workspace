@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { PageHeader } from "@/components/app-shell";
 import { DataIntegrityBanner } from "@/components/data-integrity-banner";
 import { ProjectContextBar } from "@/components/project-context-bar";
+import { ProjectSummaryStrip } from "@/components/project-summary-strip";
 import { WorkflowFooter } from "@/components/workflow-footer";
 import { useI18n } from "@/lib/i18n";
 import {
@@ -268,6 +269,7 @@ function MarketInsightPage() {
     <div>
       <ProjectContextBar />
       <PageHeader title={t("market.title")} description={t("market.sub")} />
+      <ProjectSummaryStrip />
       <DataIntegrityBanner
         verified={!!semrush}
         verifiedLabel={
