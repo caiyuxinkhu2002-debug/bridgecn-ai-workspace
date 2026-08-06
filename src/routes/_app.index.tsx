@@ -14,7 +14,7 @@ import {
 import { PageHeader } from "@/components/app-shell";
 import { useI18n } from "@/lib/i18n";
 import { useWorkspace } from "@/lib/workspace-context";
-import { stageLabelKey, stageToPath } from "@/lib/workflow";
+import { stageLabelKey, stageToPath, nextStage } from "@/lib/workflow";
 
 export const Route = createFileRoute("/_app/")({
   head: () => ({
@@ -141,7 +141,19 @@ function DashboardPage() {
                       {p.name}
                     </button>
                     <p className="truncate text-xs text-[var(--muted-foreground)]">{p.industry}</p>
+                    {nextStage(p.stage) && (
+                      <p className="truncate text-[11px] text-[var(--primary)]">
+                        {t("dash.resume")}: {t(stageLabelKey[nextStage(p.stage)!])}
+                      </p>
+                    )}
                   </div>
+                  <Link
+                    to={stageToPath[nextStage(p.stage) ?? p.stage]}
+                    onClick={() => setActiveProjectId(p.id)}
+                    className="hidden shrink-0 items-center rounded-md border border-[var(--border)] px-2 py-1 text-[11px] font-medium hover:bg-[var(--muted)] lg:inline-flex"
+                  >
+                    {t("common.open")} →
+                  </Link>
                   <span className="hidden md:inline-flex items-center rounded-full bg-[var(--primary-soft)] px-2 py-0.5 text-[11px] font-medium text-[var(--primary)]">
                     {t(stageLabelKey[p.stage])}
                   </span>
