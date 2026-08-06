@@ -268,6 +268,7 @@ function MarketInsightPage() {
     <div>
       <ProjectContextBar />
       <PageHeader title={t("market.title")} description={t("market.sub")} />
+      <ProjectSummaryStrip />
       <DataIntegrityBanner
         verified={!!semrush}
         verifiedLabel={

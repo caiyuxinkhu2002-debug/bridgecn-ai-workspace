@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageHeader } from "@/components/app-shell";
 import { DataIntegrityBanner } from "@/components/data-integrity-banner";
 import { ProjectContextBar } from "@/components/project-context-bar";
+import { ProjectSummaryStrip } from "@/components/project-summary-strip";
 import { WorkflowFooter } from "@/components/workflow-footer";
 import { useI18n } from "@/lib/i18n";
 import { useWorkspace } from "@/lib/workspace-context";
@@ -25,6 +26,7 @@ function ConsumerInsightPage() {
     <div>
       <ProjectContextBar />
       <PageHeader title={t("consumer.title")} description={t("consumer.sub")} />
+      <ProjectSummaryStrip />
       <DataIntegrityBanner />
       {!hasData ? (
         <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--background)] p-10 text-center shadow-[var(--shadow-soft)]">
