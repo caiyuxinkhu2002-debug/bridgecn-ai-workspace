@@ -6,7 +6,7 @@ import { AuthLayout, Divider, Field, SocialButtons } from "@/components/auth-lay
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/register")({
-  validateSearch: (s: Record<string, unknown>) => ({
+  validateSearch: (s: Record<string, unknown>): { next?: string } => ({
     next: typeof s.next === "string" && s.next.startsWith("/") && !s.next.startsWith("//") ? s.next : undefined,
   }),
   head: () => ({
