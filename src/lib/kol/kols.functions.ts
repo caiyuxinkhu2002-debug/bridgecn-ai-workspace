@@ -129,6 +129,44 @@ export const removeFromShortlist = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const addManyToShortlist = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (input: {
+      projectId: string;
+      items: { kolId: string; matchScore?: number; matchBreakdown?: Record<string, number> }[];
+    }) => input,
+  )
+  .handler(async ({ data, context }) => {
+    if (!data.items.length) return { ok: true, count: 0 };
+    const rows = data.items.map((i) => ({
+      project_id: data.projectId,
+      kol_id: i.kolId,
+      match_score: i.matchScore ?? null,
+      match_breakdown: i.matchBreakdown ? JSON.parse(JSON.stringify(i.matchBreakdown)) : null,
+      added_by: context.userId,
+    }));
+    const { error } = await context.supabase
+      .from("kol_project_shortlist")
+      .upsert(rows, { onConflict: "project_id,kol_id" });
+    if (error) throw new Error(error.message);
+    return { ok: true, count: rows.length };
+  });
+
+const _removeFromShortlistLegacy = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { projectId: string; kolId: string }) => input)
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase
+      .from("kol_project_shortlist")
+      .delete()
+      .eq("project_id", data.projectId)
+      .eq("kol_id", data.kolId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+void _removeFromShortlistLegacy;
+
 export const updateShortlistStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
