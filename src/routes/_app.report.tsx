@@ -26,7 +26,7 @@ export const Route = createFileRoute("/_app/report")({
       },
     ],
   }),
-  validateSearch: (s: Record<string, unknown>) => ({
+  validateSearch: (s: Record<string, unknown>): { reportId?: string; print?: boolean } => ({
     reportId: typeof s.reportId === "string" ? s.reportId : undefined,
     print: s.print === 1 || s.print === "1",
   }),
