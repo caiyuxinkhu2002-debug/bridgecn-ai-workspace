@@ -7,6 +7,8 @@ export type MatchInput = {
   targetCategories: string[]; // brand's category / keywords
   targetAudience?: string; // free text (age / gender / tier city hints)
   platforms?: ("xiaohongshu" | "douyin" | "bilibili" | "wechat")[];
+  preferredPlatforms?: ("xiaohongshu" | "douyin" | "bilibili" | "wechat")[];
+  competitorBrands?: string[];
   minFollowers?: number;
   maxFollowers?: number;
   maxBudgetCny?: number;
@@ -19,6 +21,7 @@ export type Scored = KolRow & {
     audience: number;
     platform: number;
     price: number;
+    competitor: number;
   };
 };
 
@@ -50,6 +53,23 @@ function priceScore(kol: KolRow, maxBudget?: number): number {
   return 0.2;
 }
 
+/** Has this KOL already posted about a competitor brand? Strong buying signal. */
+function competitorScore(kol: KolRow, competitors?: string[]): number {
+  if (!competitors?.length) return 0;
+  const blob = (kol.mentioned_brands || []).join(" ").toLowerCase();
+  if (!blob) return 0;
+  const hits = competitors.filter((c) => c.trim() && blob.includes(c.trim().toLowerCase())).length;
+  return hits > 0 ? Math.min(1, hits / 2) : 0;
+}
+
+function platformScore(
+  kol: KolRow,
+  preferred?: ("xiaohongshu" | "douyin" | "bilibili" | "wechat")[],
+): number {
+  if (!preferred?.length) return 1;
+  return preferred.includes(kol.platform) ? 1 : 0.5;
+}
+
 export const matchKols = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: MatchInput) => input)
@@ -69,13 +89,15 @@ export const matchKols = createServerFn({ method: "POST" })
     const scored = ((rows || []) as unknown as KolRow[]).map((k) => {
       const cat = categoryScore(k, data.targetCategories);
       const aud = audienceScore(k, data.targetAudience);
-      const platform = 1; // already filtered
+      const platform = platformScore(k, data.preferredPlatforms);
       const price = priceScore(k, data.maxBudgetCny);
-      const total = cat * 0.5 + aud * 0.25 + platform * 0.1 + price * 0.15;
+      const competitor = competitorScore(k, data.competitorBrands);
+      const base = cat * 0.45 + aud * 0.22 + platform * 0.1 + price * 0.13;
+      const total = Math.min(1, base + competitor * 0.1);
       return {
         ...k,
         match_score: Number(total.toFixed(3)),
-        match_breakdown: { category: cat, audience: aud, platform, price },
+        match_breakdown: { category: cat, audience: aud, platform, price, competitor },
       };
     });
     scored.sort((a, b) => b.match_score - a.match_score);
