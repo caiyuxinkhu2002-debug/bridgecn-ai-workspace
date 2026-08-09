@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -7,9 +7,16 @@ import { Loader2, Plus, Search, ShieldCheck } from "lucide-react";
 import { PageHeader } from "@/components/app-shell";
 import { ProjectSummaryStrip } from "@/components/project-summary-strip";
 import { useWorkspace } from "@/lib/workspace-context";
-import { listKols, addToShortlist, listShortlist } from "@/lib/kol/kols.functions";
+import {
+  listKols,
+  addToShortlist,
+  addManyToShortlist,
+  listShortlist,
+} from "@/lib/kol/kols.functions";
 import { crawlKol } from "@/lib/kol/crawl.functions";
 import { matchKols, type Scored } from "@/lib/kol/match.functions";
+import { buildKolPlan } from "@/lib/kol/plan";
+import { RecommendedPlan } from "@/components/kol/recommended-plan";
 import { KolCard } from "@/components/kol/kol-card";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -66,6 +73,7 @@ function KolDiscoveryPage() {
   const matchFn = useServerFn(matchKols);
   const crawlFn = useServerFn(crawlKol);
   const addFn = useServerFn(addToShortlist);
+  const addManyFn = useServerFn(addManyToShortlist);
   const shortlistFn = useServerFn(listShortlist);
 
   const [addUrl, setAddUrl] = useState("");
@@ -75,6 +83,8 @@ function KolDiscoveryPage() {
   const [sortKey, setSortKey] = useState<SortKey>("popularity");
   const [query, setQuery] = useState("");
   const [budget, setBudget] = useState<number | undefined>(undefined);
+  const [planBudget, setPlanBudget] = useState<number | undefined>(undefined);
+  const catalogRef = useRef<HTMLDivElement | null>(null);
 
   const kolsQuery = useQuery({
     queryKey: ["kols", workspaceId],
@@ -93,6 +103,11 @@ function KolDiscoveryPage() {
     return [kb?.category, kb?.industry, ...(kb?.keywords || [])].filter(Boolean) as string[];
   }, [activeProject]);
 
+  const competitorBrands = useMemo(
+    () => (activeProject?.knowledgeBase?.competitors || []).filter(Boolean),
+    [activeProject],
+  );
+
   // Auto-apply the active project's category to the catalog filter so the
   // user does not re-pick what they already declared during onboarding.
   const suggestedChip = useMemo(
@@ -108,13 +123,21 @@ function KolDiscoveryPage() {
   }, [suggestedChip, activeProject?.id, chipAutoApplied]);
 
   const matchQuery = useQuery({
-    queryKey: ["kol-match", workspaceId, targetCategories.join(","), selectedPlatforms.join(","), budget],
+    queryKey: [
+      "kol-match",
+      workspaceId,
+      targetCategories.join(","),
+      competitorBrands.join(","),
+      selectedPlatforms.join(","),
+      budget,
+    ],
     queryFn: () =>
       matchFn({
         data: {
           workspaceId,
           targetCategories,
           targetAudience: activeProject?.knowledgeBase?.targetAudience,
+          competitorBrands,
           platforms: selectedPlatforms.length
             ? (selectedPlatforms as ("xiaohongshu" | "douyin" | "bilibili" | "wechat")[])
             : undefined,
@@ -145,6 +168,40 @@ function KolDiscoveryPage() {
     },
     onError: (e) => toast.error((e as Error).message),
   });
+
+  const addManyMut = useMutation({
+    mutationFn: (items: { kolId: string; matchScore: number; matchBreakdown: Record<string, number> }[]) =>
+      addManyFn({ data: { projectId: activeProject!.id, items } }),
+    onSuccess: (res) => {
+      toast.success(`${res.count}명을 숏리스트에 저장했습니다`);
+      qc.invalidateQueries({ queryKey: ["kol-shortlist"] });
+    },
+    onError: (e) => toast.error((e as Error).message),
+  });
+
+  // Candidates for the auto plan: score-ordered, restricted to the project's
+  // category chip when we could infer one.
+  const planCandidates = useMemo(() => {
+    const src = matchQuery.data || [];
+    const chip = CATEGORY_CHIPS.find((c) => c.key === suggestedChip);
+    const filtered = chip
+      ? src.filter((k) =>
+          (k.primary_categories || []).some((c) =>
+            chip.match.some((m) => c.toLowerCase().includes(m.toLowerCase())),
+          ),
+        )
+      : src;
+    return (filtered.length ? filtered : src).slice();
+  }, [matchQuery.data, suggestedChip]);
+
+  const kolPlan = useMemo(
+    () =>
+      buildKolPlan(planCandidates, {
+        budgetTotalCny: planBudget,
+        categoryLabel: CATEGORY_CHIPS.find((c) => c.key === suggestedChip)?.label,
+      }),
+    [planCandidates, planBudget, suggestedChip],
+  );
 
   async function handleCrawl() {
     if (!addUrl.trim() || !workspaceId) return;
@@ -209,6 +266,34 @@ function KolDiscoveryPage() {
 
       <ProjectSummaryStrip compact />
 
+      {activeProject && (
+        <RecommendedPlan
+          brandName={activeProject.knowledgeBase?.company || activeProject.name}
+          plan={kolPlan}
+          loading={matchQuery.isLoading || kolsQuery.isLoading}
+          saving={addManyMut.isPending}
+          savedIds={shortlistIds}
+          budget={planBudget}
+          onBudgetChange={setPlanBudget}
+          onSavePlan={() =>
+            addManyMut.mutate(
+              kolPlan.tiers
+                .flatMap((t) => t.items)
+                .filter((k) => !shortlistIds.has(k.id))
+                .map((k) => ({
+                  kolId: k.id,
+                  matchScore: k.match_score,
+                  matchBreakdown: k.match_breakdown,
+                })),
+            )
+          }
+          onAddOne={(kolId, score, breakdown) => addMut.mutate({ kolId, score, breakdown })}
+          onBrowseManually={() =>
+            catalogRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+          }
+        />
+      )}
+
       {projects.length > 0 && suggestedChip && selectedCategory === suggestedChip && (
         <div className="flex flex-wrap items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--primary-soft)]/40 px-3 py-2 text-xs">
           <span className="font-medium">
@@ -252,7 +337,10 @@ function KolDiscoveryPage() {
       </div>
 
       {/* Filters */}
-      <div className="rounded-lg border border-[var(--border)] bg-[var(--card)] p-4 space-y-3">
+      <div
+        ref={catalogRef}
+        className="rounded-lg border border-[var(--border)] bg-[var(--card)] p-4 space-y-3"
+      >
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
