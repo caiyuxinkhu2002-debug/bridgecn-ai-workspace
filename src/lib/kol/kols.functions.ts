@@ -153,20 +153,6 @@ export const addManyToShortlist = createServerFn({ method: "POST" })
     return { ok: true, count: rows.length };
   });
 
-const _removeFromShortlistLegacy = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((input: { projectId: string; kolId: string }) => input)
-  .handler(async ({ data, context }) => {
-    const { error } = await context.supabase
-      .from("kol_project_shortlist")
-      .delete()
-      .eq("project_id", data.projectId)
-      .eq("kol_id", data.kolId);
-    if (error) throw new Error(error.message);
-    return { ok: true };
-  });
-void _removeFromShortlistLegacy;
-
 export const updateShortlistStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
